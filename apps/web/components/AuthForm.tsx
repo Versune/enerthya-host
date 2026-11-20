@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 type Mode = "login" | "setup";
 
@@ -22,6 +22,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
   );
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // A click before hydration is a native form submit and reloads the page.
+  // The marker lets tests (and the browser console) know the handler is live.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const confirmRef = useRef<HTMLInputElement>(null);
@@ -86,7 +90,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
   };
 
   return (
-    <form className="form" noValidate onSubmit={onSubmit}>
+    <form
+      className="form"
+      noValidate
+      data-hydrated={hydrated ? "true" : undefined}
+      onSubmit={onSubmit}
+    >
       <div className="field">
         <label className="field__label" htmlFor={usernameId}>
           Username
