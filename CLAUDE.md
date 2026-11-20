@@ -120,7 +120,11 @@ Each stage ships working. A placeholder is not a stage.
 ## CI and repository
 
 - `main` is the default branch; work happens on feature branches and lands through PRs.
-- `CI` runs install, typecheck and build.
+- `CI` runs install, lint, typecheck, unit tests, build and the Playwright suite.
+- Releases are cut by merging the release PR that release-please opens on `main`. Its tag
+  (`vX.Y.Z`) triggers the artifact workflow, which attaches `enerthya-host-vX.Y.Z.tar.gz` and
+  `SHA256SUMS`; `install.sh` verifies that pair. Do not create releases or assets by hand.
+- Commit messages are Conventional Commits because they decide the next version.
 - CodeQL uses **GitHub's default setup**. Do not add `.github/workflows/codeql.yml`: an advanced
   configuration cannot upload alongside the default setup.
 - Dependabot updates npm and Actions weekly and groups dev minors.

@@ -43,6 +43,16 @@ pnpm db:migrate
 pnpm db:studio
 ```
 
+## Releases
+
+Versions follow Conventional Commits. On every push to `main`, release-please opens (or updates) a
+release PR with the next version and the changelog; merging that PR tags `vX.Y.Z`, writes
+`CHANGELOG.md` and publishes the GitHub release. A second workflow then builds the standalone
+server and attaches `enerthya-host-vX.Y.Z.tar.gz` plus `SHA256SUMS`, the pair `install.sh`
+downloads and verifies before extracting.
+
+Nothing is published by hand, and `./install.sh --version vX.Y.Z` pins an older release.
+
 ## Configuration
 
 | Variable | Meaning |

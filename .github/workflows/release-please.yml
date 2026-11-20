@@ -1,0 +1,22 @@
+name: Release please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # Conventional commits drive the version and CHANGELOG. Merging the
+      # release PR tags the commit and publishes the GitHub release; the
+      # artifact workflow then attaches the installable build.
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
