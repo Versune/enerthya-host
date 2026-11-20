@@ -88,4 +88,19 @@ test.describe("services", () => {
     expect(body.auth).toBe("better-auth");
     expect(body.runtime?.recommended).toBeTruthy();
   });
+
+  test("icons are served from public and linked in the head", async ({ page, request }) => {
+    for (const asset of ["/icon.png", "/apple-icon.png"]) {
+      const response = await request.get(asset);
+      expect(response.ok(), asset).toBe(true);
+      expect(response.headers()["content-type"], asset).toContain("image/png");
+    }
+
+    await page.goto("/sign-in");
+    await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", "/icon.png");
+    await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
+      "href",
+      "/apple-icon.png",
+    );
+  });
 });
