@@ -74,7 +74,10 @@ runtime_state() {
       const b = process.argv[2].split(".").map(Number);
       const pad = (v) => [v[0] || 0, v[1] || 0, v[2] || 0];
       const [x, y] = [pad(a), pad(b)];
-      process.exit((x[0] - y[0]) || (x[1] - y[1]) || (x[2] - y[2]) >= 0 ? 0 : 1);
+      for (let i = 0; i < 3; i += 1) {
+        if (x[i] !== y[i]) process.exit(x[i] > y[i] ? 0 : 1);
+      }
+      process.exit(0);
     ' "$found" "$minimum" 2>/dev/null; then
     echo "ready:$found"
   else

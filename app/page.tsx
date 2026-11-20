@@ -75,7 +75,7 @@ export default async function SignInPage() {
         {
           term: "No recovery",
           detail:
-            "A lost password is reset from the CLI on this server, by someone with shell access to it.",
+            "A lost password is reset by deleting the account record on this server, by someone with shell access to it.",
         },
         {
           term: "Loopback",
