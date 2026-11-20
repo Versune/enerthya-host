@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: "%s",
   },
   description:
-    "The Enerthya Host panel runs on this machine. Local account, no cloud, no telemetry.",
+    "The Enerthya Host panel runs on this machine. Local accounts, local Postgres, no telemetry.",
   applicationName: "Enerthya Host panel",
   // Static files in public/ rather than the app/ metadata convention: they are
   // assets, not routes, and the standalone bundle copies public/ verbatim.
@@ -20,13 +20,23 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  colorScheme: "light",
-  themeColor: "#ffffff",
+  colorScheme: "dark light",
+  themeColor: "#0e100f",
 };
+
+/**
+ * Applies a stored theme before first paint. Without it the default dark
+ * document flashes light for anyone who chose light and vice versa.
+ */
+const THEME_SCRIPT = `try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t}}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
+      <head>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static constant, no input */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>
         <a className="skip-link" href="#main">
           Skip to content

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { Brand } from "@/components/Brand";
 import { SignOutButton } from "@/components/SignOutButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { getAuth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,10 @@ export default async function DashboardPage() {
     <div className="frame">
       <header className="frame__bar">
         <Brand />
-        <span className="frame__env">Self-hosted panel</span>
+        <div className="frame__tools">
+          <span className="frame__env">Self-hosted panel</span>
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="screen" id="main">

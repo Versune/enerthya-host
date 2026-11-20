@@ -14,6 +14,15 @@ colors:
   inverse-text: "#f4f5f2"
   inverse-muted: "#a8aca6"
   inverse-rule: "#2a2d2a"
+  dark-paper: "#0e100f"
+  dark-paper-2: "#141715"
+  dark-paper-3: "#1b1f1c"
+  dark-ink: "#f1f2ef"
+  dark-ink-80: "#d3d7d0"
+  dark-ink-60: "#a2a7a1"
+  dark-rule: "#242824"
+  dark-rule-strong: "#3b403b"
+  verified-text-dark: "#7fe7c0"
 typography:
   display:
     fontFamily: "Archivo, Helvetica Neue, Helvetica, Arial, sans-serif"
@@ -109,8 +118,9 @@ components:
 **Creative North Star: "The Machine's Front Door"**
 
 The panel behaves like the front door of the machine it runs on, not a SaaS onboarding funnel. It
-is a sheet of white paper with near-black ink, hairline rules and a ledger: what this install is,
-what it asks for, what it will never ask for. The form is one column of underline fields with a
+is a sheet of paper with ink, hairline rules and a ledger: what this install is, what it asks for,
+what it will never ask for. The sheet is near-black by default — a server is usually opened at
+night — and white when the operator chooses light. The form is one column of underline fields with a
 single ink button; the facts sit beside it on desktop and below it on a phone. Nothing floats,
 nothing glows, and no card frames the form, because a card would imply a product boundary that is
 not there.
@@ -129,7 +139,8 @@ it does. The honest state is part of the visual contract: the receipt reports th
 answer, and the panel never claims more than the process did.
 
 **Key Characteristics:**
-- White paper (#ffffff), near-black ink (#0b0c0b), no brand accent on the auth surfaces.
+- Dark by default: the near-black canvas (#0e100f) with near-white ink (#f1f2ef); light is the
+  same world with the pair inverted. No brand accent on the auth surfaces.
 - Archivo at editorial scale for headings and body; IBM Plex Mono for labels, hints, ledger terms,
   receipts and footer.
 - 1px hairlines for structure; fields are underlines, not boxes; no shadows, gradients or glass.
@@ -179,6 +190,25 @@ actually been verified.
 The declared `--ink-45` (#858984, 3.55:1 on paper) is not used by the shipped surfaces and is not
 promoted into the system as a body-text token.
 
+### Dark Scheme (default)
+
+The world does not change in dark mode; only which end of the paper-and-ink pair is the surface.
+The layout ships `data-theme="dark"`, and a stored choice is applied before first paint so the
+document never flashes the other scheme. The same token names carry the values, so every rule in
+this file holds in both schemes.
+
+- **Dark Canvas** (#0e100f): the page, form and receipt background in dark mode.
+- **Dark Surface 2** (#141715) and **Dark Surface 3** (#1b1f1c): declared passive tints, unused on
+  the shipped screens.
+- **Dark Ink** (#f1f2ef): primary text, the H1, structural rules, the button fill (which becomes a
+  light button with dark text) and the focus ring.
+- **Dark Ink 80** (#d3d7d0) and **Dark Ink 60** (#a2a7a1): secondary copy and mono metadata. Ink 60
+  clears 7:1 on the dark canvas.
+- **Dark Hairline** (#242824) and **Dark Strong Hairline** (#3b403b): decorative structure and the
+  inline-link underline, as in light mode.
+- **Verified Text Dark** (#7fe7c0): the readable mint step on the dark canvas; mint-700 (#07986a)
+  is too dark to clear 4.5:1 there.
+
 ### Named Rules
 **The Mint Is Evidence Rule.** Mint may mark only a verified equality (`A = A`), a passing checksum
 or a confirmed verification row. It is never a button fill, heading, background block or brand
@@ -188,6 +218,10 @@ never mint-500 (#34d399, 1.92:1).
 **The Ink Is the Accent Rule.** Until verification exists, the darkest ink is the interactive
 accent: button, focus ring, selection. No second brand hue carries interaction; the accent is the
 ink itself.
+
+**The Two Ends of the Paper Rule.** Dark and light are one system: the same token names, the same
+contrast relationships, with `--paper` and `--ink` swapped. A component never special-cases a
+scheme; if it only works on one end, it is wrong.
 
 ## Typography
 
@@ -350,8 +384,13 @@ brand mark.
   `N teams · roles are owner, admin and member`.
 
 ### Header, Footer and Brand
-- **Header:** brand at the left, environment label at the right (mono 0.75rem, 500, 0.12em,
-  uppercase, ink-60), 1px ink bottom rule.
+- **Header:** brand at the left; at the right, the environment label (mono 0.75rem, 500, 0.12em,
+  uppercase, ink-60) and the theme toggle, 1rem apart, closed by a 1px ink bottom rule.
+- **Theme toggle:** a 2.25rem square, 1px strong-hairline border, 2px radius, transparent fill and
+  an ink icon (16px Sun in dark, Moon in light). Hover raises the border to ink; focus is the
+  standard 2px ink outline at 3px. It shows the scheme it switches to, carries
+  `aria-label="Switch to light theme"` / `"Switch to dark theme"`, and stores the choice in
+  `localStorage` under `theme`.
 - **Brand:** a 1.5rem circular SVG mark in currentColor, the word `Enerthya` at Archivo 600 /
   1.125rem / -0.025em, and the mono suffix `HOST` at 0.75rem / 0.18em / uppercase in ink-60. The
   lockup is a link with a 2px ink focus outline offset 4px.
@@ -398,6 +437,8 @@ the literal result is that nothing happened.
   one organization per row on the signed-in stub.
 - **Do** use the gerund label on a submitting button and keep the control disabled until the
   request settles.
+- **Do** ship dark by default and apply the stored theme in an inline script before first paint;
+  the same component must work on both ends of the pair.
 
 ### Don't:
 - **Don't** reintroduce the centered auth card, logo cloud or "Welcome back" register on these
@@ -417,3 +458,5 @@ the literal result is that nothing happened.
   in ink, `aria-invalid`, and focus moved to the first failing field.
 - **Don't** draw a sidebar, top navigation or empty dashboard chrome before the shell is built; the
   signed-in stub is a screen, not a promise of a layout.
+- **Don't** build a second palette for dark mode; invert the existing tokens, and never special-case
+  a component per scheme.
