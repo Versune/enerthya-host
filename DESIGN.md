@@ -131,11 +131,11 @@ deliberately withholds mint, its only semantic accent, because on these surfaces
 verified. The result should feel installed, local and accountable, with the machine's own record
 on the page.
 
-This system records the shipped surfaces: `/sign-in`, `/sign-up` and the signed-in `/` stub. The
-stub is the first dashboard surface: the active organization is the H1, the signed-in identity is
-the lede, and the ledger lists the account's organizations instead of setup facts. The dashboard
-shell (sidebar, command palette, dark mode) does not exist yet, and this file must be updated when
-it does. The honest state is part of the visual contract: the receipt reports the server's literal
+This system records the shipped surfaces: `/sign-in`, `/sign-up` and the signed-in workspace in
+`(app)` — a 16rem sidebar, a 4rem topbar and a 56rem content column. The overview's H1 is the
+active organization, the lede names the signed-in identity, and the ledger lists organizations.
+Servers, projects and deployments each ship an honest empty state; none of them lists a row yet.
+The command palette, the theme toggle and the dark default are part of the shell. The honest state is part of the visual contract: the receipt reports the server's literal
 answer, and the panel never claims more than the process did.
 
 **Key Characteristics:**
@@ -275,8 +275,17 @@ The signed-in stub keeps the same frame and split; only the ledger content chang
 to the list of organizations. A dashboard with its own navigation does not exist yet and must not be
 implied by a placeholder sidebar.
 
-The only layout breakpoint in the shipped CSS is 1024px. The other media query is
-`prefers-reduced-motion`.
+The signed-in workspace is a two-column grid: a 16rem sidebar and the remaining width. The sidebar
+is sticky, full height, closed by a 1px hairline on its right edge, with the brand over a 1px ink
+rule and the nav as text links (no icons). The topbar is sticky at 4rem, closed by a 1px ink rule;
+organization name on the left, ⌘K, theme toggle and sign-out on the right. The content column is
+max 56rem with the same fluid gutter, and page headers are smaller than the auth H1
+(`clamp(1.75rem, 1.35rem + 1.6vw, 2.75rem)`).
+
+Below 860px the grid collapses to one column: the sidebar becomes a horizontal bar under the
+brand, the nav turns into a row, and the foot note and ⌘K hint are hidden.
+
+The only other layout breakpoints are the auth split at 1024px and `prefers-reduced-motion`.
 
 ### Named Rules
 **The Asymmetric Split Rule.** At 1024px and up the form never centers: it holds columns 1–6 and the
@@ -406,6 +415,20 @@ brand mark.
 - **Actions:** the primary sign-out button and the `Create another account` link, in the standard
   wrapping action row.
 
+### Dashboard Shell
+- **Sidebar:** 16rem, sticky, 1px hairline on the right. Brand over a 1px ink rule; nav links at
+  0.9375rem in ink-80 with a 2px radius; hover fills paper-2, the current page fills paper-3 and
+  keeps ink text. No icons, no collapsible groups, no counts.
+- **Topbar:** 4rem, sticky, 1px ink bottom rule, paper background. The organization is mono,
+  uppercase, ink-60, truncated with an ellipsis; right side carries the ⌘K trigger, theme toggle
+  and the sign-out button.
+- **Page header:** a mono label, an H1 at
+  `clamp(1.75rem, 1.35rem + 1.6vw, 2.75rem)`, and one lede at 52ch max. The empty state beneath is
+  an ink top rule and a mono label — the same receipt grammar, not a dashed box.
+- **Command palette:** a native `<dialog>` at `min(34rem, 92vw)`, 12vh from the top, 1px ink border,
+  2px radius, paper fill. Input row closed by a hairline; items use the nav's hover and focus fill.
+  Esc closes, Enter opens the first match; ⌘K/Ctrl+K opens it anywhere in the shell.
+
 ### Selection and Focus
 - **Selection:** ink background, paper text (`::selection`).
 - **Focus:** every control uses a 2px solid outline from the palette. The button and inline link use
@@ -456,7 +479,7 @@ the literal result is that nothing happened.
 - **Don't** use mono uppercase as decoration; it marks a label, term, hint or receipt.
 - **Don't** carry state by colour alone: errors are text with a leading `— `, an invalid underline
   in ink, `aria-invalid`, and focus moved to the first failing field.
-- **Don't** draw a sidebar, top navigation or empty dashboard chrome before the shell is built; the
-  signed-in stub is a screen, not a promise of a layout.
+- **Don't** give the sidebar a card, shadow, icon rail or collapsible sections; it is a hairline
+  column of text links, and the ⌘K palette is the only command surface.
 - **Don't** build a second palette for dark mode; invert the existing tokens, and never special-case
   a component per scheme.

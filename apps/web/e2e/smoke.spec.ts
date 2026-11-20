@@ -11,6 +11,16 @@ async function waitForHydration(page: Page) {
   await expect(page.locator('form[data-hydrated="true"]')).toBeVisible();
 }
 
+/** Every test gets a fresh context, so each signed-in test signs in itself. */
+async function signIn(page: Page) {
+  await page.goto("/sign-in");
+  await waitForHydration(page);
+  await page.getByLabel("Email").fill(EMAIL);
+  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByRole("heading", { name: ORGANIZATION })).toBeVisible();
+}
+
 test.describe
   .serial("accounts", () => {
     test("an anonymous visitor lands on sign-in", async ({ page }) => {
@@ -58,15 +68,48 @@ test.describe
     });
 
     test("the right password signs in again", async ({ page }) => {
-      await page.goto("/sign-in");
-      await waitForHydration(page);
-      await page.getByLabel("Email").fill(EMAIL);
-      await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
-      await page.getByRole("button", { name: "Sign in" }).click();
+      await signIn(page);
+    });
 
-      await expect(page.getByRole("heading", { name: ORGANIZATION })).toBeVisible();
+    test("the shell moves between the workspace sections", async ({ page }) => {
+      await signIn(page);
+
+      await page.getByRole("link", { name: "Servers" }).click();
+      await expect(page).toHaveURL(/\/servers$/);
+      await expect(page.getByRole("heading", { name: "No servers yet." })).toBeVisible();
+
+      await page.getByRole("link", { name: "Projects" }).click();
+      await expect(page).toHaveURL(/\/projects$/);
+      await expect(page.getByRole("heading", { name: "No projects yet." })).toBeVisible();
+
+      await page.getByRole("link", { name: "Deployments" }).click();
+      await expect(page).toHaveURL(/\/deployments$/);
+      await expect(page.getByRole("heading", { name: "Nothing has been deployed." })).toBeVisible();
+    });
+
+    test("the command palette navigates with the keyboard", async ({ page }) => {
+      await signIn(page);
+
+      const trigger = page.locator(
+        'button[aria-label="Open command palette"][data-hydrated="true"]',
+      );
+      await expect(trigger).toBeVisible();
+      await trigger.click();
+      const palette = page.getByRole("dialog", { name: "Command palette" });
+      await expect(palette).toBeVisible();
+
+      await page.getByLabel("Go to").fill("Projects");
+      await page.keyboard.press("Enter");
+
+      await expect(page).toHaveURL(/\/projects$/);
+      await expect(page.getByRole("heading", { name: "No projects yet." })).toBeVisible();
     });
   });
+
+test("dashboard routes send anonymous visitors to sign-in", async ({ page }) => {
+  await page.goto("/deployments");
+  await expect(page).toHaveURL(/\/sign-in$/);
+});
 
 test.describe("appearance", () => {
   test("dark is the default and the toggle survives a reload", async ({ page }) => {

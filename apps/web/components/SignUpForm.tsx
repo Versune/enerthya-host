@@ -1,7 +1,6 @@
 "use client";
 
 import { toSlug } from "@enerthya/core";
-import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { firstIssue, signUpSchema } from "@/lib/validation/auth";
@@ -22,7 +21,6 @@ async function createOrganization(name: string) {
 }
 
 export function SignUpForm() {
-  const router = useRouter();
   const ids = { name: useId(), email: useId(), password: useId(), organization: useId() };
 
   const [name, setName] = useState("");
@@ -67,11 +65,14 @@ export function SignUpForm() {
 
       const team = await createOrganization(parsed.data.organization);
       if (team) {
-        await authClient.organization.setActive({ organizationId: team.id });
+        // Best effort: the dashboard falls back to the first organization, so a
+        // slow activation must not hold the user on the form.
+        void authClient.organization.setActive({ organizationId: team.id });
       }
 
-      router.replace("/");
-      router.refresh();
+      // A hard navigation guarantees the server sees the new session cookie;
+      // a client-side replace can be served from the pre-signup cache.
+      window.location.assign("/");
     } finally {
       setSubmitting(false);
     }
