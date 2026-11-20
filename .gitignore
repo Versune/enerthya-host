@@ -30,6 +30,9 @@ test-results/
 .eslintcache
 .cache/
 tmp/
+dist/
+.pnpm-store/
+pnpm-debug.log*
 
 # ---- Deployment ----------------------------------------------------------
 .vercel/
