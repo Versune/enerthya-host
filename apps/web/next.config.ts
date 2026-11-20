@@ -12,7 +12,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: resolve(process.cwd(), "../.."),
-  transpilePackages: ["@enerthya/ui", "@enerthya/db"],
+  transpilePackages: ["@enerthya/ui", "@enerthya/db", "@enerthya/core"],
   poweredByHeader: false,
   reactStrictMode: true,
 };

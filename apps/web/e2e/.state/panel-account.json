@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "username": "e2e-admin",
+  "salt": "b2801cf1d276215bf85ce02a7bb018e2",
+  "digest": "16a009aa9f36cd53c4026f91ea627e46ff539d95513bdb13d2771793c82cd049",
+  "params": {
+    "N": 32768,
+    "r": 8,
+    "p": 1,
+    "dklen": 32
+  },
+  "createdAt": "2026-11-20T06:00:50.237Z"
+}

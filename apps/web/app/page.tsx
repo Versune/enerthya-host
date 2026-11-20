@@ -1,105 +1,80 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-import { AuthForm } from "@/components/AuthForm";
-import { AuthScreen } from "@/components/AuthScreen";
-import { Notice } from "@/components/Notice";
-import { SignOut } from "@/components/SignOut";
-import { accountExists } from "@/lib/accounts";
-import { readSession, SESSION_COOKIE } from "@/lib/session";
+import { Brand } from "@/components/Brand";
+import { SignOutButton } from "@/components/SignOutButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { getAuth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Sign in — Enerthya Host",
+  title: "Dashboard — Enerthya Host",
 };
 
-export default async function SignInPage() {
-  const jar = await cookies();
-  const session = await readSession(jar.get(SESSION_COOKIE)?.value);
+export default async function DashboardPage() {
+  const requestHeaders = await headers();
+  const auth = getAuth();
 
-  if (session) {
-    return (
-      <AuthScreen
-        title={`Signed in as ${session.username}.`}
-        lede="This browser holds a signed session for this install. The cookie is HttpOnly, SameSite=Strict and expires in eight hours."
-        ledgerTitle="What this session is"
-        ledgerFoot="Nothing leaves this machine · sign out clears the cookie"
-        facts={[
-          {
-            term: "Local",
-            detail: "The session is signed with a key stored in this deployment's state directory.",
-          },
-          {
-            term: "Bounded",
-            detail: "Eight hours, then the panel asks again. Signing out ends it immediately.",
-          },
-          {
-            term: "One account",
-            detail: "This install has exactly one administrator; team accounts are the next stage.",
-          },
-        ]}
-      >
-        <div className="form">
-          <div className="form__actions">
-            <SignOut />
-          </div>
-        </div>
-      </AuthScreen>
-    );
-  }
+  const session = await auth.api.getSession({ headers: requestHeaders });
+  if (!session) redirect("/sign-in");
 
-  let exists = false;
-  let unavailable = false;
-  let reason = "";
-  try {
-    exists = await accountExists();
-  } catch (error) {
-    unavailable = true;
-    reason = error instanceof Error ? error.message : "the account record is unreadable";
-  }
-  const noAccount = !unavailable && !exists;
+  const organizations = await auth.api.listOrganizations({ headers: requestHeaders });
+  const active =
+    organizations.find((org) => org.id === session.session.activeOrganizationId) ??
+    organizations[0];
 
   return (
-    <AuthScreen
-      title="Sign in to this install."
-      lede="One account lives on this machine. There is no email address to reset it with, and no second way in."
-      ledgerTitle="What this panel is"
-      ledgerFoot="Interface and local account · engine calls stay on this host"
-      facts={[
-        {
-          term: "Local",
-          detail:
-            "The account is hashed into this deployment's state directory. Nothing is sent anywhere.",
-        },
-        {
-          term: "No recovery",
-          detail:
-            "A lost password is reset by deleting the account record on this server, by someone with shell access to it.",
-        },
-        {
-          term: "Loopback",
-          detail:
-            "Binds to 127.0.0.1 by default. Exposing the panel to a network is a decision you make, not one it makes for you.",
-        },
-      ]}
-    >
-      {noAccount ? (
-        <Notice title="No administrator exists on this machine.">
-          Run first-run setup to create it.{" "}
-          <a className="link" href="/setup">
-            Create the administrator
-          </a>
-        </Notice>
-      ) : null}
+    <div className="frame">
+      <header className="frame__bar">
+        <Brand />
+        <div className="frame__tools">
+          <span className="frame__env">Self-hosted panel</span>
+          <ThemeToggle />
+        </div>
+      </header>
 
-      {unavailable ? (
-        <Notice title="The panel cannot reach the engine.">
-          {reason}. Check that the state directory is readable and owned by this user.
-        </Notice>
-      ) : null}
+      <main className="screen" id="main">
+        <div className="screen__col">
+          <p className="label">Dashboard</p>
+          <h1 className="title">{active ? active.name : "No organization yet."}</h1>
+          <p className="lede">
+            Signed in as {session.user.name} ({session.user.email}). Servers, projects and
+            deployments arrive in the next stage; this screen proves the session is real.
+          </p>
+          <div className="form__actions">
+            <SignOutButton />
+            <a className="link" href="/sign-up">
+              Create another account
+            </a>
+          </div>
+        </div>
 
-      <AuthForm mode="login" />
-    </AuthScreen>
+        <aside className="screen__ledger" aria-labelledby="org-title">
+          <span className="label" id="org-title">
+            Organizations
+          </span>
+          <dl className="ledger">
+            {organizations.map((org) => (
+              <div className="ledger__row" key={org.id}>
+                <dt>{org.name}</dt>
+                <dd>{org.slug}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="ledger__foot">
+            {organizations.length === 1 ? "1 team" : `${organizations.length} teams`} · roles are
+            owner, admin and member
+          </p>
+        </aside>
+      </main>
+
+      <footer className="frame__foot">
+        <span>Enerthya Host · Apache-2.0</span>
+        <span>No telemetry</span>
+        <span>No third-party requests</span>
+      </footer>
+    </div>
   );
 }

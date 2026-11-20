@@ -1,4 +1,5 @@
 import { Brand } from "@/components/Brand";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export type Fact = { term: string; detail: string };
 
@@ -21,7 +22,10 @@ export function AuthScreen({
     <div className="frame">
       <header className="frame__bar">
         <Brand />
-        <span className="frame__env">Self-hosted panel</span>
+        <div className="frame__tools">
+          <span className="frame__env">Self-hosted panel</span>
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="screen" id="main">

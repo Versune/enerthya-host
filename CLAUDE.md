@@ -6,10 +6,10 @@ An open-source, self-hosted PaaS in the Coolify class. You connect servers, poin
 repository or a Docker image, and the platform runs the build, the deployment, the domain, the
 TLS certificate, the logs, the backups and the monitoring.
 
-The current branch (`feat/paas-foundation`) replaces the earlier single-machine panel with this
-product. The old panel code (one local administrator, no database, paper-and-ink UI) still exists
-in `apps/web/lib` and `apps/web/app` while it is migrated; it is **legacy**, not a direction.
-Do not extend it. better-auth and Postgres replace it in Stage 4 of the roadmap below.
+The earlier single-machine panel (one local administrator, no database) has been replaced:
+accounts, sessions and organizations are better-auth rows in this install's Postgres. The
+paper-and-ink styling in `panel.css` is still what the auth screens wear; the dashboard shell
+replaces it in Stage 5.
 
 Early build. The monorepo, shared packages and the worker boundary exist. Nothing deploys yet:
 never write copy or UI that implies a deployment, backup or restore works.
@@ -74,9 +74,9 @@ AES-256-GCM), plus `PORT`/`HOSTNAME` for the panel. Typed validation lands with
 ## Layout while the migration is in flight
 
 ```
-apps/web/app/          pages: `/`, `/setup` (legacy auth surfaces, replaced in Stage 4)
-apps/web/app/api/      health, runtime (legacy; a thin `/api` for the new product follows)
-apps/web/lib/          LEGACY: accounts.ts (single admin), session.ts, runtime.ts
+apps/web/app/          `/` (dashboard), `/sign-in`, `/sign-up`
+apps/web/app/api/      auth/[...all] (better-auth), health, runtime
+apps/web/lib/          auth.ts (server instance), auth-client.ts, validation/, runtime.ts
 apps/worker/src/       BullMQ process; queue wiring arrives with the deploy engine
 packages/core/src/     domain logic; `toSlug` is the first shared primitive
 packages/db/src/       empty until Stage 2 creates the schema
@@ -103,6 +103,8 @@ showing a disabled control.
    applications, deployments, domains, env_vars, databases, backups, notifications.
 3. Dev `docker-compose.yml`: Postgres + Redis.
 4. better-auth with the organizations plugin and owner/admin/member RBAC; Drizzle adapter.
+   Sign-up, sign-in, sign-out and the organization created at sign-up exist; enforcing roles on
+   API routes and invitations still do not.
 5. Dashboard shell: sidebar, command palette, dark mode default.
 6. Servers over SSH: key validation, Docker install/verify, localhost by default.
 7. Projects, environments, applications (Git webhook, deploy key, Dockerfile/Nixpacks/compose).
