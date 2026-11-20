@@ -138,13 +138,13 @@ rm -rf "$TARGET"
 mkdir -p "$TARGET"
 
 if [ -n "$SOURCE_DIR" ]; then
-  need npm
-  [ -f "$SOURCE_DIR/package.json" ] || { echo "no package.json in $SOURCE_DIR" >&2; exit 2; }
-  ( cd "$SOURCE_DIR" && npm ci --no-audit --no-fund && npm run build )
-  cp -a "$SOURCE_DIR/.next/standalone/." "$TARGET/"
-  mkdir -p "$TARGET/.next"
-  cp -a "$SOURCE_DIR/.next/static" "$TARGET/.next/static"
-  cp -a "$SOURCE_DIR/public" "$TARGET/public"
+  need pnpm
+  [ -f "$SOURCE_DIR/pnpm-workspace.yaml" ] || { echo "no pnpm workspace in $SOURCE_DIR" >&2; exit 2; }
+  ( cd "$SOURCE_DIR" && pnpm install --frozen-lockfile && pnpm --filter @enerthya/web build )
+  cp -a "$SOURCE_DIR/apps/web/.next/standalone/." "$TARGET/"
+  mkdir -p "$TARGET/apps/web/.next"
+  cp -a "$SOURCE_DIR/apps/web/.next/static" "$TARGET/apps/web/.next/static"
+  cp -a "$SOURCE_DIR/apps/web/public" "$TARGET/apps/web/public"
   echo "Built the panel from $SOURCE_DIR."
 else
   need sha256sum
@@ -169,7 +169,7 @@ cat <<EOF
 
 Panel installed at $HOME_DIR/current
 
-  ENERTHYA_STATE_DIR=~/.enerthya-state PORT=8420 node "$HOME_DIR/current/server.js"
+  (cd "$HOME_DIR/current/apps/web" && ENERTHYA_STATE_DIR=~/.enerthya-state PORT=8420 node server.js)
 
 It binds 127.0.0.1 and serves the panel at http://127.0.0.1:8420/.
 EOF

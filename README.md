@@ -1,22 +1,59 @@
 # Enerthya Host
 
-A self-hosted hosting panel. You install it on one machine, open it in the browser, and it
-runs the applications and databases that machine hosts — with a recovery path you can verify
-rather than trust.
+An open-source, self-hosted PaaS. Connect your servers, point at a Git repository or a Docker
+image, and Enerthya Host handles the build, the deploy, the domain, the TLS certificate, the
+logs, the backups and the monitoring — on hardware you control.
 
-Early build. The panel, its local account and container-runtime detection work; deployment,
-backup and restore are the next stages and are not wired yet. Nothing here claims to host an
-application until it can.
+Early build. The monorepo, shared packages and the worker boundary exist; authentication,
+deployments, backups and restore are the next stages and are not wired yet. Nothing here claims
+to host an application until it can.
 
-## Supported platforms
+## Architecture
 
-| Host | Containers run | Runtime | State |
-|---|---|---|---|
-| Linux | natively on the host kernel, rootless available | Podman 4.9+ or Docker 24+ | first class |
-| macOS | inside Docker Desktop or colima's VM | Docker 24+ | supported, VM boundary |
-| Windows (WSL2) | inside Docker Desktop's VM | Docker 24+ | supported, VM boundary |
+| Path | Role |
+|---|---|
+| `apps/web` | Next.js 16 App Router dashboard and thin API. Enqueues work, never builds. |
+| `apps/worker` | Separate Node process running BullMQ: builds, deploys, health checks, backups, metrics, cron. |
+| `packages/core` | Domain logic — deploy engine, dockerode, ssh2, simple-git, execa, proxy config. |
+| `packages/db` | Drizzle schema, migrations and the typed client (Postgres). |
+| `packages/ui` | Shared shadcn/ui primitives. |
+| `packages/config` | tsconfig presets and typed environment validation. |
 
-`./install.sh --check` reports what the current machine has and installs nothing.
+Long deploys, WebSockets and background jobs never run inside a Next route handler.
+
+## Development
+
+Requirements: Node 24 or newer, pnpm 12, and Podman or Docker for the supporting services.
+
+```sh
+pnpm install
+pnpm dev             # http://localhost:3000
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build           # standalone server under apps/web/.next/standalone
+pnpm start
+```
+
+Database and queue commands (available once the schema lands):
+
+```sh
+pnpm db:generate
+pnpm db:migrate
+pnpm db:studio
+```
+
+## Configuration
+
+| Variable | Meaning |
+|---|---|
+| `DATABASE_URL` | Postgres connection string |
+| `REDIS_URL` | Redis connection string (BullMQ) |
+| `BETTER_AUTH_SECRET` | Session signing secret |
+| `ENCRYPTION_KEY` | 32-byte key for AES-256-GCM encryption of secrets at rest |
+| `PORT` | Panel port (default `8420` in a source install) |
+| `HOSTNAME` | Bind address; keep it loopback unless TLS terminates in front |
+| `ENERTHYA_STATE_DIR` | Legacy panel state directory (removed with the single-admin store) |
 
 ## Install
 
@@ -30,57 +67,25 @@ Or from a checkout, building locally:
 ./install.sh --from-source "$PWD"
 ```
 
-Requirements: Node 24 or newer, plus Podman or Docker as shown above. The script verifies the
-release checksum when it downloads a build.
+`./install.sh --check` reports what the current machine has and installs nothing. The script
+verifies the release checksum when it downloads a build.
 
-## Run
+## Status
 
-```sh
-ENERTHYA_STATE_DIR=~/.enerthya-state PORT=8420 node ~/.local/share/enerthya-host/current/server.js
-```
+- Works: pnpm workspace, typed packages, Biome, Vitest, standalone build, container-runtime
+  detection, legacy local sign-in for the panel.
+- Not yet: teams and roles, servers, projects, applications, deployments, domains and SSL,
+  encrypted env vars, logs and terminal, managed databases, backups, metrics, notifications.
 
-Open `http://127.0.0.1:8420/`. The first visit creates the administrator; there is no email, no
-cloud account and no recovery link — the password you set is the only way in, and resetting it
-means removing the account file on the host.
-
-| Variable | Default | Meaning |
-|---|---|---|
-| `PORT` | `8420` | Loopback port |
-| `HOSTNAME` | `127.0.0.1` | Bind address; do not expose without TLS in front |
-| `ENERTHYA_STATE_DIR` | `.enerthya-state` | Where the account and session key live (0700 dir, 0600 files) |
-| `ENERTHYA_PANEL_SECURE` | unset | `1` marks the session cookie `Secure` behind TLS |
-
-## What works now
-
-- First-run administrator creation and sign-in, scrypt-hashed on this machine.
-- HttpOnly, SameSite=Strict sessions signed with a key kept in the state directory.
-- Container runtime detection: Podman and Docker, with the operating-system boundary stated.
-- `/api/health` and `/api/runtime` expose exactly what the panel knows.
-
-## What does not exist yet
-
-- Creating, starting, stopping or updating an application.
-- Backups, verification and restore.
-- Team accounts and roles.
-- Any network exposure story beyond "bind loopback and put TLS in front".
-
-## Development
-
-```sh
-npm ci
-npm run dev        # http://localhost:3000
-npm run typecheck
-npm run build      # standalone server in .next/standalone
-npm start
-```
-
-Design decisions live in `DESIGN.md`; product truth lives in `PRODUCT.md`.
+See `CLAUDE.md` for the architecture rules and the stage order, `PRODUCT.md` for product truth.
+`DESIGN.md` currently describes the legacy panel and is rewritten with the new dashboard.
 
 ## Security
 
-The panel is local: it binds `127.0.0.1`, keeps its account and session key in a private state
-directory, sends nothing to a third party, and refuses cross-origin state-changing requests.
-There is no rate limiting or lockout yet beyond the cost of scrypt.
+Secrets are encrypted at rest with AES-256-GCM. External commands run through `execa` argument
+arrays, never through a shell string. Every input is validated with zod on both the API and the
+form. The panel binds loopback by default, sends nothing to a third party, and refuses
+cross-origin state-changing requests.
 
 ## Licence
 

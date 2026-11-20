@@ -23,6 +23,7 @@ coverage/
 .nyc_output/
 playwright-report/
 test-results/
+apps/web/e2e/.state/
 
 # ---- Build caches --------------------------------------------------------
 .turbo/
@@ -30,6 +31,9 @@ test-results/
 .eslintcache
 .cache/
 tmp/
+dist/
+.pnpm-store/
+pnpm-debug.log*
 
 # ---- Deployment ----------------------------------------------------------
 .vercel/

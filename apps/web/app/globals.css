@@ -1,0 +1,207 @@
+/* ==========================================================================
+   Enerthya Host — design tokens
+   One place for colour, type, space, motion. Nothing below this file should
+   hard-code a colour or a px type size.
+   ========================================================================== */
+
+/* Tailwind arrives for the panel shell: shadcn/ui's primitives are markup plus
+   utility classes, and its CLI only recognises the plain import below. The
+   import is deliberately whole, so its reset ships too — but Tailwind keeps
+   every layer it ships in (`theme`, `base`, `utilities`), and the rules below
+   and in panel.css are unlayered, so they win every conflict regardless of
+   specificity. The reset can only reach properties this design system has not
+   set, which is the behaviour we want from a reset. */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* The shared component package lives outside this app; Tailwind's automatic
+   source detection stops at the app root, so it is named explicitly. */
+@source "../../../packages/ui/src";
+
+@font-face {
+  font-family: "Archivo";
+  src: url("/fonts/archivo-latin-var.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-latin-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-latin-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---- colour -----------------------------------------------------------
+     Paper and ink do the work. Mint is a semantic colour, not a brand wash:
+     it may only mark a verified equality (A = A), a passing checksum, or a
+     confirmed verification row. Never a button, heading, or background block.
+     Contrast measured against #ffffff / #0b0c0b and recorded in DESIGN.md.
+     ---------------------------------------------------------------------- */
+  --paper: #ffffff;
+  --paper-2: #f5f6f4;
+  --paper-3: #eceee9;
+  --ink: #0b0c0b;
+  --ink-80: #2b2e2b;
+  --ink-60: #5f6360;
+  --ink-45: #858984;
+  --rule: #dcdfd9;
+  --rule-strong: #b7bbb4;
+
+  --mint-100: #e7f7f0;
+  --mint-300: #9bebcd;
+  --mint-500: #34d399;
+  --mint-700: #06704d;
+  --mint-900: #04452f;
+
+  --inverse-bg: #0b0c0b;
+  --inverse-text: #f4f5f2;
+  --inverse-muted: #a8aca6;
+  --inverse-rule: #2a2d2a;
+
+  --focus: #0b0c0b;
+  --focus-inverse: #f4f5f2;
+
+  /* ---- type -------------------------------------------------------------
+     Archivo for display and UI; IBM Plex Mono for labels, commands, data.
+     ---------------------------------------------------------------------- */
+  --font-display: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --text-xs: 0.75rem;        /* 12 — mono labels only */
+  --text-sm: 0.875rem;       /* 14 — table text, captions */
+  --text-base: 1.0625rem;    /* 17 — body */
+  --text-md: 1.1875rem;      /* 19 — lead paragraph */
+  --text-lg: clamp(1.375rem, 1.15rem + 0.9vw, 1.75rem);
+  --text-xl: clamp(1.75rem, 1.35rem + 1.8vw, 2.5rem);
+  --text-2xl: clamp(2.125rem, 1.55rem + 2.6vw, 3.375rem);
+  --text-3xl: clamp(2.5rem, 1.7rem + 3.8vw, 4.75rem);
+
+  --leading-display: 1.03;
+  --leading-heading: 1.1;
+  --leading-body: 1.62;
+
+  --tracking-display: -0.035em;
+  --tracking-heading: -0.022em;
+  --tracking-label: 0.12em;
+
+  /* ---- space -----------------------------------------------------------
+     4px base. Section rhythm is fluid, interior rhythm is fixed.
+     ---------------------------------------------------------------------- */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.25rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --s-10: 2.5rem;
+  --s-12: 3rem;
+  --s-16: 4rem;
+  --s-20: 5rem;
+  --s-24: 6rem;
+  --s-32: 8rem;
+
+  --shell: 76rem;                                  /* 1216 */
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  --section-y: clamp(3.5rem, 7vw, 6.5rem);
+  --header-h: 4rem;
+
+  --r-1: 2px;
+  --r-2: 3px;
+
+  /* ---- motion ----------------------------------------------------------- */
+  --d-1: 140ms;
+  --d-2: 220ms;
+  --d-3: 360ms;
+  --ease: cubic-bezier(0.2, 0.65, 0.25, 1);
+
+  /* ---- layers ----------------------------------------------------------- */
+  --z-header: 40;
+  --z-skip: 100;
+
+  /* ---- primitive aliases ------------------------------------------------
+     The names shadcn/ui's components read. Every one of them points at a
+     token above, so a primitive can never introduce a colour the design
+     system does not have. There is no dark scheme: the panel is paper and
+     ink, and a dark variant would be a second visual world nobody asked for.
+     ---------------------------------------------------------------------- */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--paper);
+  --secondary: var(--paper-3);
+  --secondary-foreground: var(--ink);
+  --muted: var(--paper-2);
+  --muted-foreground: var(--ink-60);
+  --accent: var(--paper-3);
+  --accent-foreground: var(--ink);
+  /* The system has no destructive colour: a refusal is wording, a status is a
+     receipt. A destructive action reads as the heaviest ink, not as red. */
+  --destructive: var(--ink);
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--ink);
+  --radius: var(--r-1);
+}
+
+@theme inline {
+  --font-heading: var(--font-display);
+  --font-sans: var(--font-display);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius));
+  --radius-md: calc(var(--radius) * 1.5);
+  --radius-lg: var(--r-2);
+  --radius-xl: var(--r-2);
+  --radius-2xl: var(--r-2);
+  --radius-3xl: var(--r-2);
+  --radius-4xl: var(--r-2);
+}
+
+/* Only a border colour is set globally, so a primitive that forgets one still
+   draws a hairline rather than a black box. Focus, body colour and layout stay
+   in panel.css, where they are written against the design system by hand. */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
