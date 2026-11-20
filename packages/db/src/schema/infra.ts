@@ -50,6 +50,8 @@ export const servers = pgTable(
     isLocal: boolean("is_local").notNull().default(false),
     status: serverStatus("status").notNull().default("pending"),
     dockerVersion: text("docker_version"),
+    // SHA256 base64 of the host key, pinned on first successful probe.
+    hostKeyFingerprint: text("host_key_fingerprint"),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     createdAt,
     updatedAt,

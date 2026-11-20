@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { Client } from "ssh2";
 
 /**
@@ -11,11 +12,31 @@ export type SshTarget = {
   port: number;
   username: string;
   privateKey: string;
+  /** Pinned on first connect; a different key is refused, not trusted. */
+  expectedHostKey?: string | null;
 };
 
 export type ProbeResult =
-  | { ok: true; runtime: "podman" | "docker" | null; version: string | null }
+  | {
+      ok: true;
+      runtime: "podman" | "docker" | null;
+      version: string | null;
+      fingerprint: string;
+    }
   | { ok: false; error: string };
+
+/** OpenSSH-style fingerprint: SHA256:<base64 without padding>. */
+export function hostKeyFingerprint(key: Buffer): string {
+  return `SHA256:${createHash("sha256").update(key).digest("base64").replace(/=+$/, "")}`;
+}
+
+export function checkHostKey(
+  key: Buffer,
+  expected?: string | null,
+): { ok: boolean; fingerprint: string } {
+  const fingerprint = hostKeyFingerprint(key);
+  return { ok: !expected || expected === fingerprint, fingerprint };
+}
 
 const RUNTIME_COMMAND =
   "command -v podman >/dev/null 2>&1 && podman --version || " +
@@ -37,6 +58,8 @@ export function probeServer(target: SshTarget, timeoutMs = 10_000): Promise<Prob
   return new Promise((resolve) => {
     const client = new Client();
     let settled = false;
+    let fingerprint = "";
+    let refusedHostKey = false;
 
     const finish = (result: ProbeResult) => {
       if (settled) return;
@@ -51,7 +74,14 @@ export function probeServer(target: SshTarget, timeoutMs = 10_000): Promise<Prob
       timeoutMs,
     );
 
-    client.on("error", (error) => finish({ ok: false, error: error.message }));
+    client.on("error", (error) =>
+      finish({
+        ok: false,
+        error: refusedHostKey
+          ? `Host key changed. Expected ${target.expectedHostKey}, got ${fingerprint}.`
+          : error.message,
+      }),
+    );
 
     client.on("ready", () => {
       client.exec(RUNTIME_COMMAND, (error, stream) => {
@@ -65,7 +95,7 @@ export function probeServer(target: SshTarget, timeoutMs = 10_000): Promise<Prob
         });
         stream.on("close", () => {
           const { runtime, version } = parseRuntimeOutput(output);
-          finish({ ok: true, runtime, version });
+          finish({ ok: true, runtime, version, fingerprint });
         });
       });
     });
@@ -76,6 +106,12 @@ export function probeServer(target: SshTarget, timeoutMs = 10_000): Promise<Prob
       username: target.username,
       privateKey: target.privateKey,
       readyTimeout: timeoutMs,
+      hostVerifier: (key: Buffer) => {
+        const check = checkHostKey(key, target.expectedHostKey);
+        fingerprint = check.fingerprint;
+        refusedHostKey = !check.ok;
+        return check.ok;
+      },
     });
   });
 }

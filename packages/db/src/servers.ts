@@ -17,6 +17,7 @@ export const SERVER_SUMMARY = {
   isLocal: servers.isLocal,
   status: servers.status,
   dockerVersion: servers.dockerVersion,
+  hostKeyFingerprint: servers.hostKeyFingerprint,
   lastSeenAt: servers.lastSeenAt,
 };
 
@@ -29,6 +30,7 @@ export type ServerSummary = {
   isLocal: boolean;
   status: "pending" | "ready" | "unreachable";
   dockerVersion: string | null;
+  hostKeyFingerprint: string | null;
   lastSeenAt: Date | null;
 };
 

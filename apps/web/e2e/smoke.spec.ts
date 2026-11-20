@@ -107,6 +107,7 @@ test.describe
       const row = page.locator(".server", { hasText: "E2E Box" });
       await expect(row).toBeVisible();
       await expect(row).toContainText("deploy@e2e.example.com:2222");
+      await expect(row).toContainText("host key not pinned");
 
       await row.getByRole("button", { name: "Remove" }).click();
       await expect(page.getByText("E2E Box")).toHaveCount(0);

@@ -1,5 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { parseRuntimeOutput } from "../src/ssh";
+import { checkHostKey, hostKeyFingerprint, parseRuntimeOutput } from "../src/ssh";
+
+describe("host key", () => {
+  const key = Buffer.from("host-key-a");
+  const other = Buffer.from("host-key-b");
+
+  it("formats an OpenSSH-style SHA256 fingerprint", () => {
+    expect(hostKeyFingerprint(key)).toMatch(/^SHA256:[A-Za-z0-9+/]{43}$/);
+  });
+
+  it("trusts an unpinned key on first connect and reports it", () => {
+    expect(checkHostKey(key)).toEqual({ ok: true, fingerprint: hostKeyFingerprint(key) });
+  });
+
+  it("accepts the pinned key", () => {
+    expect(checkHostKey(key, hostKeyFingerprint(key)).ok).toBe(true);
+  });
+
+  it("refuses a different key instead of re-pinning it", () => {
+    const result = checkHostKey(other, hostKeyFingerprint(key));
+    expect(result.ok).toBe(false);
+    expect(result.fingerprint).toBe(hostKeyFingerprint(other));
+  });
+});
 
 describe("runtime probe output", () => {
   it("reads podman", () => {
