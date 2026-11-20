@@ -1,5 +1,10 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# drizzle-kit ships esbuild, whose postinstall is required for the CLI to run.
+allowBuilds:
+  esbuild: true
+
 minimumReleaseAgeExclude:
   - lucide-react@1.76.0
