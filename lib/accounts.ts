@@ -1,4 +1,4 @@
-import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 import { lstat, mkdir, open, readFile, rename } from "node:fs/promises";
 import path from "node:path";
 
@@ -157,7 +157,13 @@ export async function verifyPassword(username: string, password: string): Promis
 
   const derived = await derive(password || "", Buffer.from(record.salt, "hex"), record.params);
   const expected = Buffer.from(record.digest, "hex");
-  const sameUser = timingSafeEqual(Buffer.from(record.username), Buffer.from(normalised));
+  // Both sides go through SHA-256 first so the buffers are always 32 bytes.
+  // timingSafeEqual throws on unequal lengths, which would turn a username of
+  // the wrong length into a 500 and reveal the stored name's length.
+  const sameUser = timingSafeEqual(
+    createHash("sha256").update(record.username).digest(),
+    createHash("sha256").update(normalised).digest(),
+  );
   return sameUser && derived.length === expected.length && timingSafeEqual(derived, expected);
 }
 

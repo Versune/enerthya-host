@@ -112,14 +112,14 @@ The first screen behaves like the front door of the machine it runs on, not a Sa
 
 The voice is declarative and procedural. Labels are mono and uppercase; body copy is plain Archivo; the status line is a receipt with rules at top and bottom, not a toast or a callout. The world deliberately withholds mint, its only semantic accent, because on these surfaces nothing has been verified. The result should feel installed, local and accountable, with the machine's own record on the page.
 
-This system records the shipped auth build: `/setup` (create the administrator) and `/` (sign in). The build begins with the H1; the surface brief's separate `FIRST RUN` label was not built. The honest state is part of the visual contract: the receipt and the build note say plainly that nothing was created or changed.
+This system records the shipped auth build: `/setup` (create the administrator) and `/` (sign in). The build begins with the H1; the surface brief's separate `FIRST RUN` label was not built. The honest state is part of the visual contract: the receipt reports the server's literal answer, and the panel never claims more than the process did.
 
 **Key Characteristics:**
 - White paper (#ffffff), near-black ink (#0b0c0b), no brand accent on the auth surfaces.
 - Archivo at editorial scale for headings and body; IBM Plex Mono for labels, hints, ledger terms, receipts and footer.
 - 1px hairlines for structure; fields are underlines, not boxes; no shadows, gradients or glass.
 - Asymmetric 12-column split at 1024px: form in columns 1–6, ledger in 8–12, separated by a vertical hairline.
-- Honest state: the receipt says nothing was created; the build note says submitting changes nothing.
+- Honest state: the receipt reports the server's literal answer; nothing is claimed beyond what the process did.
 
 ## Colors
 
@@ -164,10 +164,10 @@ The declared `--ink-45` (#858984, 3.55:1 on paper) is not used by the shipped su
 - **Body** (400, 1.0625rem / 17px, line-height 1.62): base copy and field text. Ledger detail is 0.9375rem / 15px at 1.65, max 42ch.
 - **Body Small** (400, 0.875rem / 14px, line-height 1.62): inline links and the skip link.
 - **Label** (500 mono, 0.75rem / 12px, line-height 1.62, tracking 0.12em, uppercase): field labels, ledger terms, the ledger title and the environment label, in ink-60.
-- **Receipt** (400 mono, 0.8125rem / 13px, line-height 1.7): the status receipt and the build note. The status body is ink-80; the build note is ink-60. The footer and ledger foot are 0.75rem mono, with 0.05em tracking on the footer.
+- **Receipt** (400 mono, 0.8125rem / 13px, line-height 1.7): the status receipt, body in ink-80. The footer and ledger foot are 0.75rem mono, with 0.05em tracking on the footer.
 
 ### Named Rules
-**The Mono Is Metadata Rule.** IBM Plex Mono appears only on labels, hints, ledger terms, the receipt/status, the build note, the environment label and the footer. Headings, ledes, body copy, button labels and links stay Archivo.
+**The Mono Is Metadata Rule.** IBM Plex Mono appears only on labels, hints, ledger terms, the receipt/status, the environment label and the footer. Headings, ledes, body copy, button labels and links stay Archivo.
 
 ## Layout
 
@@ -175,7 +175,7 @@ The frame is a full-height flex column: a top bar with the brand at the left and
 
 The screen is a single column below 1024px: top padding `clamp(2.5rem, 5vw, 4.5rem)`, bottom padding 3rem, gutter at the sides, and a 2.5rem gap between the form column and the ledger. At 1024px and up it becomes a 12-column grid, max-width 78rem, centered, with a column gap of `clamp(1.5rem, 3vw, 3rem)`. The form column spans columns 1–6; the ledger starts at column 8 and spans 5 columns, with a 1px left rule and `clamp(1.5rem, 3vw, 2.75rem)` of left padding. At 375 the ledger follows the form and the H1 drops to a single-column measure.
 
-The form itself is max 27rem wide. Fields are stacked 1.5rem apart. Actions wrap with 0.75rem row and 1.25rem column gaps. The build note is max 40ch; the receipt is max 46ch. Interior rhythm is fixed on a 4px base; section rhythm is fluid. The shipped screen uses a 78rem max width while the declared `--shell` token is 76rem and unused; 78rem is the recorded value.
+The form itself is max 27rem wide. Fields are stacked 1.5rem apart. Actions wrap with 0.75rem row and 1.25rem column gaps. The receipt is max 46ch. Interior rhythm is fixed on a 4px base; section rhythm is fluid. The shipped screen uses a 78rem max width while the declared `--shell` token is 76rem and unused; 78rem is the recorded value.
 
 The only layout breakpoint in the shipped CSS is 1024px. The other media query is `prefers-reduced-motion`.
 
@@ -225,7 +225,7 @@ The form language is rectilinear and open. The button and the skip link take a 2
 - **Focus:** 2px ink outline offset 4px plus an ink bottom rule.
 - **Invalid:** the bottom rule becomes ink at 2px; the error is mono 0.75rem ink text prefixed `— `; the field carries `aria-invalid` and is described by the error; the failure is also announced through the layout's polite live region, and focus moves to the first failing field.
 - **Hint:** mono 0.75rem, line-height 1.65, ink-60. When the setup password reaches 12 characters the hint darkens to ink-80; there is no mint or checkmark.
-- **Empty / valid-but-unwired:** an empty field is the strong-hairline underline. A valid submission does not navigate: it renders the receipt. No account or session is created in this build.
+- **Empty / valid:** an empty field is the strong-hairline underline. A valid submission navigates: setup creates the account and signs in, sign-in issues a session, and both land on the signed-in screen.
 
 ### Receipt / Status
 - **Shape:** an open block with a 1px ink top rule and a 1px hairline bottom rule, 1rem of padding above and below, no fill, no side stripe and no radius.
@@ -257,10 +257,10 @@ The form language is rectilinear and open. The button and the skip link take a 2
 ### Do:
 - **Do** use Machine Ink (#0b0c0b) for primary text, the primary button, focus rings, selection and the structural top rules; use Paper (#ffffff) for the canvas.
 - **Do** keep the 12-column split at 1024px: form in columns 1–6, ledger in 8–12; stack the ledger after the form below 1024px.
-- **Do** keep IBM Plex Mono on labels, hints, ledger terms, receipts, the build note and the footer; keep headings, body, button labels and links in Archivo.
+- **Do** keep IBM Plex Mono on labels, hints, ledger terms, receipts and the footer; keep headings, body, button labels and links in Archivo.
 - **Do** render fields as a label over a single underline, with a 2px ink outline at 4px offset on focus.
 - **Do** measure contrast: body copy is ink or ink-80; mono metadata is ink-60 (6.10:1); verified text, when it exists, is mint-700 (6.12:1).
-- **Do** report the engine's answer verbatim: a refusal keeps its own wording, and a missing CLI is shown as `The panel cannot reach the engine` with the remedy, never as a generic error.
+- **Do** report the engine's answer verbatim: a refusal keeps its own wording, and an unreadable state directory is shown as `The panel cannot reach the engine` with the remedy, never as a generic error.
 - **Do** theme `::selection` (ink on paper) and every focus ring from the palette.
 - **Do** keep the ledger at three facts on the auth screens, one term and one sentence per row.
 

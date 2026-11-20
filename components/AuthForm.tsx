@@ -74,10 +74,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       setServerError(
-        data.error ??
-          (response.status === 503
-            ? "The enerthya-host CLI is not available to the panel process."
-            : "The request was refused."),
+        data.error ?? `The panel answered with status ${response.status} and no message.`,
       );
     } catch {
       setServerError("The panel process did not answer. Check that it is still running.");

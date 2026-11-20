@@ -28,7 +28,7 @@ export default async function SetupPage() {
         title="An administrator already exists."
         lede="Setup runs once. This machine already has its account, and this screen refuses to create a second one."
         ledgerTitle="What you can do"
-        ledgerFoot="To start over, reset the account from the CLI on the host"
+        ledgerFoot="To start over, delete the account record in the state directory on the host"
         facts={[
           {
             term: "Sign in",
@@ -37,7 +37,7 @@ export default async function SetupPage() {
           {
             term: "Reset",
             detail:
-              "Run `enerthya-host panel account reset --confirm`, then open this screen again.",
+              "Delete `panel-account.json` from the state directory, then open this screen again.",
           },
           {
             term: "No web reset",
@@ -76,7 +76,7 @@ export default async function SetupPage() {
         {
           term: "No recovery key",
           detail:
-            "Losing the password means resetting it from the CLI on the host — a deliberate trade, not an oversight.",
+            "Losing the password means deleting the account record on the host — a deliberate trade, not an oversight.",
         },
       ]}
     >
