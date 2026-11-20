@@ -124,6 +124,9 @@ Each stage ships working. A placeholder is not a stage.
 - Releases are cut by merging the release PR that release-please opens on `main`. Its tag
   (`vX.Y.Z`) triggers the artifact workflow, which attaches `enerthya-host-vX.Y.Z.tar.gz` and
   `SHA256SUMS`; `install.sh` verifies that pair. Do not create releases or assets by hand.
+- The enterprise forbids `GITHUB_TOKEN` from creating PRs, so release-please authenticates with
+  `RELEASE_PLEASE_TOKEN`: a fine-grained PAT with **Contents: write** and **Pull requests: write**
+  on this repository. Without that secret the release workflow fails at "create pull request".
 - Commit messages are Conventional Commits because they decide the next version.
 - CodeQL uses **GitHub's default setup**. Do not add `.github/workflows/codeql.yml`: an advanced
   configuration cannot upload alongside the default setup.

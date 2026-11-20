@@ -16,7 +16,13 @@ jobs:
       # Conventional commits drive the version and CHANGELOG. Merging the
       # release PR tags the commit and publishes the GitHub release; the
       # artifact workflow then attaches the installable build.
+      #
+      # The enterprise policy forbids the built-in GITHUB_TOKEN from creating
+      # pull requests, so this uses a fine-grained PAT stored as
+      # RELEASE_PLEASE_TOKEN (Contents and Pull requests: write). A PAT also
+      # means the release PR triggers CI, which a GITHUB_TOKEN PR would not.
       - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4
         with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
