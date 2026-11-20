@@ -1,12 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { firstIssue, signInSchema } from "@/lib/validation/auth";
 
 export function SignInForm() {
-  const router = useRouter();
   const ids = { email: useId(), password: useId() };
 
   const [email, setEmail] = useState("");
@@ -38,8 +36,9 @@ export function SignInForm() {
         return;
       }
 
-      router.replace("/");
-      router.refresh();
+      // Hard navigation so the dashboard is rendered by the server with the
+      // session cookie this response just set.
+      window.location.assign("/");
     } finally {
       setSubmitting(false);
     }
