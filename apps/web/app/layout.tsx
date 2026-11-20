@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   description:
     "The Enerthya Host panel runs on this machine. Local account, no cloud, no telemetry.",
   applicationName: "Enerthya Host panel",
+  // Static files in public/ rather than the app/ metadata convention: they are
+  // assets, not routes, and the standalone bundle copies public/ verbatim.
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
   robots: { index: false, follow: false },
 };
 
