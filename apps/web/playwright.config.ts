@@ -23,6 +23,13 @@ export default defineConfig({
     url: `${baseURL}/api/health`,
     reuseExistingServer: false,
     timeout: 180_000,
-    env: { ENERTHYA_STATE_DIR: "./e2e/.state" },
+    env: {
+      ENERTHYA_STATE_DIR: "./e2e/.state",
+      // better-auth refuses to start without a secret. The database is only
+      // opened by requests that read or write a session.
+      BETTER_AUTH_SECRET: "e2e-secret-not-used-anywhere-else-0123456789",
+      BETTER_AUTH_URL: baseURL,
+      DATABASE_URL: "postgres://enerthya:enerthya@127.0.0.1:5432/enerthya",
+    },
   },
 });

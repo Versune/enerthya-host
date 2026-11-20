@@ -16,6 +16,7 @@
       "!**/.next",
       "!**/dist",
       "!**/coverage",
+      "!**/drizzle",
       "!**/next-env.d.ts",
       "!**/pnpm-lock.yaml"
     ]

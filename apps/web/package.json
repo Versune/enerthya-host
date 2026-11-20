@@ -10,7 +10,9 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@enerthya/db": "workspace:*",
     "@enerthya/ui": "workspace:*",
+    "better-auth": "1.7.26",
     "class-variance-authority": "0.7.1",
     "cn": "0.5.2",
     "lucide-react": "1.76.0",

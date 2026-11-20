@@ -56,6 +56,12 @@ test.describe
       await expect(page.getByRole("heading", { name: `Signed in as ${USERNAME}.` })).toBeVisible();
     });
 
+    test("better-auth answers on its own route", async ({ request }) => {
+      const response = await request.get("/api/auth/ok");
+      expect(response.ok()).toBe(true);
+      expect(await response.json()).toMatchObject({ ok: true });
+    });
+
     test("health reports what the panel knows", async ({ request }) => {
       const response = await request.get("/api/health");
       expect(response.ok()).toBe(true);
