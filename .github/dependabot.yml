@@ -10,6 +10,13 @@ updates:
       dev-dependencies:
         dependency-type: "development"
         update-types: ["minor", "patch"]
+    ignore:
+      # The panel ships on Node 24: install.sh refuses anything older, CI runs
+      # 24, and the runtime is what the types must describe. Typing against a
+      # later major would let tsc accept APIs the host does not have, so
+      # @types/node follows the runtime instead of Dependabot.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
