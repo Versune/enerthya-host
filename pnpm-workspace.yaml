@@ -3,8 +3,12 @@ packages:
   - "packages/*"
 
 # drizzle-kit ships esbuild, whose postinstall is required for the CLI to run.
+# ssh2's optional cpu-features native addon is denied: it is an optimisation,
+# and ssh2 works without it.
 allowBuilds:
   esbuild: true
+  ssh2: true
+  cpu-features: false
 
 minimumReleaseAgeExclude:
   - lucide-react@1.76.0
