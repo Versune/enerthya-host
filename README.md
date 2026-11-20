@@ -53,7 +53,6 @@ pnpm db:studio
 | `ENCRYPTION_KEY` | 32-byte key for AES-256-GCM encryption of secrets at rest |
 | `PORT` | Panel port (default `8420` in a source install) |
 | `HOSTNAME` | Bind address; keep it loopback unless TLS terminates in front |
-| `ENERTHYA_STATE_DIR` | Legacy panel state directory (removed with the single-admin store) |
 
 ## Install
 
@@ -73,9 +72,11 @@ verifies the release checksum when it downloads a build.
 ## Status
 
 - Works: pnpm workspace, typed packages, Biome, Vitest, standalone build, container-runtime
-  detection, legacy local sign-in for the panel.
-- Not yet: teams and roles, servers, projects, applications, deployments, domains and SSL,
-  encrypted env vars, logs and terminal, managed databases, backups, metrics, notifications.
+  detection, email/password sign-up and sign-in through better-auth, organizations created at
+  sign-up, and a Playwright suite that drives all of it.
+- Not yet: invitations and role enforcement, servers, projects, applications, deployments,
+  domains and SSL, encrypted env vars, logs and terminal, managed databases, backups, metrics,
+  notifications.
 
 See `CLAUDE.md` for the architecture rules and the stage order, `PRODUCT.md` for product truth.
 `DESIGN.md` currently describes the legacy panel and is rewritten with the new dashboard.
