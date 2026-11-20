@@ -1,0 +1,54 @@
+name: Feature request
+description: Propose a scoped change or a new capability.
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem before the solution. Enerthya Host is early: large changes should
+        start here, and the smallest version that solves the problem is the one that gets built.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you unable to do today, and who is affected?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: The smallest behavior, screen or route that solves it.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and limits
+      description: What this will not do, and which state, security or OS boundaries it must keep.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Authentication and accounts
+        - Runtime detection and containers
+        - Deployments
+        - Backups, verify and restore
+        - Interface and design system
+        - Installer, releases and CI
+        - Documentation
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Boundaries
+      options:
+        - label: This keeps the panel local (loopback, local account, no third-party service).
+          required: true
+        - label: This states what it does not cover rather than implying it is finished.
+          required: true

@@ -1,0 +1,36 @@
+# ---- Node / Next ---------------------------------------------------------
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# ---- Local state and secrets --------------------------------------------
+.enerthya-state/
+.env
+.env.*
+!.env.example
+*.log
+
+# ---- Editors and OS ------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+
+# ---- Tests and tooling ---------------------------------------------------
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# ---- Build caches --------------------------------------------------------
+.turbo/
+.vite/
+.eslintcache
+.cache/
+tmp/
+
+# ---- Deployment ----------------------------------------------------------
+.vercel/
+.netlify/

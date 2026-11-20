@@ -1,0 +1,62 @@
+name: Bug report
+description: Something in the panel does not work as described.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste passwords, tokens, account records or anything from the state directory.
+        Report security problems privately: https://github.com/Versune/enerthya-host/security/advisories/new
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The behavior you saw, with the exact message if there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: From a clean state where possible — setup, sign in, then the action.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Panel version
+      description: Release tag, or the commit you built from.
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows (WSL2)
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Container runtime
+      options:
+        - Podman
+        - Docker
+        - None installed
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: What the panel reports
+      description: Output of `/api/health` and `/api/runtime` from a browser or curl. Remove anything private.
