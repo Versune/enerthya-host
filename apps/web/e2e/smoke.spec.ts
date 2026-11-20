@@ -68,6 +68,19 @@ test.describe
     });
   });
 
+test.describe("appearance", () => {
+  test("dark is the default and the toggle survives a reload", async ({ page }) => {
+    await page.goto("/sign-in");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+    await page.getByRole("button", { name: "Switch to light theme" }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  });
+});
+
 test.describe("services", () => {
   test("better-auth answers on its own route", async ({ request }) => {
     const response = await request.get("/api/auth/ok");

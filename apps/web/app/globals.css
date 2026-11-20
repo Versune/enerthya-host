@@ -159,6 +159,43 @@
   --input: var(--rule);
   --ring: var(--ink);
   --radius: var(--r-1);
+
+  /* Verified text: mint-700 clears 4.5:1 on paper and is the light-mode step. */
+  --verified-text: var(--mint-700);
+}
+
+/* ---- dark scheme ---------------------------------------------------------
+   Dark is the default: the panel is opened on a server at night more often
+   than not. The world does not change, only which end of the paper-and-ink
+   pair is the surface. Paper becomes the near-black canvas, ink the
+   near-white text, and every hairline drops to a rule that is still visible
+   without becoming a line. Mint-700 is too dark to read here, so verified
+   text uses a lighter step that clears 4.5:1 on the dark canvas.
+   ------------------------------------------------------------------------ */
+[data-theme="dark"] {
+  --paper: #0e100f;
+  --paper-2: #141715;
+  --paper-3: #1b1f1c;
+  --ink: #f1f2ef;
+  --ink-80: #d3d7d0;
+  --ink-60: #a2a7a1;
+  --ink-45: #767c75;
+  --rule: #242824;
+  --rule-strong: #3b403b;
+
+  --mint-100: #0b2a20;
+  --mint-300: #9bebcd;
+  --mint-500: #34d399;
+  --mint-700: #07986a;
+  --mint-900: #d7f7ea;
+  --verified-text: #7fe7c0;
+
+  --inverse-bg: #f1f2ef;
+  --inverse-text: #0b0c0b;
+  --inverse-muted: #5f6360;
+  --inverse-rule: #dcdfd9;
+
+  --focus: #f1f2ef;
 }
 
 @theme inline {
