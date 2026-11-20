@@ -26,6 +26,8 @@ export default defineConfig({
       // better-auth refuses to start without a secret. The suite expects a
       // migrated database (see the e2e job in CI, or `pnpm db:migrate` locally).
       BETTER_AUTH_SECRET: "e2e-secret-not-used-anywhere-else-0123456789",
+      // 32 bytes, base64; only the test database ever sees what it encrypts.
+      ENCRYPTION_KEY: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
       BETTER_AUTH_URL: baseURL,
       DATABASE_URL: "postgres://enerthya:enerthya@127.0.0.1:5432/enerthya",
     },

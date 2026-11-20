@@ -76,7 +76,8 @@ test.describe
 
       await page.getByRole("link", { name: "Servers" }).click();
       await expect(page).toHaveURL(/\/servers$/);
-      await expect(page.getByRole("heading", { name: "No servers yet." })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "1 server." })).toBeVisible();
+      await expect(page.getByText("This machine")).toBeVisible();
 
       await page.getByRole("link", { name: "Projects" }).click();
       await expect(page).toHaveURL(/\/projects$/);
@@ -85,6 +86,30 @@ test.describe
       await page.getByRole("link", { name: "Deployments" }).click();
       await expect(page).toHaveURL(/\/deployments$/);
       await expect(page.getByRole("heading", { name: "Nothing has been deployed." })).toBeVisible();
+    });
+
+    test("a server can be added and removed", async ({ page }) => {
+      await signIn(page);
+      await page.goto("/servers");
+
+      await page.locator("summary", { hasText: "Add a server" }).click();
+      await expect(page.locator('form[data-hydrated="true"]')).toBeVisible();
+
+      await page.getByLabel("Name", { exact: true }).fill("E2E Box");
+      await page.getByLabel("Host", { exact: true }).fill("e2e.example.com");
+      await page.getByLabel("Port").fill("2222");
+      await page.getByLabel("SSH user").fill("deploy");
+      await page
+        .getByLabel("Private key")
+        .fill("-----BEGIN OPENSSH PRIVATE KEY-----\ntest\n-----END-----");
+      await page.getByRole("button", { name: "Add server" }).click();
+
+      const row = page.locator(".server", { hasText: "E2E Box" });
+      await expect(row).toBeVisible();
+      await expect(row).toContainText("deploy@e2e.example.com:2222");
+
+      await row.getByRole("button", { name: "Remove" }).click();
+      await expect(page.getByText("E2E Box")).toHaveCount(0);
     });
 
     test("the command palette navigates with the keyboard", async ({ page }) => {
@@ -105,6 +130,11 @@ test.describe
       await expect(page.getByRole("heading", { name: "No projects yet." })).toBeVisible();
     });
   });
+
+test("the servers API refuses anonymous writes", async ({ request }) => {
+  const response = await request.post("/api/servers", { data: { name: "Nope" } });
+  expect(response.status()).toBe(401);
+});
 
 test("dashboard routes send anonymous visitors to sign-in", async ({ page }) => {
   await page.goto("/deployments");

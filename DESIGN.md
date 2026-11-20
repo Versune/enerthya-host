@@ -429,6 +429,15 @@ brand mark.
   2px radius, paper fill. Input row closed by a hairline; items use the nav's hover and focus fill.
   Esc closes, Enter opens the first match; ⌘K/Ctrl+K opens it anywhere in the shell.
 
+### Server List
+- **Rows:** hairline-divided, name in Archivo over `user@host:port` in mono ink-60; state and
+  runtime on the right in mono, with a 0.5rem status dot. The dot is mint only when a probe
+  verified the runtime; unreachable is ink, untested is ink-45 — never red.
+- **Actions:** quiet buttons (transparent fill, strong-hairline border) for Test and Remove; the
+  local row says "Check runtime". Errors appear as mono text beside the row, not as a toast.
+- **Add form:** inside a disclosure below the list, not a modal. Name/Host/Port/SSH user on one
+  row at ≥860px; the key is a mono textarea with a hint that it is encrypted at rest.
+
 ### Selection and Focus
 - **Selection:** ink background, paper text (`::selection`).
 - **Focus:** every control uses a 2px solid outline from the palette. The button and inline link use

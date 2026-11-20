@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: resolve(process.cwd(), "../.."),
   transpilePackages: ["@enerthya/ui", "@enerthya/db", "@enerthya/core"],
+  // ssh2 ships a native addon; it has to stay a runtime require instead of
+  // being placed into a server chunk.
+  serverExternalPackages: ["ssh2", "cpu-features"],
   poweredByHeader: false,
   reactStrictMode: true,
 };

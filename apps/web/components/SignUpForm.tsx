@@ -1,6 +1,8 @@
 "use client";
 
-import { toSlug } from "@enerthya/core";
+// Subpath, not the barrel: the barrel also exports ssh2 and node:crypto,
+// which must never reach a client bundle.
+import { toSlug } from "@enerthya/core/slug";
 import { useEffect, useId, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { firstIssue, signUpSchema } from "@/lib/validation/auth";

@@ -83,10 +83,10 @@ verifies the release checksum when it downloads a build.
 
 - Works: pnpm workspace, typed packages, Biome, Vitest, standalone build, container-runtime
   detection, email/password sign-up and sign-in through better-auth, organizations created at
-  sign-up, and a Playwright suite that drives all of it.
-- Not yet: invitations and role enforcement, servers, projects, applications, deployments,
-  domains and SSL, encrypted env vars, logs and terminal, managed databases, backups, metrics,
-  notifications.
+  sign-up, the dashboard shell, and a server registry: the local machine is always the first row,
+  remote servers take an SSH key encrypted with AES-256-GCM, and a probe reports the runtime.
+- Not yet: invitations and role enforcement, projects, applications, deployments, domains and SSL,
+  encrypted env vars, logs and terminal, managed databases, backups, metrics, notifications.
 
 See `CLAUDE.md` for the architecture rules and the stage order, `PRODUCT.md` for product truth.
 `DESIGN.md` currently describes the legacy panel and is rewritten with the new dashboard.
