@@ -4,6 +4,17 @@
    hard-code a colour or a px type size.
    ========================================================================== */
 
+/* Tailwind arrives for the panel shell: shadcn/ui's primitives are markup plus
+   utility classes, and its CLI only recognises the plain import below. The
+   import is deliberately whole, so its reset ships too — but Tailwind keeps
+   every layer it ships in (`theme`, `base`, `utilities`), and the rules below
+   and in panel.css are unlayered, so they win every conflict regardless of
+   specificity. The reset can only reach properties this design system has not
+   set, which is the behaviour we want from a reset. */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
 @font-face {
   font-family: "Archivo";
   src: url("/fonts/archivo-latin-var.woff2") format("woff2");
@@ -116,4 +127,77 @@
   /* ---- layers ----------------------------------------------------------- */
   --z-header: 40;
   --z-skip: 100;
+
+  /* ---- primitive aliases ------------------------------------------------
+     The names shadcn/ui's components read. Every one of them points at a
+     token above, so a primitive can never introduce a colour the design
+     system does not have. There is no dark scheme: the panel is paper and
+     ink, and a dark variant would be a second visual world nobody asked for.
+     ---------------------------------------------------------------------- */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--paper);
+  --secondary: var(--paper-3);
+  --secondary-foreground: var(--ink);
+  --muted: var(--paper-2);
+  --muted-foreground: var(--ink-60);
+  --accent: var(--paper-3);
+  --accent-foreground: var(--ink);
+  /* The system has no destructive colour: a refusal is wording, a status is a
+     receipt. A destructive action reads as the heaviest ink, not as red. */
+  --destructive: var(--ink);
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--ink);
+  --radius: var(--r-1);
+}
+
+@theme inline {
+  --font-heading: var(--font-display);
+  --font-sans: var(--font-display);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius));
+  --radius-md: calc(var(--radius) * 1.5);
+  --radius-lg: var(--r-2);
+  --radius-xl: var(--r-2);
+  --radius-2xl: var(--r-2);
+  --radius-3xl: var(--r-2);
+  --radius-4xl: var(--r-2);
+}
+
+/* Only a border colour is set globally, so a primitive that forgets one still
+   draws a hairline rather than a black box. Focus, body colour and layout stay
+   in panel.css, where they are written against the design system by hand. */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }
