@@ -38,6 +38,22 @@ jobs:
   e2e:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: enerthya
+          POSTGRES_PASSWORD: enerthya
+          POSTGRES_DB: enerthya
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U enerthya -d enerthya"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://enerthya:enerthya@127.0.0.1:5432/enerthya
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, GitHub API verified
         with:
@@ -51,6 +67,8 @@ jobs:
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
+      - name: Migrate
+        run: pnpm db:migrate
       - name: Install Chromium
         run: pnpm --filter @enerthya/web exec playwright install --with-deps chromium
       - name: End-to-end tests
