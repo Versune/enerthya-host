@@ -1,0 +1,55 @@
+name: Release artifact
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to attach the build to
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  artifact:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, GitHub API verified
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 12.21.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0, GitHub API verified
+        with:
+          node-version: "24"
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm build
+      - name: Package
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist/stage
+          cp -a apps/web/.next/standalone/. dist/stage/
+          mkdir -p dist/stage/apps/web/.next
+          cp -a apps/web/.next/static dist/stage/apps/web/.next/static
+          # The standalone bundle already carries public/; replace it instead of
+          # nesting a second copy inside it.
+          rm -rf dist/stage/apps/web/public
+          cp -a apps/web/public dist/stage/apps/web/public
+          tar -czf "dist/enerthya-host-${TAG}.tar.gz" -C dist/stage .
+          cd dist
+          sha256sum "enerthya-host-${TAG}.tar.gz" > SHA256SUMS
+          tar -tzf "enerthya-host-${TAG}.tar.gz" | head -20
+      - name: Attach to release
+        run: gh release upload "$TAG" "dist/enerthya-host-${TAG}.tar.gz" dist/SHA256SUMS --clobber
