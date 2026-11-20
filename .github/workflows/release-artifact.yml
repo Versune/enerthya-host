@@ -50,6 +50,8 @@ jobs:
           tar -czf "dist/enerthya-host-${TAG}.tar.gz" -C dist/stage .
           cd dist
           sha256sum "enerthya-host-${TAG}.tar.gz" > SHA256SUMS
-          tar -tzf "enerthya-host-${TAG}.tar.gz" | head -20
+          # sed, not head: head closes the pipe and tar dies with SIGPIPE,
+          # which pipefail turns into a failed step.
+          tar -tzf "enerthya-host-${TAG}.tar.gz" | sed -n '1,20p'
       - name: Attach to release
         run: gh release upload "$TAG" "dist/enerthya-host-${TAG}.tar.gz" dist/SHA256SUMS --clobber
