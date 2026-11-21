@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/Versune/enerthya-host/compare/v0.6.1...v0.7.0) (2026-11-21)
+
+
+### Features
+
+* **install:** ship the deploy worker as an opt-in runtime profile ([#43](https://github.com/Versune/enerthya-host/issues/43)) ([e18754c](https://github.com/Versune/enerthya-host/commit/e18754c390f7efab86ee7a089e65bbcc2f07c3ef))
+
 ## [0.6.1](https://github.com/Versune/enerthya-host/compare/v0.6.0...v0.6.1) (2026-11-21)
 
 
