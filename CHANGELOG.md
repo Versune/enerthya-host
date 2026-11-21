@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/Versune/enerthya-host/compare/v0.2.0...v0.3.0) (2026-11-21)
+
+
+### Features
+
+* **projects:** create projects with production and staging, gated by role ([#30](https://github.com/Versune/enerthya-host/issues/30)) ([96a8f70](https://github.com/Versune/enerthya-host/commit/96a8f70a9df35bdef48560ce1999d08aa42a1efb))
+* **servers:** pin the SSH host key and refuse a changed one ([#26](https://github.com/Versune/enerthya-host/issues/26)) ([11f8dc3](https://github.com/Versune/enerthya-host/commit/11f8dc345fc45452fd18ff67d8f07d649a2bfd87))
+
+
+### Bug Fixes
+
+* **dev:** generate apps/web/.env on first pnpm dev ([#29](https://github.com/Versune/enerthya-host/issues/29)) ([6421eeb](https://github.com/Versune/enerthya-host/commit/6421eeb34106339dc863f1cbbc2b5f354d428b42))
+
 ## [0.2.0](https://github.com/Versune/enerthya-host/compare/v0.1.0...v0.2.0) (2026-11-20)
 
 
