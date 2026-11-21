@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.7](https://github.com/Versune/enerthya-host/compare/v0.12.6...v0.12.7) (2026-11-21)
+
+
+### Features
+
+* **backups:** upload verified dumps to an S3-compatible bucket ([#72](https://github.com/Versune/enerthya-host/issues/72)) ([d75eec9](https://github.com/Versune/enerthya-host/commit/d75eec910a22c65733ca77268a1a067a0e422a39))
+
+
+### Bug Fixes
+
+* **web:** refresh dashboard copy to match what ships ([#74](https://github.com/Versune/enerthya-host/issues/74)) ([b8ee3e7](https://github.com/Versune/enerthya-host/commit/b8ee3e7a048622eadbb6d058010d30a649303d0e))
+
 ## [0.12.6](https://github.com/Versune/enerthya-host/compare/v0.12.5...v0.12.6) (2026-11-21)
 
 
