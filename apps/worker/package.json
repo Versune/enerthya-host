@@ -7,10 +7,12 @@
     "dev": "node --watch --import tsx --env-file-if-exists=.env src/index.ts",
     "start": "node --import tsx --env-file-if-exists=.env src/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build": "node scripts/build.mjs"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
+    "esbuild": "^0.28.2",
     "typescript": "5.9.3",
     "vitest": "5.1.1"
   },

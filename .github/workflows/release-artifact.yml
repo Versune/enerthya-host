@@ -51,6 +51,9 @@ jobs:
           mkdir -p dist/stage/drizzle
           cp -a packages/db/drizzle/. dist/stage/drizzle/
           # The installer builds this image on the host and runs this stack.
+          pnpm --filter @enerthya/worker build
+          mkdir -p dist/stage/apps/worker
+          cp -a apps/worker/dist dist/stage/apps/worker/dist
           cp docker/Dockerfile dist/stage/Dockerfile
           cp docker/compose.yml dist/stage/compose.yml
           tar -czf "dist/enerthya-host-${TAG}.tar.gz" -C dist/stage .

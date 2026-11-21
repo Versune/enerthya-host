@@ -12,6 +12,7 @@
     "dev": "pnpm --filter @enerthya/web dev",
     "dev:worker": "pnpm --filter @enerthya/worker dev",
     "build": "pnpm --filter @enerthya/web build",
+    "build:worker": "pnpm --filter @enerthya/worker build",
     "start": "pnpm --filter @enerthya/web start",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",

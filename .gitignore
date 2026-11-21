@@ -37,3 +37,6 @@ pnpm-debug.log*
 # ---- Deployment ----------------------------------------------------------
 .vercel/
 .netlify/
+
+# Built by the release artifact, never committed.
+apps/worker/dist

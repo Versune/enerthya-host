@@ -6,6 +6,7 @@
 #   install.sh --check                  # report the host, install nothing
 #   install.sh --version v0.3.0         # pin a release
 #   install.sh --bind 0.0.0.0 --port 8420
+#   install.sh --with-runtime           # also run deploys (mounts the Docker socket)
 #
 # It installs Docker when missing, downloads and verifies the release, builds
 # the panel image locally, starts Postgres + Redis + panel with Compose,
@@ -21,10 +22,11 @@ CHECK_ONLY=0
 BIND="${ENERTHYA_BIND:-127.0.0.1}"
 PORT="${ENERTHYA_PORT:-8420}"
 PUBLIC_URL=""
+WITH_RUNTIME=0
 DATE="$(date +%Y%m%d-%H%M%S)"
 LOG_FILE="$DATA_DIR/install-$DATE.log"
 
-usage() { sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -33,6 +35,7 @@ while [ $# -gt 0 ]; do
     --port) PORT="${2:-}"; shift 2 ;;
     --url) PUBLIC_URL="${2:-}"; shift 2 ;;
     --check) CHECK_ONLY=1; shift ;;
+    --with-runtime) WITH_RUNTIME=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -179,6 +182,7 @@ BETTER_AUTH_TRUSTED_ORIGINS=$TRUSTED
 ENERTHYA_VERSION=$VERSION
 ENERTHYA_BIND=$BIND
 ENERTHYA_PORT=$PORT
+COMPOSE_PROFILES=$([ "$WITH_RUNTIME" = "1" ] && echo runtime || echo "")
 EOF
 chmod 600 "$ENV_FILE"
 
@@ -221,6 +225,12 @@ done
 # ---- start and verify -------------------------------------------------------
 step "Starting the panel"
 "${COMPOSE[@]}" up -d panel
+
+if [ "$WITH_RUNTIME" = "1" ]; then
+  step "Starting the deploy runtime"
+  say "  The worker mounts /var/run/docker.sock: anyone who controls it controls this host."
+  "${COMPOSE[@]}" up -d worker
+fi
 HEALTHY=0
 for _ in $(seq 1 45); do
   code="$(curl -fsS -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/api/health" 2>/dev/null || true)"
@@ -244,5 +254,10 @@ say "  Env      $ENV_FILE (0600)"
 say "  Compose  $DATA_DIR/compose.yml"
 say "  Log      $LOG_FILE"
 say ""
+if [ "$WITH_RUNTIME" = "1" ]; then
+  say "  Deploys  enabled (worker has the Docker socket)"
+else
+  say "  Deploys  disabled — rerun with --with-runtime to let the worker start containers."
+fi
 say "Upgrade: rerun this script (add --version to pin)."
 say "Expose publicly only behind TLS; BETTER_AUTH_URL was set to $PUBLIC_URL."

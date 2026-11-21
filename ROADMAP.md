@@ -11,7 +11,7 @@ Current release: **0.5.0**.
 | Area | What works |
 |---|---|
 | Foundation | pnpm monorepo, Drizzle schema (18 tables), Biome, Vitest, Playwright, release automation |
-| Install | container-first installer: Docker, Postgres, Redis, panel, migrations, healthcheck |
+| Install | container-first installer: Docker, Postgres, Redis, panel, migrations, healthcheck; `--with-runtime` adds the deploy worker |
 | Auth | better-auth email/password, organizations, sessions, 2FA-capable schema |
 | Dashboard | shell with sidebar, ⌘K palette, dark by default |
 | Servers | local-first registry, AES-256-GCM SSH keys, runtime probe, host-key pinning |

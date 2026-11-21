@@ -106,6 +106,8 @@ less install.sh && bash install.sh --check
   pulls an image (or clones a repository and builds its Dockerfile), starts the container on a
   published port, waits for its health check, and only then stops the previous container for that
   application. A deployment that fails removes its own container and leaves the old one running.
+- Also works: the installer ships that worker as an opt-in Compose profile (`--with-runtime`),
+  because it mounts the host's container socket.
 - Not yet: Nixpacks and compose builds, rollback as a command, domains and SSL, encrypted env
   vars, logs and terminal, managed databases, backups, metrics, notifications, invitations.
 
