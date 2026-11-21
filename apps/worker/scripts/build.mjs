@@ -19,6 +19,8 @@ await build({
   bundle: true,
   platform: "node",
   format: "cjs",
+  // The email template is JSX; the automatic runtime keeps React out of scope.
+  jsx: "automatic",
   target: "node24",
   sourcemap: false,
   minify: false,

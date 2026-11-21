@@ -72,10 +72,20 @@ Install Docker Desktop or colima and run the same command inside the Docker VM. 
 | `ENERTHYA_S3_REGION` | region; `auto` for R2 (default) |
 | `ENERTHYA_S3_ACCESS_KEY_ID` | access key |
 | `ENERTHYA_S3_SECRET_ACCESS_KEY` | secret key |
+| `ENERTHYA_SMTP_HOST` | SMTP relay for email notifications |
+| `ENERTHYA_SMTP_PORT` | relay port; 587 (STARTTLS) by default, 465 implies implicit TLS |
+| `ENERTHYA_SMTP_USER` | relay user, when the relay needs one |
+| `ENERTHYA_SMTP_PASSWORD` | relay password |
+| `ENERTHYA_SMTP_FROM` | envelope sender, e.g. `Enerthya <panel@example.com>` |
 
 With the five `ENERTHYA_S3_*` values set, a verified backup is uploaded and the local copy is
 removed; the row records `s3://<bucket>/<key>`. Without them the dump stays on the host, next to
 the database it protects.
+
+Email channels use the install's relay, not their own: with `ENERTHYA_SMTP_HOST` and
+`ENERTHYA_SMTP_FROM` set, a channel that carries an address receives the deployment-failure
+notice. Without them the channel is accepted and the worker logs that it skipped the send, so a
+missing relay is visible instead of silent.
 
 Back up `.env` with the data volumes: without `ENCRYPTION_KEY`, secrets stored in the database
 cannot be decrypted.

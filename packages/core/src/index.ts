@@ -52,6 +52,7 @@ export {
   signPutObject,
 } from "./s3";
 export { toSlug } from "./slug";
+export { type SmtpConfig, smtpConfigFromEnv } from "./smtp";
 export {
   checkHostKey,
   hostKeyFingerprint,
