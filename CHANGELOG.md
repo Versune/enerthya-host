@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/Versune/enerthya-host/compare/v0.3.0...v0.4.0) (2026-11-21)
+
+
+### Features
+
+* **install:** container-first installer that configures the whole stack ([#32](https://github.com/Versune/enerthya-host/issues/32)) ([0d0fb04](https://github.com/Versune/enerthya-host/commit/0d0fb04f2b02f7d8200b04cace9a3802846062c1))
+
 ## [0.3.0](https://github.com/Versune/enerthya-host/compare/v0.2.0...v0.3.0) (2026-11-21)
 
 
