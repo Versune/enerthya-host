@@ -19,9 +19,9 @@ export default async function OverviewPage() {
   return (
     <>
       <PageHeader label="Overview" title={active?.name ?? "No organization yet."}>
-        Signed in as {session.user.name} ({session.user.email}). The dashboard shell is in place;
-        servers, projects and deployments are the next stages, and this panel will say when they are
-        live instead of showing them disabled.
+        Signed in as {session.user.name} ({session.user.email}). A deploy builds, passes its health
+        check and only then replaces the old container; domains, encrypted environment variables,
+        logs, metrics, managed databases and verified backups are here too.
       </PageHeader>
 
       <dl className="ledger">
