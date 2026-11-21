@@ -1,3 +1,4 @@
+export * from "./applications";
 export { createDb, type Database, getDb } from "./client";
 export * from "./members";
 export * from "./projects";
