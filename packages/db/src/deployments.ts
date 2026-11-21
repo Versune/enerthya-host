@@ -237,4 +237,33 @@ export async function appendDeploymentLog(db: Database, id: string, line: string
     set log = coalesce(log, '') || ${`[${stamp}] ${line}\n`}
     where id = ${id}
   `);
+  // LISTEN/NOTIFY is the transport for the live view; the payload is only the
+  // id, so a line of any length stays under the notification limits.
+  await db.execute(sql`select pg_notify('deployment_log', ${id})`);
+}
+
+export async function selectDeploymentLog(db: Database, id: string): Promise<string | null> {
+  const [row] = await db
+    .select({ log: deployments.log })
+    .from(deployments)
+    .where(eq(deployments.id, id))
+    .limit(1);
+  return row?.log ?? null;
+}
+
+/** True when the deployment belongs to an application in this organization. */
+export async function deploymentInOrganization(
+  db: Database,
+  organizationId: string,
+  deploymentId: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: deployments.id })
+    .from(deployments)
+    .innerJoin(applications, eq(deployments.applicationId, applications.id))
+    .innerJoin(environments, eq(applications.environmentId, environments.id))
+    .innerJoin(projects, eq(environments.projectId, projects.id))
+    .where(and(eq(deployments.id, deploymentId), eq(projects.organizationId, organizationId)))
+    .limit(1);
+  return Boolean(row);
 }
