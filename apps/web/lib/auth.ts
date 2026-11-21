@@ -23,7 +23,12 @@ function createAuth() {
     appName: "Enerthya Host",
     baseURL,
     secret: required("BETTER_AUTH_SECRET"),
-    trustedOrigins: [baseURL],
+    trustedOrigins: [
+      baseURL,
+      ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean) ?? []),
+    ],
     database: drizzleAdapter(getDb(), {
       provider: "pg",
       schema: {
