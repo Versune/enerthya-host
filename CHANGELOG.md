@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/Versune/enerthya-host/compare/v0.11.0...v0.12.0) (2026-11-21)
+
+
+### Features
+
+* **deployments:** record every deploy step and show it ([#56](https://github.com/Versune/enerthya-host/issues/56)) ([86b84be](https://github.com/Versune/enerthya-host/commit/86b84bede8aaa830e65e295b08cfc72c4d974e9d))
+
 ## [0.11.0](https://github.com/Versune/enerthya-host/compare/v0.10.0...v0.11.0) (2026-11-21)
 
 
