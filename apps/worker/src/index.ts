@@ -11,6 +11,7 @@ import { DEPLOY_QUEUE, type DeployJob, redisConnection } from "@enerthya/core/qu
 import { Worker } from "bullmq";
 import { runDeployment } from "./deploy";
 import { startLogServer } from "./log-server";
+import { startStatsServer } from "./stats-server";
 
 export const WORKER_NAME = "enerthya-worker";
 
@@ -44,8 +45,10 @@ if (redisUrl) {
   console.log(`[${WORKER_NAME}] listening on ${DEPLOY_QUEUE}`);
 
   const databaseUrl = process.env.DATABASE_URL;
-  if (databaseUrl) startLogServer(databaseUrl);
-  else console.warn(`[${WORKER_NAME}] DATABASE_URL is not set; container logs are unavailable.`);
+  if (databaseUrl) {
+    startLogServer(databaseUrl);
+    startStatsServer(databaseUrl);
+  } else console.warn(`[${WORKER_NAME}] DATABASE_URL is not set; container logs are unavailable.`);
 
   const shutdown = async (signal: string) => {
     console.log(`[${WORKER_NAME}] ${signal}: closing`);
