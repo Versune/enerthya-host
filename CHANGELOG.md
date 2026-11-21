@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/Versune/enerthya-host/compare/v0.5.0...v0.6.0) (2026-11-21)
+
+
+### Features
+
+* **deploy:** run deployments on a Docker or Podman runtime ([#39](https://github.com/Versune/enerthya-host/issues/39)) ([4128a35](https://github.com/Versune/enerthya-host/commit/4128a354c89255af035402d9a03d2f02be94ef18))
+
 ## [0.5.0](https://github.com/Versune/enerthya-host/compare/v0.4.0...v0.5.0) (2026-11-21)
 
 
