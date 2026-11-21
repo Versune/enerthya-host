@@ -163,7 +163,15 @@ ln -sfn "$SOURCE" "$DATA_DIR/current"
 # ---- secrets ----------------------------------------------------------------
 step "Writing environment"
 gen_secret() { openssl rand -base64 32 | tr -d '\n'; }
+# Settings an operator added by hand (S3 credentials today, anything ENERTHYA_*
+# later) are not written by this script, so they are carried over explicitly.
+# Without this, every upgrade silently dropped ENERTHYA_S3_* and backups went
+# back to local-only storage.
+PRESERVED_ENV=""
 if [ -f "$ENV_FILE" ]; then
+  PRESERVED_ENV="$(grep -E '^ENERTHYA_[A-Z0-9_]+=' "$ENV_FILE" 2>/dev/null |
+    grep -vE '^ENERTHYA_(VERSION|BIND|PORT|HOME)=' || true)"
+  cp -p "$ENV_FILE" "$ENV_FILE.bak-$DATE"
   # shellcheck disable=SC1090
   . "$ENV_FILE"
 fi
@@ -205,6 +213,7 @@ ENERTHYA_BIND=$BIND
 ENERTHYA_PORT=$PORT
 COMPOSE_PROFILES=$PROFILES
 EOF
+[ -n "$PRESERVED_ENV" ] && printf '%s\n' "$PRESERVED_ENV" >>"$ENV_FILE"
 chmod 600 "$ENV_FILE"
 
 cp "$SOURCE/compose.yml" "$DATA_DIR/compose.yml"
@@ -284,5 +293,10 @@ if [ "$RUNTIME_ENABLED" = "1" ]; then
 else
   say "  Deploys  disabled — rerun with --with-runtime to let the worker start containers."
 fi
+if [ -f "$ENV_FILE.bak-$DATE" ]; then say "  Backup   $ENV_FILE.bak-$DATE"; fi
+say ""
+say "Services"
+"${COMPOSE[@]}" ps --format '  {{.Service}}  {{.Status}}' 2>/dev/null || true
+say ""
 say "Upgrade: rerun this script (add --version to pin)."
 say "Expose publicly only behind TLS; BETTER_AUTH_URL was set to $PUBLIC_URL."
