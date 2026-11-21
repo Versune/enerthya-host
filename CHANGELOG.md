@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/Versune/enerthya-host/compare/v0.4.0...v0.5.0) (2026-11-21)
+
+
+### Features
+
+* **applications:** attach applications to environments with build settings ([#36](https://github.com/Versune/enerthya-host/issues/36)) ([f4fdff8](https://github.com/Versune/enerthya-host/commit/f4fdff87b2ec807b52bb94a11d3e6c1fd53efa4e))
+* **deployments:** queue deployments and resolve their source in the worker ([#38](https://github.com/Versune/enerthya-host/issues/38)) ([9c0eb5e](https://github.com/Versune/enerthya-host/commit/9c0eb5e0e9f588d1a9e91e90d39bf0a0f39547a5))
+
 ## [0.4.0](https://github.com/Versune/enerthya-host/compare/v0.3.0...v0.4.0) (2026-11-21)
 
 
