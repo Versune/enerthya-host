@@ -17,6 +17,7 @@ Current release: **0.5.0**.
 | Servers | local-first registry, AES-256-GCM SSH keys, runtime probe, host-key pinning |
 | Projects | projects with production/staging environments; writes gated by owner/admin |
 | Applications | repository or image attached to an environment, with build type, port and healthcheck path; unique slug per environment |
+| Auto-deploy | GitHub webhook per application, HMAC-verified against the application's own secret, branch-filtered |
 | Env vars | per application, encrypted at rest, runtime and optional build-time, injected by the worker |
 | Deployments | queue, pipeline and history: pull or clone → build the Dockerfile → start → health check → stop the previous container; a failed run removes its own container and records why; rollback re-runs the previous image that reached running |
 
@@ -26,8 +27,7 @@ Current release: **0.5.0**.
    and let an interrupted deployment continue instead of restarting from the clone.
 2. **Nixpacks and compose** — the two build types the schema already offers and the worker refuses
    with an explicit message.
-3. **Private repositories** — deploy keys, encrypted at rest, and a webhook that enqueues a
-   deployment on push.
+3. **Private repositories** — deploy keys, encrypted at rest, so the clone can authenticate.
 4. **Domains and TLS** — generate Caddy or Traefik config; never reimplement ACME.
 
 ## Later

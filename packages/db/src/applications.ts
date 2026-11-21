@@ -136,3 +136,29 @@ export async function removeApplication(
     .returning({ id: applications.id });
   return deleted.length > 0;
 }
+
+export type DeployHook = {
+  id: string;
+  name: string;
+  gitBranch: string;
+  autoDeploy: boolean;
+  webhookSecret: string | null;
+};
+
+export async function selectDeployHook(
+  db: Database,
+  applicationId: string,
+): Promise<DeployHook | null> {
+  const [row] = await db
+    .select({
+      id: applications.id,
+      name: applications.name,
+      gitBranch: applications.gitBranch,
+      autoDeploy: applications.autoDeploy,
+      webhookSecret: applications.webhookSecret,
+    })
+    .from(applications)
+    .where(eq(applications.id, applicationId))
+    .limit(1);
+  return row ?? null;
+}

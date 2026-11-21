@@ -638,3 +638,20 @@
 .field--inline .field__label {
   margin: 0;
 }
+
+.hook {
+  margin: var(--s-6) 0 0;
+  border-top: 1px solid var(--rule);
+}
+
+.hook dt {
+  margin-top: var(--s-4);
+}
+
+.hook dd {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-80);
+  overflow-wrap: anywhere;
+}
