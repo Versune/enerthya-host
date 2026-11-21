@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.0](https://github.com/Versune/enerthya-host/compare/v0.7.0...v0.8.0) (2026-11-21)
+
+
+### Features
+
+* **deployments:** roll back to the previous image that reached running ([#46](https://github.com/Versune/enerthya-host/issues/46)) ([786d216](https://github.com/Versune/enerthya-host/commit/786d216b844302399df94ba7e6bcf5c7c96a7557))
+* **shell:** give the navigation section icons ([#47](https://github.com/Versune/enerthya-host/issues/47)) ([0679d7b](https://github.com/Versune/enerthya-host/commit/0679d7bb1efdcdbf17f3d0cd0bea672fc37bbe9d))
+
 ## [0.7.0](https://github.com/Versune/enerthya-host/compare/v0.6.1...v0.7.0) (2026-11-21)
 
 
