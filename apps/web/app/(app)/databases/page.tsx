@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { BackupActions } from "@/components/databases/BackupActions";
 import { DatabaseActions } from "@/components/databases/DatabaseActions";
 import { DatabaseForm } from "@/components/databases/DatabaseForm";
+import { ScheduleForm } from "@/components/databases/ScheduleForm";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { currentOrganization } from "@/lib/current-org";
 import { connectionString, listBackups, listManagedDatabases } from "@/lib/databases";
@@ -98,6 +99,22 @@ export default async function DatabasesPage() {
                     <BackupActions databaseId={database.id} />
                     <DatabaseActions id={database.id} />
                   </span>
+                ) : null}
+                {canWrite ? (
+                  <details className="add-project project__schedule">
+                    <summary className="btn btn--quiet">
+                      Backup schedule
+                      {database.backupIntervalHours
+                        ? ` · every ${database.backupIntervalHours}h`
+                        : " · off"}
+                    </summary>
+                    <ScheduleForm
+                      databaseId={database.id}
+                      intervalHours={database.backupIntervalHours}
+                      retentionDays={database.backupRetentionDays}
+                      lastBackupAt={database.lastBackupAt?.toISOString().slice(0, 16) ?? null}
+                    />
+                  </details>
                 ) : null}
               </li>
             );

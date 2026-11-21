@@ -13,6 +13,7 @@ import {
   selectBackups,
   selectManagedDatabaseCredentials,
   selectManagedDatabases,
+  setBackupSchedule,
 } from "@enerthya/db";
 
 export type DatabaseRow = ManagedDatabaseSummary;
@@ -38,6 +39,22 @@ export async function connectionString(
   };
   const password = encodeURIComponent(credentials.password);
   return `postgres://${credentials.username}:${password}@127.0.0.1:${database.port}/${credentials.database}`;
+}
+
+/** Turns a database's automatic backups on (interval set) or off (null). */
+export async function setDatabaseSchedule(
+  organizationId: string,
+  databaseId: string,
+  input: { intervalHours: number | null; retentionDays: number | null },
+): Promise<void> {
+  const db = getDb();
+  if (!(await managedDatabaseInOrganization(db, organizationId, databaseId))) {
+    throw new Error("Database not found");
+  }
+  await setBackupSchedule(db, databaseId, {
+    intervalHours: input.intervalHours && input.intervalHours > 0 ? input.intervalHours : null,
+    retentionDays: input.retentionDays && input.retentionDays > 0 ? input.retentionDays : null,
+  });
 }
 
 export async function createManagedDatabase(

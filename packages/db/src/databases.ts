@@ -12,6 +12,9 @@ export type ManagedDatabaseSummary = {
   environmentId: string;
   projectName: string;
   environmentSlug: string;
+  backupIntervalHours: number | null;
+  backupRetentionDays: number | null;
+  lastBackupAt: Date | null;
 };
 
 export async function selectManagedDatabases(
@@ -29,6 +32,9 @@ export async function selectManagedDatabases(
       environmentId: databases.environmentId,
       projectName: projects.name,
       environmentSlug: environments.slug,
+      backupIntervalHours: databases.backupIntervalHours,
+      backupRetentionDays: databases.backupRetentionDays,
+      lastBackupAt: databases.lastBackupAt,
     })
     .from(databases)
     .innerJoin(environments, eq(databases.environmentId, environments.id))

@@ -116,7 +116,8 @@ showing a disabled control.
    only proven on the host topology, not yet against a real DNS record)
 10. ~~Env vars, encrypted, build-time vs runtime~~ (done)
 11. Real-time logs (SSE/WebSocket) and the web terminal — **next**
-12. One-click databases with scheduled backups to S3/R2/MinIO.
+12. ~~One-click databases with scheduled backups to S3/R2/MinIO~~ (done: provisioned Postgres,
+    verified backups, a schedule and retention window per database)
 13. Metrics per container and per server; notifications (Discord, email, webhook); templates.
 14. Invitations and member management screens; zero-downtime handover and resumable deployments.
 

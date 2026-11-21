@@ -32,11 +32,25 @@ export function signPutObject(
   body: Buffer,
   now = new Date(),
 ): SignedRequest {
+  return signRequest(config, "PUT", key, sha256Hex(body), now);
+}
+
+/** AWS Signature V4 for a DELETE; the payload hash is the empty-body digest. */
+export function signDeleteObject(config: S3Config, key: string, now = new Date()): SignedRequest {
+  return signRequest(config, "DELETE", key, sha256Hex(Buffer.alloc(0)), now);
+}
+
+function signRequest(
+  config: S3Config,
+  method: string,
+  key: string,
+  payloadHash: string,
+  now: Date,
+): SignedRequest {
   const endpoint = config.endpoint.replace(/\/$/, "");
   const url = new URL(`${endpoint}/${config.bucket}/${key}`);
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, "");
   const dateStamp = amzDate.slice(0, 8);
-  const payloadHash = sha256Hex(body);
 
   const headers: Record<string, string> = {
     host: url.host,
@@ -45,7 +59,7 @@ export function signPutObject(
   };
   const signedHeaders = Object.keys(headers).sort().join(";");
   const canonicalRequest = [
-    "PUT",
+    method,
     url.pathname,
     "",
     `${Object.keys(headers)
@@ -91,6 +105,21 @@ export async function putObject(config: S3Config, key: string, body: Buffer): Pr
   if (!response.ok) {
     throw new Error(
       `The bucket refused the upload (${response.status}): ${(await response.text()).slice(0, 200)}`,
+    );
+  }
+}
+
+/** Removes one object. A 404 counts as success: the goal is that it is gone. */
+export async function deleteObject(config: S3Config, key: string): Promise<void> {
+  const request = signDeleteObject(config, key);
+  const response = await fetch(request.url, {
+    method: "DELETE",
+    headers: request.headers,
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!response.ok && response.status !== 404) {
+    throw new Error(
+      `The bucket refused the delete (${response.status}): ${(await response.text()).slice(0, 200)}`,
     );
   }
 }

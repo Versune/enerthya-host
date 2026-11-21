@@ -1,3 +1,10 @@
+export {
+  type BackupSchedule,
+  isBackupDue,
+  nextBackupAt,
+  retentionCutoff,
+  selectExpiredBackups,
+} from "./backup-schedule";
 export { decryptSecret, encryptSecret } from "./crypto";
 export { type DeployKey, generateDeployKey, publicKeyFromPrivate } from "./deploy-key";
 export { type CaddyConfig, caddyConfig, type ProxyRoute, publishRoutes } from "./proxy";
@@ -34,7 +41,14 @@ export {
   streamContainerLogs,
   waitForHealthy,
 } from "./runtime";
-export { putObject, type S3Config, s3ConfigFromEnv, signPutObject } from "./s3";
+export {
+  deleteObject,
+  putObject,
+  type S3Config,
+  s3ConfigFromEnv,
+  signDeleteObject,
+  signPutObject,
+} from "./s3";
 export { toSlug } from "./slug";
 export {
   checkHostKey,

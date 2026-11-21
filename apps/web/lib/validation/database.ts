@@ -12,3 +12,20 @@ export const managedDatabaseSchema = z.object({
 });
 
 export type ManagedDatabaseInput = z.infer<typeof managedDatabaseSchema>;
+
+/**
+ * An interval of zero or nothing at all turns the schedule off. Retention is
+ * optional and only meaningful with a schedule.
+ */
+export const backupScheduleSchema = z.object({
+  intervalHours: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(24 * 30)
+    .nullable()
+    .default(null),
+  retentionDays: z.coerce.number().int().min(0).max(365).nullable().default(null),
+});
+
+export type BackupScheduleInput = z.infer<typeof backupScheduleSchema>;
