@@ -84,9 +84,12 @@ verifies the release checksum when it downloads a build.
 - Works: pnpm workspace, typed packages, Biome, Vitest, standalone build, container-runtime
   detection, email/password sign-up and sign-in through better-auth, organizations created at
   sign-up, the dashboard shell, and a server registry: the local machine is always the first row,
-  remote servers take an SSH key encrypted with AES-256-GCM, and a probe reports the runtime, pinning the SSH host key on first connect and refusing a changed one.
-- Not yet: invitations and role enforcement, projects, applications, deployments, domains and SSL,
-  encrypted env vars, logs and terminal, managed databases, backups, metrics, notifications.
+  remote servers take an SSH key encrypted with AES-256-GCM, and a probe reports the runtime,
+  pinning the SSH host key on first connect and refusing a changed one.
+- Also works: projects with production and staging environments created in one step, and write
+  endpoints guarded by the caller's role (owner/admin write, member reads).
+- Not yet: invitations, applications, deployments, domains and SSL, encrypted env vars, logs and
+  terminal, managed databases, backups, metrics, notifications.
 
 See `CLAUDE.md` for the architecture rules and the stage order, `PRODUCT.md` for product truth.
 `DESIGN.md` currently describes the legacy panel and is rewritten with the new dashboard.

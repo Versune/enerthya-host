@@ -81,7 +81,7 @@ test.describe
 
       await page.getByRole("link", { name: "Projects" }).click();
       await expect(page).toHaveURL(/\/projects$/);
-      await expect(page.getByRole("heading", { name: "No projects yet." })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "0 projects." })).toBeVisible();
 
       await page.getByRole("link", { name: "Deployments" }).click();
       await expect(page).toHaveURL(/\/deployments$/);
@@ -113,6 +113,24 @@ test.describe
       await expect(page.getByText("E2E Box")).toHaveCount(0);
     });
 
+    test("a project is born with production and staging", async ({ page }) => {
+      await signIn(page);
+      await page.goto("/projects");
+
+      await page.locator("summary", { hasText: "Create a project" }).click();
+      await expect(page.locator('form[data-hydrated="true"]')).toBeVisible();
+
+      await page.getByLabel("Name", { exact: true }).fill("E2E Project");
+      await page.getByRole("button", { name: "Create project" }).click();
+
+      const row = page.locator(".project", { hasText: "E2E Project" });
+      await expect(row).toBeVisible();
+      await expect(row.locator(".env-chip")).toHaveText(["production", "staging"]);
+
+      await row.getByRole("button", { name: "Remove" }).click();
+      await expect(page.getByText("E2E Project")).toHaveCount(0);
+    });
+
     test("the command palette navigates with the keyboard", async ({ page }) => {
       await signIn(page);
 
@@ -128,7 +146,7 @@ test.describe
       await page.keyboard.press("Enter");
 
       await expect(page).toHaveURL(/\/projects$/);
-      await expect(page.getByRole("heading", { name: "No projects yet." })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "0 projects." })).toBeVisible();
     });
   });
 
