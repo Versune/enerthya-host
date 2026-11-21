@@ -327,3 +327,46 @@ export async function execInContainer(
   const info = await exec.inspect();
   return info.ExitCode ?? 1;
 }
+
+/** Runs a command and returns its exit code and raw output. */
+export async function execCapture(
+  client: Docker,
+  containerId: string,
+  command: string[],
+  { maxBytes = 256 * 1024 * 1024 }: { maxBytes?: number } = {},
+): Promise<{ code: number; output: Buffer }> {
+  const container = client.getContainer(containerId);
+  const exec = await container.exec({
+    Cmd: command,
+    AttachStdout: true,
+    AttachStderr: true,
+  });
+  // hijack + demuxStream: without them a non-TTY exec delivers Docker's 8-byte
+  // frame headers mixed into the output, which a binary dump cannot survive.
+  const stream = await exec.start({ hijack: true, stdin: false });
+  const chunks: Buffer[] = [];
+  let size = 0;
+
+  const sink = new Writable({
+    write(chunk: Buffer, _encoding, callback) {
+      size += chunk.length;
+      if (size > maxBytes) {
+        callback(new Error("The command produced more output than this operation accepts."));
+        return;
+      }
+      chunks.push(chunk);
+      callback();
+    },
+  });
+  client.modem.demuxStream(stream, sink, sink);
+
+  await new Promise<void>((resolve, reject) => {
+    stream.on("end", () => resolve());
+    stream.on("close", () => resolve());
+    stream.on("error", reject);
+    sink.on("error", reject);
+  });
+
+  const info = await exec.inspect();
+  return { code: info.ExitCode ?? 1, output: Buffer.concat(chunks) };
+}

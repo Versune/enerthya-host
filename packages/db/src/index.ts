@@ -1,4 +1,5 @@
 export * from "./applications";
+export * from "./backups";
 export { createDb, type Database, getDb } from "./client";
 export * from "./databases";
 export * from "./deployments";

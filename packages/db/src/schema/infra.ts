@@ -225,6 +225,8 @@ export const backups = pgTable(
     destination: backupDestination("destination").notNull().default("s3"),
     storagePath: text("storage_path"),
     sizeBytes: bigint("size_bytes", { mode: "number" }),
+    /** Set only after the dump was restored into a throwaway server. */
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
     error: text("error"),
     startedAt: timestamp("started_at", { withTimezone: true }),
     finishedAt: timestamp("finished_at", { withTimezone: true }),

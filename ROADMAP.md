@@ -17,6 +17,7 @@ Current release: **0.5.0**.
 | Servers | local-first registry, AES-256-GCM SSH keys, runtime probe, host-key pinning |
 | Projects | projects with production/staging environments; writes gated by owner/admin |
 | Applications | repository or image attached to an environment, with build type, port and healthcheck path; unique slug per environment |
+| Backups | `pg_dump` and a restore into a throwaway server; a backup only counts once its table count matches |
 | Managed Postgres | one-click database with its own volume and a generated password, provisioned by the worker |
 | Metrics | CPU and memory per running container, sampled on demand by the worker |
 | Notifications | Discord webhook or generic endpoint on `deployment.failed`, URL encrypted at rest |

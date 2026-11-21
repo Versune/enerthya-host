@@ -1,11 +1,12 @@
 import { roleAtLeast } from "@enerthya/core/roles";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { BackupActions } from "@/components/databases/BackupActions";
 import { DatabaseActions } from "@/components/databases/DatabaseActions";
 import { DatabaseForm } from "@/components/databases/DatabaseForm";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { currentOrganization } from "@/lib/current-org";
-import { connectionString, listManagedDatabases } from "@/lib/databases";
+import { connectionString, listBackups, listManagedDatabases } from "@/lib/databases";
 import { listProjects } from "@/lib/projects";
 
 export const dynamic = "force-dynamic";
@@ -19,10 +20,16 @@ export default async function DatabasesPage() {
   if (!context) redirect("/sign-in");
 
   const canWrite = roleAtLeast(context.role, "admin");
-  const [databases, projects] = await Promise.all([
+  const [databases, projects, backups] = await Promise.all([
     listManagedDatabases(context.organization.id),
     listProjects(context.organization.id),
+    listBackups(context.organization.id),
   ]);
+
+  const latestBackup = new Map<string, (typeof backups)[number]>();
+  for (const backup of backups) {
+    if (!latestBackup.has(backup.databaseId)) latestBackup.set(backup.databaseId, backup);
+  }
 
   const environments = projects.flatMap((project) =>
     project.environments.map((environment) => ({
@@ -71,13 +78,27 @@ export default async function DatabasesPage() {
                     {database.environmentSlug}
                   </span>
                   {url ? <code className="deployment__meta">{url}</code> : null}
+                  {latestBackup.get(database.id) ? (
+                    <span className="deployment__meta">
+                      last backup: {latestBackup.get(database.id)?.status}
+                      {latestBackup.get(database.id)?.verifiedAt ? " · verified" : ""}
+                      {latestBackup.get(database.id)?.error
+                        ? ` · ${latestBackup.get(database.id)?.error}`
+                        : ""}
+                    </span>
+                  ) : null}
                 </div>
                 <span
                   className={`env-chip${database.status === "failed" ? " env-chip--failed" : ""}`}
                 >
                   {database.status}
                 </span>
-                {canWrite ? <DatabaseActions id={database.id} /> : null}
+                {canWrite ? (
+                  <span className="server__actions">
+                    <BackupActions databaseId={database.id} />
+                    <DatabaseActions id={database.id} />
+                  </span>
+                ) : null}
               </li>
             );
           })}

@@ -1,0 +1,1 @@
+ALTER TABLE "backup" ADD COLUMN "verified_at" timestamp with time zone;
