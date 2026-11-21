@@ -8,6 +8,11 @@ permissions:
   contents: write
   pull-requests: write
 
+# Two runs on the same push would rewrite the release PR at the same time.
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
 jobs:
   release-please:
     runs-on: ubuntu-24.04
