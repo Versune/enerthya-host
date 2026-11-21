@@ -1,12 +1,16 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { decryptSecret, encryptSecret } from "@enerthya/core/crypto";
-import { enqueueDatabaseJob } from "@enerthya/core/queue";
+import { enqueueBackupJob, enqueueDatabaseJob } from "@enerthya/core/queue";
 import {
+  type BackupSummary,
   deleteManagedDatabase,
   environmentInOrganization,
   getDb,
+  insertBackup,
   insertManagedDatabase,
   type ManagedDatabaseSummary,
+  managedDatabaseInOrganization,
+  selectBackups,
   selectManagedDatabaseCredentials,
   selectManagedDatabases,
 } from "@enerthya/db";
@@ -84,4 +88,32 @@ export async function removeManagedDatabase(organizationId: string, id: string):
   const redisUrl = process.env.REDIS_URL;
   if (redisUrl) await enqueueDatabaseJob(redisUrl, id, "remove").catch(() => undefined);
   return deleteManagedDatabase(db, organizationId, id);
+}
+
+export type BackupRow = BackupSummary;
+
+export function listBackups(organizationId: string): Promise<BackupRow[]> {
+  return selectBackups(getDb(), organizationId);
+}
+
+/** Queues a dump; the worker verifies it by restoring it before it counts. */
+export async function createBackup(organizationId: string, databaseId: string): Promise<string> {
+  const db = getDb();
+  if (!(await managedDatabaseInOrganization(db, organizationId, databaseId))) {
+    throw new Error("Database not found");
+  }
+
+  const id = randomUUID();
+  await insertBackup(db, databaseId, id);
+
+  const redisUrl = process.env.REDIS_URL;
+  try {
+    if (!redisUrl) throw new Error("REDIS_URL is not set in the panel's environment.");
+    await enqueueBackupJob(redisUrl, id);
+  } catch (error) {
+    throw new QueueUnavailableError(
+      error instanceof Error ? error.message : "The queue is unreachable.",
+    );
+  }
+  return id;
 }

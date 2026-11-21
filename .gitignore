@@ -40,3 +40,6 @@ pnpm-debug.log*
 
 # Built by the release artifact, never committed.
 apps/worker/dist
+
+# Local backup dumps written while developing.
+.backups

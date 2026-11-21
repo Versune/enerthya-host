@@ -11,6 +11,7 @@ import {
 } from "@enerthya/core/runtime";
 import { getDb, selectManagedDatabaseForWorker, updateManagedDatabase } from "@enerthya/db";
 import { Worker } from "bullmq";
+import { runBackup } from "./backup";
 
 const READY_TIMEOUT_MS = 90_000;
 
@@ -97,8 +98,11 @@ export function startDatabaseWorker(redisUrl: string): Worker {
   return new Worker(
     DATABASE_QUEUE,
     async (job) => {
-      const data = job.data as { databaseId: string; action: "provision" | "remove" };
-      if (data.action === "provision") await provisionDatabase(data.databaseId);
+      const data = job.data as
+        | { databaseId: string; action: "provision" | "remove" }
+        | { backupId: string; action: "backup" };
+      if (data.action === "backup") await runBackup(data.backupId);
+      else if (data.action === "provision") await provisionDatabase(data.databaseId);
       else await deprovisionDatabase(data.databaseId);
     },
     {

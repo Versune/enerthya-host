@@ -9,7 +9,9 @@ export const DEPLOY_QUEUE = "deployments";
 export const DATABASE_QUEUE = "databases";
 
 export type DeployJob = { deploymentId: string };
-export type DatabaseJob = { databaseId: string; action: "provision" | "remove" };
+export type DatabaseJob =
+  | { databaseId: string; action: "provision" | "remove"; backupId?: never }
+  | { backupId: string; action: "backup"; databaseId?: never };
 
 export type RedisConnection = {
   host: string;
@@ -80,15 +82,25 @@ export async function enqueueDeployment(redisUrl: string, deploymentId: string):
 export async function enqueueDatabaseJob(
   redisUrl: string,
   databaseId: string,
-  action: DatabaseJob["action"],
+  action: "provision" | "remove",
 ): Promise<void> {
+  await addDatabaseJob(redisUrl, `${action}-${databaseId}`, { databaseId, action });
+}
+
+/** Queues one backup; the id pairs the job with the backup row. */
+export async function enqueueBackupJob(redisUrl: string, backupId: string): Promise<void> {
+  await addDatabaseJob(redisUrl, `backup-${backupId}`, { backupId, action: "backup" });
+}
+
+async function addDatabaseJob(redisUrl: string, jobId: string, data: DatabaseJob): Promise<void> {
   const queue = new Queue<DatabaseJob>(DATABASE_QUEUE, { connection: redisConnection(redisUrl) });
   try {
-    await queue.add(
-      action,
-      { databaseId, action },
-      { jobId: `${action}-${databaseId}`, attempts: 1, removeOnComplete: 50, removeOnFail: 50 },
-    );
+    await queue.add(data.action, data, {
+      jobId,
+      attempts: 1,
+      removeOnComplete: 50,
+      removeOnFail: 50,
+    });
   } finally {
     await queue.close();
   }
