@@ -22,6 +22,7 @@ export {
   type RuntimeConnection,
   type RuntimeKind,
   stopAndRemove,
+  streamContainerLogs,
   waitForHealthy,
 } from "./runtime";
 export { toSlug } from "./slug";

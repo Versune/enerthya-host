@@ -17,6 +17,7 @@ Current release: **0.5.0**.
 | Servers | local-first registry, AES-256-GCM SSH keys, runtime probe, host-key pinning |
 | Projects | projects with production/staging environments; writes gated by owner/admin |
 | Applications | repository or image attached to an environment, with build type, port and healthcheck path; unique slug per environment |
+| Container log | the running container's output, requested over a Postgres channel and tailed by the worker |
 | Deploy log |Each  deployment records every step, from the claim to the swap or the failure |
 | Domains | per application, published to a generated Caddy config; TLS is Caddy's job |
 | Private repos | per-application ed25519 deploy key, encrypted at rest, used for the clone |
@@ -33,7 +34,7 @@ Current release: **0.5.0**.
 
 ## Later
 
-- A web terminal (the build log is already live, but the running container's output is not).
+- An interactive web terminal (logs are live; stdin is not).
 - One-click databases (Postgres, MySQL, Redis, MongoDB) with scheduled backups to S3/R2/MinIO and
   a restore that is verified, not assumed.
 - CPU/RAM/network metrics per container and per server.

@@ -1,26 +1,24 @@
+import { sql } from "drizzle-orm";
 import postgres from "postgres";
+import type { Database } from "./client";
 
-export type DeploymentLogListener = {
+export type ChannelListener = {
   ready: Promise<void>;
   close: () => Promise<void>;
 };
 
-/**
- * Listens on the channel the worker notifies after writing a log line. The
- * panel never polls: it holds this connection and re-reads the row when its own
- * deployment is named.
- */
-export function listenToDeploymentLog(
+/** Holds one dedicated connection open and calls back for each notification. */
+export function listenToChannel(
   databaseUrl: string,
-  deploymentId: string,
-  onLine: () => void,
-): DeploymentLogListener {
+  channel: string,
+  onMessage: (payload: string) => void,
+): ChannelListener {
   const client = postgres(databaseUrl, { max: 1 });
   let closed = false;
 
   const ready = client
-    .listen("deployment_log", (payload: string) => {
-      if (payload === deploymentId && !closed) onLine();
+    .listen(channel, (payload: string) => {
+      if (!closed) onMessage(payload);
     })
     .then(() => undefined);
 
@@ -33,4 +31,9 @@ export function listenToDeploymentLog(
       await client.end({ timeout: 2 }).catch(() => undefined);
     },
   };
+}
+
+/** Notifies a channel. The channel name is a literal from our own code. */
+export async function notifyChannel(db: Database, channel: string, payload: string): Promise<void> {
+  await db.execute(sql`select pg_notify(${channel}, ${payload})`);
 }

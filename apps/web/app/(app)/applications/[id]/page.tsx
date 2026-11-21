@@ -2,6 +2,7 @@ import { roleAtLeast } from "@enerthya/core/roles";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ContainerLogs } from "@/components/applications/ContainerLogs";
 import { DomainActions } from "@/components/applications/DomainActions";
 import { DomainForm } from "@/components/applications/DomainForm";
 import { EnvVarActions } from "@/components/applications/EnvVarActions";
@@ -48,6 +49,15 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
       <p className="page__back">
         <Link href="/applications">← All applications</Link>
       </p>
+
+      <section className="page__section">
+        <h2 className="label">Runtime</h2>
+        <p className="page__lede">
+          The running container's output, streamed while this section is open. The worker reads it
+          and publishes each line; the panel never touches the runtime.
+        </p>
+        <ContainerLogs applicationId={application.id} />
+      </section>
 
       <section className="page__section">
         <h2 className="label">Domains</h2>
