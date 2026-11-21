@@ -142,8 +142,13 @@ if [ ! -f "$SOURCE/Dockerfile" ]; then
   trap 'rm -rf "$TMP"' EXIT
   BASE="https://github.com/$REPO/releases/download/$VERSION"
   ASSET="enerthya-host-$VERSION.tar.gz"
-  curl -fsSL "$BASE/$ASSET" -o "$TMP/$ASSET"
-  curl -fsSL "$BASE/SHA256SUMS" -o "$TMP/SHA256SUMS"
+  # A release is published before its artifact finishes uploading, so a tag
+  # that exists can still answer 404 for a few seconds. Retry before failing,
+  # and say what is happening when it does fail.
+  curl -fsSL --retry 6 --retry-delay 5 --retry-all-errors "$BASE/$ASSET" -o "$TMP/$ASSET" ||
+    fail "Could not download $ASSET. If this release was just published, its artifact may still be uploading; retry in a minute."
+  curl -fsSL --retry 6 --retry-delay 5 --retry-all-errors "$BASE/SHA256SUMS" -o "$TMP/SHA256SUMS" ||
+    fail "Could not download SHA256SUMS for $VERSION."
   ( cd "$TMP" && grep " $ASSET\$" SHA256SUMS | sha256sum --check --status - ) ||
     fail "Checksum verification failed for $ASSET."
   say "  Checksum verified"
