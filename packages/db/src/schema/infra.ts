@@ -208,6 +208,12 @@ export const databases = pgTable(
     volumeName: text("volume_name").notNull(),
     credentialsEncrypted: text("credentials_encrypted").notNull(),
     status: databaseStatus("status").notNull().default("provisioning"),
+    /** Hours between automatic backups; null means no schedule. */
+    backupIntervalHours: integer("backup_interval_hours"),
+    /** Days a successful backup is kept before retention removes it. */
+    backupRetentionDays: integer("backup_retention_days"),
+    /** When the scheduler last enqueued a backup for this database. */
+    lastBackupAt: timestamp("last_backup_at", { withTimezone: true }),
     createdAt,
     updatedAt,
   },

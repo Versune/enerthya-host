@@ -9,6 +9,7 @@
  */
 import { DEPLOY_QUEUE, type DeployJob, redisConnection } from "@enerthya/core/queue";
 import { Worker } from "bullmq";
+import { startBackupScheduler } from "./backup-scheduler";
 import { startDatabaseWorker } from "./database-worker";
 import { runDeployment } from "./deploy";
 import { startLogServer } from "./log-server";
@@ -50,6 +51,8 @@ if (redisUrl) {
   if (databaseUrl) {
     startLogServer(databaseUrl);
     startStatsServer(databaseUrl);
+    startBackupScheduler(redisUrl);
+    console.log(`[${WORKER_NAME}] backup scheduler running`);
   } else console.warn(`[${WORKER_NAME}] DATABASE_URL is not set; container logs are unavailable.`);
 
   const shutdown = async (signal: string) => {

@@ -43,6 +43,13 @@
       "when": 1795276508194,
       "tag": "0005_milky_lorna_dane",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795293456651,
+      "tag": "0006_normal_mercury",
+      "breakpoints": true
     }
   ]
 }
