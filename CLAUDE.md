@@ -133,6 +133,10 @@ Each stage ships working. A placeholder is not a stage.
   `RELEASE_PLEASE_TOKEN`: a fine-grained PAT with **Contents: write** and **Pull requests: write**
   on this repository. Without that secret the release workflow fails at "create pull request".
 - Commit messages are Conventional Commits because they decide the next version.
+- Before 1.0 the cadence is deliberately slow: `feat` and `fix` bump the **patch** (0.12.1), a
+  breaking change bumps the **minor** (0.13.0). A deliberate milestone is a commit footer —
+  `Release-As: 1.0.0` — not a stream of 0.x bumps. Merge the release PR when a slice is worth
+  shipping, not after every merge.
 - CodeQL uses **GitHub's default setup**. Do not add `.github/workflows/codeql.yml`: an advanced
   configuration cannot upload alongside the default setup.
 - Dependabot updates npm and Actions weekly and groups dev minors.

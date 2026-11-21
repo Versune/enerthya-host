@@ -230,6 +230,10 @@ if [ "$WITH_RUNTIME" = "1" ]; then
   step "Starting the deploy runtime"
   say "  The worker mounts /var/run/docker.sock: anyone who controls it controls this host."
   "${COMPOSE[@]}" up -d worker
+  # The proxy serves domains. It needs :80 and :443; if something else owns
+  # them, the panel and the worker are still worth starting.
+  "${COMPOSE[@]}" up -d proxy ||
+    say "  The proxy did not start — is 80 or 443 in use? Domains will not be served until it does."
 fi
 HEALTHY=0
 for _ in $(seq 1 45); do
