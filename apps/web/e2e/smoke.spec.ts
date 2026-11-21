@@ -131,6 +131,39 @@ test.describe
       await expect(page.getByText("E2E Project")).toHaveCount(0);
     });
 
+    test("an application is created inside an environment", async ({ page }) => {
+      await signIn(page);
+
+      await page.goto("/projects");
+      await page.locator("summary", { hasText: "Create a project" }).click();
+      await expect(page.locator('form[data-hydrated="true"]')).toBeVisible();
+      await page.getByLabel("Name", { exact: true }).fill("App Project");
+      await page.getByRole("button", { name: "Create project" }).click();
+      await expect(page.getByText("App Project")).toBeVisible();
+
+      await page.goto("/applications");
+      await page.locator("summary", { hasText: "Create an application" }).click();
+      await expect(page.locator('form[data-hydrated="true"]')).toBeVisible();
+
+      await page.getByLabel("Name", { exact: true }).fill("E2E App");
+      await page.getByLabel("Environment").selectOption({ label: "App Project · production" });
+      await page.getByLabel("Repository").fill("https://github.com/example/app");
+      await page.getByRole("button", { name: "Create application" }).click();
+
+      const row = page.locator(".project", { hasText: "E2E App" });
+      await expect(row).toBeVisible();
+      await expect(row).toContainText("example/app");
+
+      await row.getByRole("button", { name: "Remove" }).click();
+      await expect(page.getByText("E2E App")).toHaveCount(0);
+
+      // Leave the account with no projects so later tests see the empty state.
+      await page.goto("/projects");
+      const project = page.locator(".project", { hasText: "App Project" });
+      await project.getByRole("button", { name: "Remove" }).click();
+      await expect(page.getByText("App Project")).toHaveCount(0);
+    });
+
     test("the command palette navigates with the keyboard", async ({ page }) => {
       await signIn(page);
 
