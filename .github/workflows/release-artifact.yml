@@ -12,6 +12,12 @@ on:
 permissions:
   contents: write
 
+# One build per tag. A rerun waits instead of racing the first one and
+# clobbering its half-uploaded assets.
+concurrency:
+  group: release-artifact-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
 jobs:
   artifact:
     runs-on: ubuntu-24.04
@@ -24,17 +30,34 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.event.release.tag_name || inputs.tag }}
+
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           version: 12.21.0
+
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0, GitHub API verified
         with:
           node-version: "24"
           cache: pnpm
+
+      # A tag that does not match the package version produces an installer
+      # pointing at the wrong code, so stop before building anything.
+      - name: Check tag matches package version
+        run: |
+          set -euo pipefail
+          WANT="v$(node -p "require('./package.json').version")"
+          if [ "$WANT" != "$TAG" ]; then
+            echo "::error::tag $TAG does not match package.json ($WANT)"
+            exit 1
+          fi
+          echo "tag $TAG matches package.json"
+
       - name: Install
         run: pnpm install --frozen-lockfile
+
       - name: Build
         run: pnpm build
+
       - name: Package
         run: |
           set -euo pipefail
@@ -56,11 +79,68 @@ jobs:
           cp -a apps/worker/dist dist/stage/apps/worker/dist
           cp docker/Dockerfile dist/stage/Dockerfile
           cp docker/compose.yml dist/stage/compose.yml
-          tar -czf "dist/enerthya-host-${TAG}.tar.gz" -C dist/stage .
-          cd dist
-          sha256sum "enerthya-host-${TAG}.tar.gz" > SHA256SUMS
+
+      # An installer downloads this and runs it as root; it must contain what
+      # the Dockerfile and install.sh expect, or fail here instead of on a host.
+      - name: Check the staged tree
+        run: |
+          set -euo pipefail
+          for path in Dockerfile compose.yml drizzle apps/web/server.js \
+                      apps/web/.next/static apps/web/public apps/worker/dist/index.cjs; do
+            if [ ! -e "dist/stage/$path" ]; then
+              echo "::error::missing $path in the staged artifact"
+              exit 1
+            fi
+          done
+          echo "staged tree has every path the installer needs"
+
+      # Sorted entries, fixed mtime and ownership: the same commit yields the
+      # same archive, so the checksum means something across rebuilds.
+      - name: Archive
+        run: |
+          set -euo pipefail
+          OUT="dist/enerthya-host-${TAG}.tar.gz"
+          tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+              -cf - -C dist/stage . | gzip -n >"$OUT"
+          ( cd dist && sha256sum "$(basename "$OUT")" > SHA256SUMS )
           # sed, not head: head closes the pipe and tar dies with SIGPIPE,
           # which pipefail turns into a failed step.
-          tar -tzf "enerthya-host-${TAG}.tar.gz" | sed -n '1,20p'
+          tar -tzf "$OUT" | sed -n '1,15p'
+          echo "size: $(du -h "$OUT" | cut -f1)"
+          cat dist/SHA256SUMS
+
       - name: Attach to release
-        run: gh release upload "$TAG" "dist/enerthya-host-${TAG}.tar.gz" dist/SHA256SUMS --clobber
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" >/dev/null ||
+            { echo "::error::release $TAG does not exist yet"; exit 1; }
+          for attempt in 1 2 3; do
+            if gh release upload "$TAG" "dist/enerthya-host-${TAG}.tar.gz" dist/SHA256SUMS --clobber; then
+              break
+            fi
+            if [ "$attempt" = 3 ]; then
+              echo "::error::upload failed after 3 attempts"
+              exit 1
+            fi
+            echo "upload attempt $attempt failed; retrying in 15s"
+            sleep 15
+          done
+
+      # The installer retries a 404 because the tag and its assets are not
+      # atomic. Prove the two files are there before reporting success.
+      - name: Verify the release carries both assets
+        run: |
+          set -euo pipefail
+          ASSETS="$(gh release view "$TAG" --json assets --jq '[.assets[].name] | sort | join(",")')"
+          EXPECTED="SHA256SUMS,enerthya-host-${TAG}.tar.gz"
+          if [ "$ASSETS" != "$EXPECTED" ]; then
+            echo "::error::release $TAG has [$ASSETS], expected [$EXPECTED]"
+            exit 1
+          fi
+          {
+            echo "## Released $TAG"
+            echo
+            echo '```'
+            cat dist/SHA256SUMS
+            echo '```'
+          } >>"$GITHUB_STEP_SUMMARY"
