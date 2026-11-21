@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.11](https://github.com/Versune/enerthya-host/compare/v0.12.10...v0.12.11) (2026-11-21)
+
+
+### Features
+
+* **notifications:** deliver deployment failures by email ([#85](https://github.com/Versune/enerthya-host/issues/85)) ([3dab57f](https://github.com/Versune/enerthya-host/commit/3dab57f9d50973e11230c3f9c6b818cf6a3b7623))
+
 ## [0.12.10](https://github.com/Versune/enerthya-host/compare/v0.12.9...v0.12.10) (2026-11-21)
 
 
