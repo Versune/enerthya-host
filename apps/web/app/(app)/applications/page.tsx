@@ -38,9 +38,9 @@ export default async function ApplicationsPage() {
           applications.length === 1 ? "1 application." : `${applications.length} applications.`
         }
       >
-        An application is a repository or image attached to one environment. Creating it records the
-        source; building and deploying it is the next stage, and this panel will not pretend a
-        container is running before one is.
+        An application is a repository or image attached to one environment. Deploying it pulls or
+        builds the image, starts the container and waits for its health check before the previous
+        one stops.
       </PageHeader>
 
       {applications.length === 0 ? (
@@ -49,7 +49,7 @@ export default async function ApplicationsPage() {
           <p>
             {environments.length === 0
               ? "Create a project first: every application belongs to an environment."
-              : "Create the first one with the form below. It records the source and the build type; nothing is deployed yet."}
+              : "Create the first one with the form below, then press Deploy to build and run it."}
           </p>
         </div>
       ) : (

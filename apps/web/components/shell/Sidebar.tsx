@@ -42,7 +42,8 @@ export function Sidebar() {
       </nav>
 
       <p className="sidebar__foot">
-        Servers, projects and deployments ship in the next stages. Nothing deploys yet.
+        Servers, projects, applications and deployments. Domains, logs, databases and backups
+        come next.
       </p>
     </aside>
   );
