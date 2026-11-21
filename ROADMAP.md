@@ -18,6 +18,7 @@ Current release: **0.5.0**.
 | Projects | projects with production/staging environments; writes gated by owner/admin |
 | Applications | repository or image attached to an environment, with build type, port and healthcheck path; unique slug per environment |
 | Domains | per application, published to a generated Caddy config; TLS is Caddy's job |
+| Private repos | per-application ed25519 deploy key, encrypted at rest, used for the clone |
 | Auto-deploy | GitHub webhook per application, HMAC-verified against the application's own secret, branch-filtered |
 | Env vars | per application, encrypted at rest, runtime and optional build-time, injected by the worker |
 | Deployments | queue, pipeline and history: pull or clone → build the Dockerfile → start → health check → stop the previous container; a failed run removes its own container and records why; rollback re-runs the previous image that reached running |
@@ -28,7 +29,6 @@ Current release: **0.5.0**.
    and let an interrupted deployment continue instead of restarting from the clone.
 2. **Nixpacks and compose** — the two build types the schema already offers and the worker refuses
    with an explicit message.
-3. **Private repositories** — deploy keys, encrypted at rest, so the clone can authenticate.
 
 ## Later
 

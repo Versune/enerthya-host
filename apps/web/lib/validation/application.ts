@@ -14,7 +14,20 @@ export const applicationSchema = z
       .trim()
       .optional()
       .transform((value) => value ?? "")
-      .pipe(z.union([z.literal(""), z.url({ error: "Enter a valid repository URL." })])),
+      .pipe(
+        z.union([
+          z.literal(""),
+          z.url({ error: "Enter a valid repository URL." }),
+          // git@github.com:owner/repo.git — the form a private repository
+          // usually has, and not a URL.
+          z
+            .string()
+            .regex(
+              /^[a-z0-9._-]+@[a-z0-9.-]+:[A-Za-z0-9._/-]+$/,
+              "Enter an https:// URL or an SSH address like git@github.com:owner/repo.git.",
+            ),
+        ]),
+      ),
     dockerImage: z.string().trim().max(255).optional().or(z.literal("")),
     gitBranch: z.string().trim().min(1).max(120).default("main"),
     buildType: z.enum(["dockerfile", "nixpacks", "docker-compose"]).default("nixpacks"),

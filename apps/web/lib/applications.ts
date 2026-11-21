@@ -1,4 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
+import { decryptSecret, encryptSecret } from "@enerthya/core/crypto";
+import { generateDeployKey, publicKeyFromPrivate } from "@enerthya/core/deploy-key";
 import { toSlug } from "@enerthya/core/slug";
 import {
   type ApplicationSummary,
@@ -68,6 +70,8 @@ export async function createApplication(
     port: input.port,
     healthcheckPath: input.healthcheckPath,
     webhookSecret: randomBytes(32).toString("hex"),
+    deployKeyEncrypted:
+      input.sourceType === "git" ? encryptSecret(generateDeployKey().privateKey) : null,
   });
 }
 
@@ -76,6 +80,18 @@ export function deleteApplication(organizationId: string, id: string): Promise<b
 }
 
 /** The webhook settings for one application, after proving it belongs to the org. */
+/** The public half of the application's deploy key, for pasting into GitHub. */
+export async function getDeployKeyPublic(
+  organizationId: string,
+  applicationId: string,
+): Promise<string | null> {
+  const db = getDb();
+  if (!(await applicationInOrganization(db, organizationId, applicationId))) return null;
+  const hook = await selectDeployHook(db, applicationId);
+  if (!hook?.deployKeyEncrypted) return null;
+  return publicKeyFromPrivate(decryptSecret(hook.deployKeyEncrypted), hook.name);
+}
+
 export async function getDeployHook(
   organizationId: string,
   applicationId: string,
