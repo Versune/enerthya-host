@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { decryptSecret } from "@enerthya/core/crypto";
@@ -33,22 +33,38 @@ import { imageTagFor } from "./naming";
  * clone is shallow: a deployment needs the tip of a branch, not its history,
  * and the command never prompts for a password.
  */
-export async function cloneRepository(url: string, branch: string, dir: string): Promise<string> {
-  const clone = await execa("git", ["clone", "--depth", "1", "--branch", branch, url, dir], {
-    timeout: 120_000,
-    reject: false,
-    env: {
-      GIT_TERMINAL_PROMPT: "0",
-      GIT_SSH_COMMAND: "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new",
-    },
-  });
-  if (clone.exitCode !== 0) {
-    const detail = clone.stderr.trim() || `git exited with ${clone.exitCode}`;
-    throw new Error(`Could not clone ${url} (${branch}): ${detail}`);
-  }
+export async function cloneRepository(
+  url: string,
+  branch: string,
+  dir: string,
+  privateKey?: string,
+): Promise<string> {
+  let keyDir: string | null = null;
+  try {
+    let sshCommand = "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new";
+    if (privateKey) {
+      keyDir = await mkdtemp(join(tmpdir(), "enerthya-key-"));
+      const keyFile = join(keyDir, "deploy_key");
+      await writeFile(keyFile, privateKey, { mode: 0o600 });
+      // IdentitiesOnly: an agent on the host must not offer a different key.
+      sshCommand = `ssh -i ${keyFile} -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=accept-new`;
+    }
 
-  const head = await execa("git", ["rev-parse", "HEAD"], { cwd: dir, timeout: 30_000 });
-  return head.stdout.trim();
+    const clone = await execa("git", ["clone", "--depth", "1", "--branch", branch, url, dir], {
+      timeout: 120_000,
+      reject: false,
+      env: { GIT_TERMINAL_PROMPT: "0", GIT_SSH_COMMAND: sshCommand },
+    });
+    if (clone.exitCode !== 0) {
+      const detail = clone.stderr.trim() || `git exited with ${clone.exitCode}`;
+      throw new Error(`Could not clone ${url} (${branch}): ${detail}`);
+    }
+
+    const head = await execa("git", ["rev-parse", "HEAD"], { cwd: dir, timeout: 30_000 });
+    return head.stdout.trim();
+  } finally {
+    if (keyDir) await rm(keyDir, { recursive: true, force: true }).catch(() => undefined);
+  }
 }
 
 /**
@@ -229,7 +245,10 @@ async function prepareImage(
 
   const dir = await mkdtemp(join(tmpdir(), "enerthya-"));
   onContext(dir);
-  const commitSha = await cloneRepository(target.gitUrl, target.gitBranch, dir);
+  const privateKey = target.deployKeyEncrypted
+    ? decryptSecret(target.deployKeyEncrypted)
+    : undefined;
+  const commitSha = await cloneRepository(target.gitUrl, target.gitBranch, dir, privateKey);
   await setDeploymentSource(getDb(), deploymentId, { commitSha });
 
   const image = imageTagFor(target.applicationSlug, deploymentId);

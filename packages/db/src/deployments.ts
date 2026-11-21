@@ -36,6 +36,7 @@ export type DeploymentTarget = {
   healthcheckPath: string;
   /** Set when a rollback already chose the image this deployment must run. */
   presetImage: string | null;
+  deployKeyEncrypted: string | null;
 };
 
 /** Deployment history for one organization, newest first. */
@@ -152,6 +153,7 @@ export async function selectDeploymentTarget(
       port: applications.port,
       healthcheckPath: applications.healthcheckPath,
       presetImage: deployments.imageTag,
+      deployKeyEncrypted: applications.deployKeyEncrypted,
     })
     .from(deployments)
     .innerJoin(applications, eq(deployments.applicationId, applications.id))

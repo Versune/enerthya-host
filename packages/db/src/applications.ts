@@ -143,6 +143,7 @@ export type DeployHook = {
   gitBranch: string;
   autoDeploy: boolean;
   webhookSecret: string | null;
+  deployKeyEncrypted: string | null;
 };
 
 export async function selectDeployHook(
@@ -156,6 +157,7 @@ export async function selectDeployHook(
       gitBranch: applications.gitBranch,
       autoDeploy: applications.autoDeploy,
       webhookSecret: applications.webhookSecret,
+      deployKeyEncrypted: applications.deployKeyEncrypted,
     })
     .from(applications)
     .where(eq(applications.id, applicationId))

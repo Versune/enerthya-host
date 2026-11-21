@@ -139,7 +139,7 @@ export function ApplicationForm({ environments }: { environments: EnvironmentOpt
               id={ids.repo}
               value={gitUrl}
               onChange={(event) => setGitUrl(event.target.value)}
-              placeholder="https://github.com/owner/repo"
+              placeholder="https://github.com/owner/repo or git@github.com:owner/repo.git"
               autoCapitalize="none"
               spellCheck={false}
             />
