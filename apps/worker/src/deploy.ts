@@ -28,6 +28,7 @@ import {
 } from "@enerthya/db";
 import { execa } from "execa";
 import { imageTagFor } from "./naming";
+import { notifyFailure } from "./notify";
 
 /**
  * Clones one branch into `dir` and returns the commit that was cloned. The
@@ -189,6 +190,12 @@ export async function runDeployment(deploymentId: string): Promise<void> {
     }
     const message = error instanceof Error ? error.message : "The deployment failed.";
     await log(`Failed: ${message}`);
+    void notifyFailure(target.applicationId, {
+      applicationName: target.applicationName,
+      applicationId: target.applicationId,
+      deploymentId,
+      error: message,
+    });
     await transitionDeployment(
       db,
       deploymentId,

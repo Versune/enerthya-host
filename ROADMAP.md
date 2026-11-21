@@ -17,6 +17,7 @@ Current release: **0.5.0**.
 | Servers | local-first registry, AES-256-GCM SSH keys, runtime probe, host-key pinning |
 | Projects | projects with production/staging environments; writes gated by owner/admin |
 | Applications | repository or image attached to an environment, with build type, port and healthcheck path; unique slug per environment |
+| Notifications | Discord webhook or generic endpoint on `deployment.failed`, URL encrypted at rest |
 | Container log | the running container's output, requested over a Postgres channel and tailed by the worker |
 | Deploy log |Each  deployment records every step, from the claim to the swap or the failure |
 | Domains | per application, published to a generated Caddy config; TLS is Caddy's job |
@@ -38,7 +39,7 @@ Current release: **0.5.0**.
 - One-click databases (Postgres, MySQL, Redis, MongoDB) with scheduled backups to S3/R2/MinIO and
   a restore that is verified, not assumed.
 - CPU/RAM/network metrics per container and per server.
-- Notifications (Discord, email, webhook).
+- Email notifications (only webhook and Discord exist today).
 - Service templates.
 - Invitations and full RBAC screens; roles are stored and enforced on project writes today.
 - Docker socket mount (or agent) so the panel container can manage the host runtime directly.
