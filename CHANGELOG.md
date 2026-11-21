@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.0](https://github.com/Versune/enerthya-host/compare/v0.8.0...v0.9.0) (2026-11-21)
+
+
+### Features
+
+* **applications:** queue a deployment on a signed GitHub push ([#50](https://github.com/Versune/enerthya-host/issues/50)) ([2f764fc](https://github.com/Versune/enerthya-host/commit/2f764fc4a667ba5d4d757828a51d088d2a295da1))
+* **env-vars:** store secrets per application and inject them at deploy ([#49](https://github.com/Versune/enerthya-host/issues/49)) ([dd5aeb9](https://github.com/Versune/enerthya-host/commit/dd5aeb98975c5dd8008ceb0da3d18ee036efc229))
+
 ## [0.8.0](https://github.com/Versune/enerthya-host/compare/v0.7.0...v0.8.0) (2026-11-21)
 
 
