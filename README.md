@@ -91,8 +91,8 @@ verifies the release checksum when it downloads a build.
 - Not yet: invitations, applications, deployments, domains and SSL, encrypted env vars, logs and
   terminal, managed databases, backups, metrics, notifications.
 
-See `CLAUDE.md` for the architecture rules and the stage order, `PRODUCT.md` for product truth.
-`DESIGN.md` currently describes the legacy panel and is rewritten with the new dashboard.
+See `ROADMAP.md` for what ships next, `CLAUDE.md` for the architecture rules and the stage order,
+and `PRODUCT.md` for product truth.
 
 ## Security
 
