@@ -8,6 +8,7 @@ import { DomainActions } from "@/components/applications/DomainActions";
 import { DomainForm } from "@/components/applications/DomainForm";
 import { EnvVarActions } from "@/components/applications/EnvVarActions";
 import { EnvVarForm } from "@/components/applications/EnvVarForm";
+import { TerminalPanel } from "@/components/applications/TerminalPanel";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { getApplication, getDeployHook, getDeployKeyPublic } from "@/lib/applications";
 import { currentOrganization } from "@/lib/current-org";
@@ -59,6 +60,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
         </p>
         <ContainerStats applicationId={application.id} />
         <ContainerLogs applicationId={application.id} />
+        {canWrite ? <TerminalPanel applicationId={application.id} /> : null}
       </section>
 
       <section className="page__section">

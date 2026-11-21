@@ -328,6 +328,60 @@ export async function execInContainer(
   return info.ExitCode ?? 1;
 }
 
+export type TerminalSession = {
+  write: (data: string) => void;
+  resize: (cols: number, rows: number) => Promise<void>;
+  close: () => void;
+};
+
+/**
+ * A TTY attached to a shell inside the container.
+ *
+ * Tty:true means Docker sends the raw byte stream with no 8-byte framing, so
+ * the terminal gets what the shell wrote and can write keystrokes straight
+ * back. No demuxStream here for the same reason the capture path needs it.
+ */
+export async function openTerminal(
+  client: Docker,
+  containerId: string,
+  options: {
+    cols: number;
+    rows: number;
+    shell?: string[];
+    onData: (chunk: string) => void;
+    onExit?: () => void;
+  },
+): Promise<TerminalSession> {
+  const container = client.getContainer(containerId);
+  const exec = await container.exec({
+    Cmd: options.shell ?? ["/bin/sh"],
+    AttachStdin: true,
+    AttachStdout: true,
+    AttachStderr: true,
+    Tty: true,
+  });
+  const stream = await exec.start({ hijack: true, stdin: true });
+
+  stream.on("data", (chunk: Buffer) => options.onData(chunk.toString("utf8")));
+  stream.on("end", () => options.onExit?.());
+  stream.on("error", () => options.onExit?.());
+
+  await exec.resize({ h: options.rows, w: options.cols }).catch(() => undefined);
+
+  return {
+    write(data: string) {
+      stream.write(data);
+    },
+    async resize(cols: number, rows: number) {
+      await exec.resize({ h: rows, w: cols }).catch(() => undefined);
+    },
+    close() {
+      stream.end();
+      stream.destroy();
+    },
+  };
+}
+
 /** Runs a command and returns its exit code and raw output. */
 export async function execCapture(
   client: Docker,

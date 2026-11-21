@@ -450,6 +450,25 @@
   margin-top: var(--s-6);
 }
 
+.terminal {
+  display: grid;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+}
+
+/* The shell keeps its own dark surface; the rest of the panel stays paper. */
+.terminal__host {
+  min-height: 22rem;
+  padding: var(--s-2);
+  background: #111111;
+  border: 1px solid var(--rule);
+  overflow: hidden;
+}
+
+.terminal__host:empty {
+  display: none;
+}
+
 /* Two fields, not three: the server form's row is sized for name/port/user. */
 .schedule-form__row {
   display: grid;

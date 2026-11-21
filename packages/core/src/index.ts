@@ -32,6 +32,7 @@ export {
   execInContainer,
   listApplicationContainers,
   missingRuntimeMessage,
+  openTerminal,
   pullImage,
   type RuntimeConnection,
   type RuntimeKind,
@@ -39,6 +40,7 @@ export {
   removeVolume,
   stopAndRemove,
   streamContainerLogs,
+  type TerminalSession,
   waitForHealthy,
 } from "./runtime";
 export {
