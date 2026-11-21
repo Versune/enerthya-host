@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/Versune/enerthya-host/compare/v0.9.0...v0.10.0) (2026-11-21)
+
+
+### Features
+
+* **domains:** route a domain to the port its deployment published ([#52](https://github.com/Versune/enerthya-host/issues/52)) ([1f791f7](https://github.com/Versune/enerthya-host/commit/1f791f7d4652e841e0fe801fe0558736fab85fcd))
+
 ## [0.9.0](https://github.com/Versune/enerthya-host/compare/v0.8.0...v0.9.0) (2026-11-21)
 
 
