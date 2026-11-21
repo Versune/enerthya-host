@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import type { Database } from "./client";
 import { applications, deployments, environments, projects } from "./schema";
 
@@ -16,6 +16,7 @@ export type DeploymentSummary = {
   containerId: string | null;
   rollbackOfId: string | null;
   error: string | null;
+  log: string | null;
   startedAt: Date | null;
   finishedAt: Date | null;
   createdAt: Date;
@@ -58,6 +59,7 @@ export async function selectDeployments(
       containerId: deployments.containerId,
       rollbackOfId: deployments.rollbackOfId,
       error: deployments.error,
+      log: deployments.log,
       startedAt: deployments.startedAt,
       finishedAt: deployments.finishedAt,
       createdAt: deployments.createdAt,
@@ -225,4 +227,14 @@ export async function selectRollbackCandidate(
 ): Promise<RollbackCandidate | null> {
   const candidates = await selectRollbackCandidates(db, organizationId);
   return candidates.find((candidate) => candidate.applicationId === applicationId) ?? null;
+}
+
+/** Appends one line to the deployment's log, keeping the newest 4000 lines. */
+export async function appendDeploymentLog(db: Database, id: string, line: string): Promise<void> {
+  const stamp = new Date().toISOString().slice(11, 19);
+  await db.execute(sql`
+    update ${deployments}
+    set log = coalesce(log, '') || ${`[${stamp}] ${line}\n`}
+    where id = ${id}
+  `);
 }

@@ -144,6 +144,8 @@ export const deployments = pgTable(
     /** Host port the runtime published, so a domain can be pointed at it. */
     hostPort: integer("host_port"),
     logPath: text("log_path"),
+    /** Build and deploy output, one line per step. */
+    log: text("log"),
     error: text("error"),
     rollbackOfId: text("rollback_of_id").references((): AnyPgColumn => deployments.id, {
       onDelete: "set null",

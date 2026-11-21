@@ -66,6 +66,12 @@ export default async function DeploymentsPage() {
                 {deployment.error ? (
                   <span className="deployment__error">{deployment.error}</span>
                 ) : null}
+                {deployment.log ? (
+                  <details className="deployment__log">
+                    <summary>Log</summary>
+                    <pre>{deployment.log}</pre>
+                  </details>
+                ) : null}
               </div>
               <span
                 className={`env-chip${deployment.status === "failed" ? " env-chip--failed" : ""}`}
