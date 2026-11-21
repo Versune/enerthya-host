@@ -127,7 +127,7 @@ export async function setDeploymentSource(
 export async function setDeploymentRuntime(
   db: Database,
   id: string,
-  runtime: { containerId?: string; imageTag?: string },
+  runtime: { containerId?: string; imageTag?: string; hostPort?: number },
 ): Promise<void> {
   await db.update(deployments).set(runtime).where(eq(deployments.id, id));
 }

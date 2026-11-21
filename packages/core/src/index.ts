@@ -1,4 +1,5 @@
 export { decryptSecret, encryptSecret } from "./crypto";
+export { type CaddyConfig, caddyConfig, type ProxyRoute, publishRoutes } from "./proxy";
 export {
   DEPLOY_QUEUE,
   type DeployJob,

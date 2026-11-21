@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { decryptSecret } from "@enerthya/core/crypto";
+import { publishRoutes } from "@enerthya/core/proxy";
 import {
   buildImage,
   connectRuntime,
@@ -18,6 +19,7 @@ import {
   type DeploymentTarget,
   getDb,
   selectDeploymentTarget,
+  selectDomainRoutes,
   selectEncryptedEnvVars,
   setDeploymentRuntime,
   setDeploymentSource,
@@ -124,7 +126,10 @@ export async function runDeployment(deploymentId: string): Promise<void> {
       env: variables.runtime,
     });
     containerId = started.id;
-    await setDeploymentRuntime(db, deploymentId, { containerId });
+    await setDeploymentRuntime(db, deploymentId, {
+      containerId,
+      hostPort: started.hostPort,
+    });
 
     await transitionDeployment(db, deploymentId, ["deploying"], "healthcheck");
     await waitForHealthy(`http://127.0.0.1:${started.hostPort}${target.healthcheckPath}`);
@@ -137,6 +142,11 @@ export async function runDeployment(deploymentId: string): Promise<void> {
     await transitionDeployment(db, deploymentId, ["healthcheck"], "running", {
       finishedAt: new Date(),
     });
+
+    // The container serves; now point the domains at it. A proxy that is not
+    // running yet is not a deployment failure — the application is up, and the
+    // next deployment will publish again.
+    await publishDomainRoutes();
   } catch (error) {
     if (containerId) {
       await stopAndRemove(runtime.client, containerId).catch(() => undefined);
@@ -154,6 +164,19 @@ export async function runDeployment(deploymentId: string): Promise<void> {
     );
   } finally {
     if (contextDir) await rm(contextDir, { recursive: true, force: true }).catch(() => undefined);
+  }
+}
+
+/** Loads every domain the panel knows about into the reverse proxy. */
+async function publishDomainRoutes(): Promise<void> {
+  const adminUrl = process.env.CADDY_ADMIN_URL;
+  if (!adminUrl) return;
+  try {
+    await publishRoutes(adminUrl, await selectDomainRoutes(getDb()));
+  } catch (error) {
+    console.error(
+      `[enerthya-worker] could not publish proxy routes: ${error instanceof Error ? error.message : error}`,
+    );
   }
 }
 

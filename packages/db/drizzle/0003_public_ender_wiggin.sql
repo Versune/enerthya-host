@@ -1,0 +1,1 @@
+ALTER TABLE "deployment" ADD COLUMN "host_port" integer;
