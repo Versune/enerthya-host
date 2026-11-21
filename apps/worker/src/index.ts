@@ -12,6 +12,7 @@ import { Worker } from "bullmq";
 import { startBackupScheduler } from "./backup-scheduler";
 import { startDatabaseWorker } from "./database-worker";
 import { runDeployment } from "./deploy";
+import { startHostStatsServer } from "./host-stats-server";
 import { logger } from "./log";
 import { startLogServer } from "./log-server";
 import { startStatsServer } from "./stats-server";
@@ -55,6 +56,7 @@ if (redisUrl) {
     startStatsServer(databaseUrl);
     startBackupScheduler(redisUrl);
     logger.info({ intervalMs: 300_000 }, "backup scheduler running");
+    startHostStatsServer(databaseUrl);
     startTerminalServer(databaseUrl);
     logger.info("terminal server listening on terminal_start");
   } else

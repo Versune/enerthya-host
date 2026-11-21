@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HostStats } from "@/components/shell/HostStats";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { getAuth } from "@/lib/auth";
 import { requireSession } from "@/lib/require-session";
@@ -23,6 +24,15 @@ export default async function OverviewPage() {
         check and only then replaces the old container; domains, encrypted environment variables,
         logs, metrics, managed databases and verified backups are here too.
       </PageHeader>
+
+      <section className="page__section">
+        <h2 className="label">This machine</h2>
+        <p className="page__lede">
+          The host the worker runs on. Container numbers answer whether an application is healthy;
+          these answer whether the machine is.
+        </p>
+        <HostStats />
+      </section>
 
       <dl className="ledger">
         {organizations.map((org) => (
