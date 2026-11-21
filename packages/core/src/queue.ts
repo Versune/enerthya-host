@@ -6,8 +6,10 @@ import { Queue } from "bullmq";
  * only the request to move it forward.
  */
 export const DEPLOY_QUEUE = "deployments";
+export const DATABASE_QUEUE = "databases";
 
 export type DeployJob = { deploymentId: string };
+export type DatabaseJob = { databaseId: string; action: "provision" | "remove" };
 
 export type RedisConnection = {
   host: string;
@@ -67,6 +69,25 @@ export async function enqueueDeployment(redisUrl: string, deploymentId: string):
       "deploy",
       { deploymentId },
       { jobId: deploymentId, attempts: 1, removeOnComplete: 200, removeOnFail: 200 },
+    );
+  } finally {
+    await queue.close();
+  }
+}
+
+/** Queues a managed database operation. The job id pairs the action with the
+ * database, so re-requesting the same action cannot double-provision. */
+export async function enqueueDatabaseJob(
+  redisUrl: string,
+  databaseId: string,
+  action: DatabaseJob["action"],
+): Promise<void> {
+  const queue = new Queue<DatabaseJob>(DATABASE_QUEUE, { connection: redisConnection(redisUrl) });
+  try {
+    await queue.add(
+      action,
+      { databaseId, action },
+      { jobId: `${action}-${databaseId}`, attempts: 1, removeOnComplete: 50, removeOnFail: 50 },
     );
   } finally {
     await queue.close();

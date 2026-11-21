@@ -2,9 +2,12 @@ export { decryptSecret, encryptSecret } from "./crypto";
 export { type DeployKey, generateDeployKey, publicKeyFromPrivate } from "./deploy-key";
 export { type CaddyConfig, caddyConfig, type ProxyRoute, publishRoutes } from "./proxy";
 export {
+  DATABASE_QUEUE,
+  type DatabaseJob,
   DEPLOY_QUEUE,
   type DeployJob,
   deployQueue,
+  enqueueDatabaseJob,
   enqueueDeployment,
   type RedisConnection,
   redisConnection,
@@ -16,12 +19,15 @@ export {
   containerName,
   createAndStart,
   describeRuntime,
+  ensureVolume,
+  execInContainer,
   listApplicationContainers,
   missingRuntimeMessage,
   pullImage,
   type RuntimeConnection,
   type RuntimeKind,
   readContainerStats,
+  removeVolume,
   stopAndRemove,
   streamContainerLogs,
   waitForHealthy,
