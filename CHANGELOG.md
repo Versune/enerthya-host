@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/Versune/enerthya-host/compare/v0.6.0...v0.6.1) (2026-11-21)
+
+
+### Bug Fixes
+
+* **copy:** stop saying nothing deploys ([#41](https://github.com/Versune/enerthya-host/issues/41)) ([62ac271](https://github.com/Versune/enerthya-host/commit/62ac27112957df528d3d608e1e7272aac387b002))
+
 ## [0.6.0](https://github.com/Versune/enerthya-host/compare/v0.5.0...v0.6.0) (2026-11-21)
 
 
