@@ -2,11 +2,14 @@ import { roleAtLeast } from "@enerthya/core/roles";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { DomainActions } from "@/components/applications/DomainActions";
+import { DomainForm } from "@/components/applications/DomainForm";
 import { EnvVarActions } from "@/components/applications/EnvVarActions";
 import { EnvVarForm } from "@/components/applications/EnvVarForm";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { getApplication, getDeployHook } from "@/lib/applications";
 import { currentOrganization } from "@/lib/current-org";
+import { listDomains } from "@/lib/domains";
 import { listEnvVars } from "@/lib/env-vars";
 
 export const dynamic = "force-dynamic";
@@ -23,9 +26,10 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
   const application = await getApplication(context.organization.id, id);
   if (!application) notFound();
 
-  const [envVars, hook] = await Promise.all([
+  const [envVars, hook, domainList] = await Promise.all([
     listEnvVars(context.organization.id, id),
     getDeployHook(context.organization.id, id),
+    listDomains(context.organization.id, id),
   ]);
   const canWrite = roleAtLeast(context.role, "admin");
   const source =
@@ -43,6 +47,47 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
       <p className="page__back">
         <Link href="/applications">← All applications</Link>
       </p>
+
+      <section className="page__section">
+        <h2 className="label">Domains</h2>
+        <p className="page__lede">
+          Point the domain's DNS at this machine, then add it here. The proxy picks it up on the
+          next deployment and obtains the certificate; nothing is served until a deployment has
+          reached running.
+        </p>
+
+        {domainList.length === 0 ? (
+          <div className="empty">
+            <strong className="label">No domains</strong>
+            <p>
+              {canWrite
+                ? "Add one below once its DNS record points here."
+                : "An admin can add domains here."}
+            </p>
+          </div>
+        ) : (
+          <ul className="projects">
+            {domainList.map((domain) => (
+              <li className="project" key={domain.id}>
+                <div className="project__id">
+                  <span className="project__name">{domain.hostname}</span>
+                  <span className="deployment__meta">{domain.status}</span>
+                </div>
+                {canWrite ? (
+                  <DomainActions applicationId={application.id} domainId={domain.id} />
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {canWrite ? (
+          <details className="add-project">
+            <summary className="btn btn--quiet">Add a domain</summary>
+            <DomainForm applicationId={application.id} />
+          </details>
+        ) : null}
+      </section>
 
       <section className="page__section">
         <h2 className="label">Auto-deploy</h2>

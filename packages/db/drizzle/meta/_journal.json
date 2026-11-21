@@ -22,6 +22,13 @@
       "when": 1795188827719,
       "tag": "0002_omniscient_ravenous",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795239292610,
+      "tag": "0003_public_ender_wiggin",
+      "breakpoints": true
     }
   ]
 }

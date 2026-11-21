@@ -141,6 +141,8 @@ export const deployments = pgTable(
     commitSha: text("commit_sha"),
     imageTag: text("image_tag"),
     containerId: text("container_id"),
+    /** Host port the runtime published, so a domain can be pointed at it. */
+    hostPort: integer("host_port"),
     logPath: text("log_path"),
     error: text("error"),
     rollbackOfId: text("rollback_of_id").references((): AnyPgColumn => deployments.id, {

@@ -76,10 +76,29 @@ services:
       DATABASE_URL: postgres://enerthya:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@127.0.0.1:${POSTGRES_PORT:-5432}/enerthya
       REDIS_URL: redis://127.0.0.1:${REDIS_PORT:-6379}
       DOCKER_HOST: unix:///var/run/docker.sock
+      CADDY_ADMIN_URL: http://127.0.0.1:2019
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
+  # The reverse proxy, generated from the database. Host networking so it can
+  # reach the port each container published on the host's loopback, and so :80
+  # and :443 are the host's own. Caddy obtains certificates itself.
+  proxy:
+    profiles: ["runtime"]
+    image: caddy:2-alpine
+    restart: unless-stopped
+    network_mode: host
+    # Caddy's admin API only accepts requests whose origin is listed. The
+    # bootstrap file sets that once; every config the worker loads keeps it.
+    command:
+      - sh
+      - -c
+      - printf '{\n\tadmin 127.0.0.1:2019 {\n\t\torigins http://127.0.0.1:2019\n\t}\n}\n' > /tmp/Caddyfile && caddy run --config /tmp/Caddyfile
+    volumes:
+      - caddy-data:/data
+
 volumes:
   postgres-data:
   redis-data:
+  caddy-data:
