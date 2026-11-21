@@ -14,16 +14,20 @@ export function listChannels(organizationId: string): Promise<ChannelRow[]> {
   return selectNotificationChannels(getDb(), organizationId);
 }
 
-export async function addChannel(
-  organizationId: string,
-  input: { name: string; type: "discord" | "webhook"; url: string },
-): Promise<void> {
+export type ChannelInput =
+  | { name: string; type: "discord" | "webhook"; url: string }
+  | { name: string; type: "email"; to: string };
+
+export async function addChannel(organizationId: string, input: ChannelInput): Promise<void> {
+  // The secret stays the destination only; SMTP settings live in the install's
+  // environment, shared by every email channel.
+  const config = input.type === "email" ? { to: input.to } : { url: input.url };
   await insertNotificationChannel(getDb(), {
     id: randomUUID(),
     organizationId,
     name: input.name,
     type: input.type,
-    configEncrypted: encryptSecret(JSON.stringify({ url: input.url })),
+    configEncrypted: encryptSecret(JSON.stringify(config)),
     events: ["deployment.failed"],
   });
 }
