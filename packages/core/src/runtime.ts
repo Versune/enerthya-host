@@ -24,6 +24,8 @@ export type CreateContainerSpec = {
   labels: Record<string, string>;
   /** KEY=value pairs handed to the container. */
   env?: string[];
+  /** Host paths or named volumes mounted into the container. */
+  volumes?: { source: string; target: string }[];
 };
 
 function parseDockerHost(value: string): Docker.DockerOptions | null {
@@ -158,6 +160,7 @@ export async function createAndStart(
     HostConfig: {
       PortBindings: { [portKey]: [{ HostPort: "" }] },
       RestartPolicy: { Name: "unless-stopped" },
+      Binds: spec.volumes?.map((volume) => `${volume.source}:${volume.target}`),
     },
   });
 
@@ -283,4 +286,44 @@ export function streamContainerLogs(
       // The container may have gone away first.
     }
   };
+}
+
+export async function ensureVolume(client: Docker, name: string): Promise<void> {
+  try {
+    await client.createVolume({ Name: name });
+  } catch (error) {
+    // An existing volume is the normal case when a provisioning job is retried.
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/already exists/i.test(message)) throw error;
+  }
+}
+
+export async function removeVolume(client: Docker, name: string): Promise<void> {
+  try {
+    await client.getVolume(name).remove();
+  } catch {
+    // A missing volume is already removed.
+  }
+}
+
+/** Runs a command inside a container and returns its exit code. */
+export async function execInContainer(
+  client: Docker,
+  containerId: string,
+  command: string[],
+): Promise<number> {
+  const container = client.getContainer(containerId);
+  const exec = await container.exec({
+    Cmd: command,
+    AttachStdout: true,
+    AttachStderr: true,
+  });
+  const started = await exec.start({});
+  await new Promise<void>((resolve) => {
+    started.on("end", () => resolve());
+    started.on("error", () => resolve());
+    started.resume();
+  });
+  const info = await exec.inspect();
+  return info.ExitCode ?? 1;
 }

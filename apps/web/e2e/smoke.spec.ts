@@ -6,9 +6,12 @@ const EMAIL = `e2e-${STAMP}@example.com`;
 const PASSWORD = "correct horse battery staple";
 const ORGANIZATION = `E2E Team ${STAMP}`;
 
-/** A click before React hydrates is a native submit and reloads the page. */
+/** A click before React hydrates is a native submit and reloads the page.
+ * The first compile of a route in development can take longer than the default
+ * five seconds, and a hydration wait that is too short fails the test, not the
+ * page. */
 async function waitForHydration(page: Page) {
-  await expect(page.locator('form[data-hydrated="true"]')).toBeVisible();
+  await expect(page.locator('form[data-hydrated="true"]')).toBeVisible({ timeout: 20_000 });
 }
 
 /** Every test gets a fresh context, so each signed-in test signs in itself. */

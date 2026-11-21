@@ -9,6 +9,7 @@
  */
 import { DEPLOY_QUEUE, type DeployJob, redisConnection } from "@enerthya/core/queue";
 import { Worker } from "bullmq";
+import { startDatabaseWorker } from "./database-worker";
 import { runDeployment } from "./deploy";
 import { startLogServer } from "./log-server";
 import { startStatsServer } from "./stats-server";
@@ -42,7 +43,8 @@ export function startWorker(redisUrl: string): Worker<DeployJob> {
 const redisUrl = process.env.REDIS_URL;
 if (redisUrl) {
   const worker = startWorker(redisUrl);
-  console.log(`[${WORKER_NAME}] listening on ${DEPLOY_QUEUE}`);
+  startDatabaseWorker(redisUrl);
+  console.log(`[${WORKER_NAME}] listening on ${DEPLOY_QUEUE} and databases`);
 
   const databaseUrl = process.env.DATABASE_URL;
   if (databaseUrl) {
