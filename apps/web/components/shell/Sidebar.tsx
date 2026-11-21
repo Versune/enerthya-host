@@ -46,8 +46,8 @@ export function Sidebar() {
       </nav>
 
       <p className="sidebar__foot">
-        Servers, projects, applications and deployments. Domains, logs, databases and backups come
-        next.
+        Servers, projects, applications and deployments, with domains, logs, metrics, databases and
+        verified backups.
       </p>
     </aside>
   );
