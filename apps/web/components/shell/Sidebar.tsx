@@ -1,15 +1,16 @@
 "use client";
 
+import { Boxes, FolderKanban, LayoutDashboard, Rocket, Server } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Brand } from "@/components/Brand";
 
 export const NAV_ITEMS = [
-  { href: "/", label: "Overview" },
-  { href: "/servers", label: "Servers" },
-  { href: "/projects", label: "Projects" },
-  { href: "/applications", label: "Applications" },
-  { href: "/deployments", label: "Deployments" },
+  { href: "/", label: "Overview", icon: LayoutDashboard },
+  { href: "/servers", label: "Servers", icon: Server },
+  { href: "/projects", label: "Projects", icon: FolderKanban },
+  { href: "/applications", label: "Applications", icon: Boxes },
+  { href: "/deployments", label: "Deployments", icon: Rocket },
 ] as const;
 
 export function Sidebar() {
@@ -33,6 +34,7 @@ export function Sidebar() {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                 >
+                  <item.icon className="nav-item__icon" size={16} strokeWidth={1.6} aria-hidden />
                   {item.label}
                 </Link>
               </li>

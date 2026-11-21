@@ -38,7 +38,9 @@
 }
 
 .nav-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   padding: 0.5rem 0.65rem;
   border-radius: var(--r-1);
   color: var(--ink-80);
@@ -50,8 +52,19 @@
     color var(--d-1) var(--ease);
 }
 
+.nav-item__icon {
+  color: var(--ink-45);
+  flex: none;
+  transition: color var(--d-1) var(--ease);
+}
+
 .nav-item:hover {
   background: var(--paper-2);
+  color: var(--ink);
+}
+
+.nav-item:hover .nav-item__icon,
+.nav-item[aria-current="page"] .nav-item__icon {
   color: var(--ink);
 }
 
