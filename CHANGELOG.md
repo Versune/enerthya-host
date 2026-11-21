@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.5](https://github.com/Versune/enerthya-host/compare/v0.12.4...v0.12.5) (2026-11-21)
+
+
+### Bug Fixes
+
+* **install:** wait for the release artifact instead of failing on 404 ([#67](https://github.com/Versune/enerthya-host/issues/67)) ([b62a25d](https://github.com/Versune/enerthya-host/commit/b62a25d06e84ed1c4b07f981f0b24cbfe0a74906))
+
 ## [0.12.4](https://github.com/Versune/enerthya-host/compare/v0.12.3...v0.12.4) (2026-11-21)
 
 
