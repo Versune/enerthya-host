@@ -10,6 +10,7 @@ import {
   type RuntimeConnection,
   stopAndRemove,
 } from "@enerthya/core/runtime";
+import { putObject, s3ConfigFromEnv } from "@enerthya/core/s3";
 import { getDb, selectBackupJob, updateBackup } from "@enerthya/db";
 import tar from "tar-fs";
 
@@ -141,9 +142,25 @@ export async function runBackup(backupId: string): Promise<void> {
       );
     }
 
+    // The dump is only worth keeping where losing this host cannot take it.
+    // With a bucket configured it is uploaded and the local copy removed;
+    // without one it stays here, and the row says so.
+    const s3 = s3ConfigFromEnv();
+    let storagePath = dumpPath;
+    let destination: "local" | "s3" = "local";
+    if (s3) {
+      const key = `backups/${backup.databaseId}/${backupId}.dump`;
+      await putObject(s3, key, dump.output);
+      storagePath = `s3://${s3.bucket}/${key}`;
+      destination = "s3";
+      await rm(dumpPath, { force: true }).catch(() => undefined);
+      dumpPath = null;
+    }
+
     await updateBackup(db, backupId, {
       status: "succeeded",
-      storagePath: dumpPath,
+      destination,
+      storagePath,
       sizeBytes: dump.output.length,
       verifiedAt: new Date(),
       finishedAt: new Date(),

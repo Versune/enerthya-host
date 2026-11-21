@@ -67,6 +67,15 @@ Install Docker Desktop or colima and run the same command inside the Docker VM. 
 | `ENERTHYA_VERSION` | image tag to run |
 | `ENERTHYA_BIND` | host interface for the panel port |
 | `ENERTHYA_PORT` | host port for the panel |
+| `ENERTHYA_S3_ENDPOINT` | S3-compatible endpoint for verified backups (S3, R2, MinIO) |
+| `ENERTHYA_S3_BUCKET` | bucket that receives the dumps |
+| `ENERTHYA_S3_REGION` | region; `auto` for R2 (default) |
+| `ENERTHYA_S3_ACCESS_KEY_ID` | access key |
+| `ENERTHYA_S3_SECRET_ACCESS_KEY` | secret key |
+
+With the five `ENERTHYA_S3_*` values set, a verified backup is uploaded and the local copy is
+removed; the row records `s3://<bucket>/<key>`. Without them the dump stays on the host, next to
+the database it protects.
 
 Back up `.env` with the data volumes: without `ENCRYPTION_KEY`, secrets stored in the database
 cannot be decrypted.

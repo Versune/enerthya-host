@@ -58,6 +58,7 @@ export async function updateBackup(
   id: string,
   patch: {
     status?: BackupSummary["status"];
+    destination?: BackupSummary["destination"];
     storagePath?: string;
     sizeBytes?: number;
     verifiedAt?: Date;
