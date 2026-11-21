@@ -55,7 +55,8 @@ Node 24+, pnpm 12 (`packageManager` is pinned). Podman or Docker for the dev ser
 Environment: `DATABASE_URL`, `REDIS_URL`, `BETTER_AUTH_SECRET`, `ENCRYPTION_KEY` (32 bytes,
 AES-256-GCM), plus `PORT`/`HOSTNAME` for the panel. The worker finds the container runtime through
 `DOCKER_HOST` (unix:// or tcp://), falling back to `/var/run/docker.sock` and the rootless Podman
-socket; Podman needs `podman system service` running. Typed validation lands with
+socket; Podman needs `podman system service` running. `CADDY_ADMIN_URL` (default
+`http://127.0.0.1:2019`) is where the worker loads the generated proxy config. Typed validation lands with
 `packages/config` in Stage 2; nothing reads an unvalidated env var afterwards.
 
 ## Security invariants — do not weaken
@@ -102,21 +103,22 @@ showing a disabled control.
 ## Roadmap, in order
 
 1. ~~Monorepo structure and configs~~ (done)
-2. Complete Drizzle schema: users, organizations, members, servers, projects, environments,
-   applications, deployments, domains, env_vars, databases, backups, notifications.
-3. Dev `docker-compose.yml`: Postgres + Redis.
-4. better-auth with the organizations plugin and owner/admin/member RBAC; Drizzle adapter.
-   Sign-up, sign-in, sign-out and the organization created at sign-up exist; enforcing roles on
-   API routes and invitations still do not.
-5. Dashboard shell: sidebar, command palette, dark mode default.
-6. Servers over SSH: key validation, Docker install/verify, localhost by default.
-7. Projects, environments, applications (Git webhook, deploy key, Dockerfile/Nixpacks/compose).
-8. Deploy pipeline: clone → build → healthcheck → zero-downtime swap → rollback.
-9. Domains and automatic SSL through the generated proxy config.
-10. Env vars, encrypted, build-time vs runtime.
-11. Real-time logs (SSE/WebSocket) and the web terminal.
+2. ~~Complete Drizzle schema~~ (done; migrations 0000–0003)
+3. ~~Dev `docker-compose.yml`~~ (done)
+4. ~~better-auth with the organizations plugin and RBAC~~ (done: API routes enforce owner/admin;
+   invitations still do not exist)
+5. ~~Dashboard shell~~ (done)
+6. ~~Servers over SSH~~ (done: encrypted key, probe, host-key pinning)
+7. ~~Projects, environments, applications~~ (done: source, build type, webhook, deploy key)
+8. ~~Deploy pipeline~~ (done: clone → build the Dockerfile → health check → swap → rollback;
+   Nixpacks and compose builds are refused with an explicit message, not implemented)
+9. ~~Domains and automatic SSL through the generated proxy~~ (done with Caddy; the proxy hop is
+   only proven on the host topology, not yet against a real DNS record)
+10. ~~Env vars, encrypted, build-time vs runtime~~ (done)
+11. Real-time logs (SSE/WebSocket) and the web terminal — **next**
 12. One-click databases with scheduled backups to S3/R2/MinIO.
 13. Metrics per container and per server; notifications (Discord, email, webhook); templates.
+14. Invitations and member management screens; zero-downtime handover and resumable deployments.
 
 Each stage ships working. A placeholder is not a stage.
 

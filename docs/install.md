@@ -83,12 +83,18 @@ To enable deploys:
 sudo bash install.sh --with-runtime
 ```
 
-This writes `COMPOSE_PROFILES=runtime` to `.env` and starts the `worker` service:
+This writes `COMPOSE_PROFILES=runtime` to `.env` and starts two services:
 
 - it runs the same image with `command: ["node", "apps/worker/dist/index.cjs"]`;
 - it mounts `/var/run/docker.sock` and uses host networking, because the containers it starts
   publish their ports on the host's loopback;
-- Postgres and Redis are published on `127.0.0.1` only, for the worker to reach them.
+- Postgres and Redis are published on `127.0.0.1` only, for the worker to reach them;
+- the **`proxy`** service (Caddy) takes `:80` and `:443` on the host, routes each domain the panel
+  knows about to the port its deployment published, and obtains the certificate itself.
+
+Both bind ports on the host, so stop anything already listening on 80 or 443 before enabling the
+profile. A domain only works after its DNS record points at this machine and a deployment has
+reached `running`.
 
 Anyone able to execute a container through that socket can mount the host's filesystem and read
 every secret on the machine, including `/data/enerthya/.env`. Run the worker only on a host you
