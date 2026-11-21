@@ -7,6 +7,7 @@ export {
 } from "./backup-schedule";
 export { decryptSecret, encryptSecret } from "./crypto";
 export { type DeployKey, generateDeployKey, publicKeyFromPrivate } from "./deploy-key";
+export { type HostStats, type HostStatsInput, readHostStats } from "./host-stats";
 export { type CaddyConfig, caddyConfig, type ProxyRoute, publishRoutes } from "./proxy";
 export {
   DATABASE_QUEUE,
