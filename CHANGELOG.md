@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.12.10](https://github.com/Versune/enerthya-host/compare/v0.12.9...v0.12.10) (2026-11-21)
+
+
+### Features
+
+* **terminal:** a shell inside the running container ([#84](https://github.com/Versune/enerthya-host/issues/84)) ([010eac4](https://github.com/Versune/enerthya-host/commit/010eac489ea1bbe6e9d296f357810c90618929da))
+* **worker:** structured logs with pino, relative time with date-fns ([#81](https://github.com/Versune/enerthya-host/issues/81)) ([f98b043](https://github.com/Versune/enerthya-host/commit/f98b043e83a878a8a05fa846edbf241e72967b03))
+
+
+### Bug Fixes
+
+* **install:** stop dropping operator settings from .env ([#82](https://github.com/Versune/enerthya-host/issues/82)) ([3022943](https://github.com/Versune/enerthya-host/commit/30229434912518e7f8070ac8f1b03086388bfd95))
+
 ## [0.12.9](https://github.com/Versune/enerthya-host/compare/v0.12.8...v0.12.9) (2026-11-21)
 
 
