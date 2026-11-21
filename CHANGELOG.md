@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/Versune/enerthya-host/compare/v0.10.0...v0.11.0) (2026-11-21)
+
+
+### Features
+
+* **applications:** per-application deploy keys for private repositories ([#54](https://github.com/Versune/enerthya-host/issues/54)) ([95376ed](https://github.com/Versune/enerthya-host/commit/95376ed6a163b8c4336dd894e46ce85cc3f9f84d))
+
 ## [0.10.0](https://github.com/Versune/enerthya-host/compare/v0.9.0...v0.10.0) (2026-11-21)
 
 
