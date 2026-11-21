@@ -8,6 +8,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
+    "predev": "node scripts/dev-env.mjs",
     "dev": "pnpm --filter @enerthya/web dev",
     "build": "pnpm --filter @enerthya/web build",
     "start": "pnpm --filter @enerthya/web start",
