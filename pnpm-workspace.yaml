@@ -12,6 +12,8 @@ allowBuilds:
   # msgpackr-extract is an optional native accelerator for BullMQ's msgpack.
   # The pure-JS path is used instead, so the build script stays denied.
   msgpackr-extract: false
+  # protobufjs' postinstall only prints its funding notice; no code is needed.
+  protobufjs: false
 
 minimumReleaseAgeExclude:
   - lucide-react@1.76.0

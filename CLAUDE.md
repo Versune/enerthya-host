@@ -53,7 +53,9 @@ pnpm db:studio         # drizzle studio
 Node 24+, pnpm 12 (`packageManager` is pinned). Podman or Docker for the dev services.
 
 Environment: `DATABASE_URL`, `REDIS_URL`, `BETTER_AUTH_SECRET`, `ENCRYPTION_KEY` (32 bytes,
-AES-256-GCM), plus `PORT`/`HOSTNAME` for the panel. Typed validation lands with
+AES-256-GCM), plus `PORT`/`HOSTNAME` for the panel. The worker finds the container runtime through
+`DOCKER_HOST` (unix:// or tcp://), falling back to `/var/run/docker.sock` and the rootless Podman
+socket; Podman needs `podman system service` running. Typed validation lands with
 `packages/config` in Stage 2; nothing reads an unvalidated env var afterwards.
 
 ## Security invariants — do not weaken
@@ -78,7 +80,7 @@ AES-256-GCM), plus `PORT`/`HOSTNAME` for the panel. Typed validation lands with
 apps/web/app/          `/` (dashboard), `/sign-in`, `/sign-up`
 apps/web/app/api/      auth/[...all] (better-auth), health, runtime
 apps/web/lib/          auth.ts (server instance), auth-client.ts, validation/, runtime.ts
-apps/worker/src/       BullMQ consumer for the deployment queue; resolves the source today
+apps/worker/src/       BullMQ consumer: clone, build, start, health check, swap
 packages/core/src/     domain logic; `toSlug` is the first shared primitive
 packages/db/src/       Drizzle schema, migrations and every query (Postgres)
 DESIGN.md              the design system — currently describes the legacy panel, rewritten in
