@@ -1,7 +1,8 @@
 # Installing Enerthya Host
 
-The panel runs as three containers: the panel itself, Postgres 17 and Redis 7. Nothing else is
-installed on the host except Docker.
+The panel runs as two containers, the panel itself and Postgres 17 and Redis 7 alongside it.
+Nothing else is installed on the host except Docker. A fourth container, the deploy worker, is
+optional and described under [Running deploys](#running-deploys).
 
 ## Requirements
 
@@ -30,6 +31,7 @@ Flags:
 | `--bind 0.0.0.0` | listen on every interface (see TLS below) |
 | `--port 8420` | panel port |
 | `--url https://panel.example.com` | origin used by better-auth; set it when not using localhost |
+| `--with-runtime` | also run the deploy worker (mounts the Docker socket — see below) |
 
 Layout:
 
@@ -69,6 +71,32 @@ Install Docker Desktop or colima and run the same command inside the Docker VM. 
 Back up `.env` with the data volumes: without `ENCRYPTION_KEY`, secrets stored in the database
 cannot be decrypted.
 
+## Running deploys
+
+By default the panel installs **without** the worker: applications can be created and deployments
+are recorded, but nothing builds or starts a container. That is deliberate — the worker needs
+`/var/run/docker.sock`, and a mounted socket is equivalent to root on the host.
+
+To enable deploys:
+
+```sh
+sudo bash install.sh --with-runtime
+```
+
+This writes `COMPOSE_PROFILES=runtime` to `.env` and starts the `worker` service:
+
+- it runs the same image with `command: ["node", "apps/worker/dist/index.cjs"]`;
+- it mounts `/var/run/docker.sock` and uses host networking, because the containers it starts
+  publish their ports on the host's loopback;
+- Postgres and Redis are published on `127.0.0.1` only, for the worker to reach them.
+
+Anyone able to execute a container through that socket can mount the host's filesystem and read
+every secret on the machine, including `/data/enerthya/.env`. Run the worker only on a host you
+control, and treat the panel as having that privilege too.
+
+Turn it off again by removing `COMPOSE_PROFILES` from `.env` and running
+`docker compose ... up -d --remove-orphans` — deployments then queue until a worker exists.
+
 ## Exposing it on a VPS
 
 Default is loopback. For a domain, terminate TLS in Caddy, Traefik or nginx and proxy to
@@ -92,3 +120,5 @@ test but sends credentials over plain HTTP.
 | Postgres not ready | `... logs postgres`; port conflicts inside Compose do not touch the host |
 | Login redirects to the wrong host | `BETTER_AUTH_URL` and `BETTER_AUTH_TRUSTED_ORIGINS` in `.env` |
 | Docker permission denied | the installer uses root; for manual runs add your user to the `docker` group |
+| Deploy stays `queued` | no worker is running: reinstall with `--with-runtime` |
+| Worker restarts on boot | `docker compose ... logs worker`; the socket must exist at that path |

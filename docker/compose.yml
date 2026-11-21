@@ -8,6 +8,8 @@ services:
       POSTGRES_USER: enerthya
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: enerthya
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -20,6 +22,8 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -46,6 +50,35 @@ services:
       HOSTNAME: 0.0.0.0
     ports:
       - "${ENERTHYA_BIND:-127.0.0.1}:${ENERTHYA_PORT:-8420}:8420"
+
+  # The deploy runtime. Off by default: it mounts the host's container socket,
+  # which is equivalent to root on this machine. Enable with COMPOSE_PROFILES=runtime
+  # (install.sh --with-runtime) once you accept that trade.
+  #
+  # Host networking is deliberate: the worker starts containers on the host and
+  # health-checks them through the port the runtime published, which lives on
+  # the host's loopback — not on this container's.
+  worker:
+    profiles: ["runtime"]
+    image: enerthya-host:${ENERTHYA_VERSION:-latest}
+    restart: unless-stopped
+    network_mode: host
+    # Root inside this container only, to reach a socket owned by root:docker.
+    # The socket is already equivalent to root on the host.
+    user: "0:0"
+    command: ["node", "apps/worker/dist/index.cjs"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://enerthya:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@127.0.0.1:${POSTGRES_PORT:-5432}/enerthya
+      REDIS_URL: redis://127.0.0.1:${REDIS_PORT:-6379}
+      DOCKER_HOST: unix:///var/run/docker.sock
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   postgres-data:
