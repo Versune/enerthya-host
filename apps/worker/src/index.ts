@@ -15,6 +15,7 @@ import { runDeployment } from "./deploy";
 import { logger } from "./log";
 import { startLogServer } from "./log-server";
 import { startStatsServer } from "./stats-server";
+import { startTerminalServer } from "./terminal-server";
 
 export const WORKER_NAME = "enerthya-worker";
 
@@ -54,6 +55,8 @@ if (redisUrl) {
     startStatsServer(databaseUrl);
     startBackupScheduler(redisUrl);
     logger.info({ intervalMs: 300_000 }, "backup scheduler running");
+    startTerminalServer(databaseUrl);
+    logger.info("terminal server listening on terminal_start");
   } else
     logger.warn("DATABASE_URL is not set; logs, metrics and backup scheduling are unavailable");
 

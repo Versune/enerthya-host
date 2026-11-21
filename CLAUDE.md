@@ -115,7 +115,8 @@ showing a disabled control.
 9. ~~Domains and automatic SSL through the generated proxy~~ (done with Caddy; the proxy hop is
    only proven on the host topology, not yet against a real DNS record)
 10. ~~Env vars, encrypted, build-time vs runtime~~ (done)
-11. Real-time logs (SSE/WebSocket) and the web terminal — **next**
+11. ~~Real-time logs (SSE/WebSocket) and the web terminal~~ (done: deploy log and container
+    output over SSE; the shell runs as a TTY exec in the worker, carried over Postgres channels)
 12. ~~One-click databases with scheduled backups to S3/R2/MinIO~~ (done: provisioned Postgres,
     verified backups, a schedule and retention window per database)
 13. Metrics per container and per server; notifications (Discord, email, webhook); templates.
