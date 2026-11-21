@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.12](https://github.com/Versune/enerthya-host/compare/v0.12.11...v0.12.12) (2026-11-21)
+
+
+### Features
+
+* **metrics:** read the host the worker runs on ([#89](https://github.com/Versune/enerthya-host/issues/89)) ([9fe35c7](https://github.com/Versune/enerthya-host/commit/9fe35c7eec0300b6116b40ce49cc509b5a1897ef))
+* **web:** chart container CPU with react-query and recharts ([#87](https://github.com/Versune/enerthya-host/issues/87)) ([b1aa480](https://github.com/Versune/enerthya-host/commit/b1aa480f6a3901a6798ce369611a29899aefd2b0))
+
 ## [0.12.11](https://github.com/Versune/enerthya-host/compare/v0.12.10...v0.12.11) (2026-11-21)
 
 
