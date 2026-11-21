@@ -34,6 +34,7 @@ export {
   streamContainerLogs,
   waitForHealthy,
 } from "./runtime";
+export { putObject, type S3Config, s3ConfigFromEnv, signPutObject } from "./s3";
 export { toSlug } from "./slug";
 export {
   checkHostKey,
