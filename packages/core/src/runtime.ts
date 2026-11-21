@@ -20,6 +20,8 @@ export type CreateContainerSpec = {
   image: string;
   containerPort: number;
   labels: Record<string, string>;
+  /** KEY=value pairs handed to the container. */
+  env?: string[];
 };
 
 function parseDockerHost(value: string): Docker.DockerOptions | null {
@@ -120,11 +122,12 @@ export async function buildImage(
   contextDir: string,
   tag: string,
   dockerfile = "Dockerfile",
+  buildArgs: Record<string, string> = {},
 ): Promise<void> {
   const context = tar.pack(contextDir, {
     ignore: (name) => name === ".git" || name.startsWith(".git/"),
   });
-  const stream = await client.buildImage(context, { t: tag, dockerfile });
+  const stream = await client.buildImage(context, { t: tag, dockerfile, buildargs: buildArgs });
   await new Promise<void>((resolve, reject) => {
     client.modem.followProgress(
       stream,
@@ -148,6 +151,7 @@ export async function createAndStart(
     name: spec.name,
     Image: spec.image,
     Labels: spec.labels,
+    Env: spec.env,
     ExposedPorts: { [portKey]: {} },
     HostConfig: {
       PortBindings: { [portKey]: [{ HostPort: "" }] },

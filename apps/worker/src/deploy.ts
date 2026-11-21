@@ -1,6 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { decryptSecret } from "@enerthya/core/crypto";
 import {
   buildImage,
   connectRuntime,
@@ -17,6 +18,7 @@ import {
   type DeploymentTarget,
   getDb,
   selectDeploymentTarget,
+  selectEncryptedEnvVars,
   setDeploymentRuntime,
   setDeploymentSource,
   transitionDeployment,
@@ -96,9 +98,16 @@ export async function runDeployment(deploymentId: string): Promise<void> {
   let containerId: string | null = null;
 
   try {
-    const image = await prepareImage(runtime, target, deploymentId, (dir) => {
-      contextDir = dir;
-    });
+    const variables = await loadEnvVars(target.applicationId);
+    const image = await prepareImage(
+      runtime,
+      target,
+      deploymentId,
+      (dir) => {
+        contextDir = dir;
+      },
+      variables.build,
+    );
     await setDeploymentRuntime(db, deploymentId, { imageTag: image });
 
     await transitionDeployment(db, deploymentId, ["building"], "deploying");
@@ -112,6 +121,7 @@ export async function runDeployment(deploymentId: string): Promise<void> {
         "enerthya.environment": target.environmentId,
         "enerthya.deployment": deploymentId,
       },
+      env: variables.runtime,
     });
     containerId = started.id;
     await setDeploymentRuntime(db, deploymentId, { containerId });
@@ -147,11 +157,32 @@ export async function runDeployment(deploymentId: string): Promise<void> {
   }
 }
 
+/**
+ * Decrypts the application's variables and splits them the way the schema
+ * promises: every one reaches the container, and the ones marked build-time
+ * also reach the build. The panel never sees this plaintext.
+ */
+async function loadEnvVars(applicationId: string): Promise<{
+  runtime: string[];
+  build: Record<string, string>;
+}> {
+  const rows = await selectEncryptedEnvVars(getDb(), applicationId);
+  const runtime: string[] = [];
+  const build: Record<string, string> = {};
+  for (const row of rows) {
+    const value = decryptSecret(row.valueEncrypted);
+    runtime.push(`${row.key}=${value}`);
+    if (row.isBuildTime) build[row.key] = value;
+  }
+  return { runtime, build };
+}
+
 async function prepareImage(
   runtime: RuntimeConnection,
   target: DeploymentTarget,
   deploymentId: string,
   onContext: (dir: string) => void,
+  buildArgs: Record<string, string> = {},
 ): Promise<string> {
   // A rollback decided the image when the deployment was queued: rebuild
   // nothing, run exactly what served before.
@@ -179,6 +210,6 @@ async function prepareImage(
   await setDeploymentSource(getDb(), deploymentId, { commitSha });
 
   const image = imageTagFor(target.applicationSlug, deploymentId);
-  await buildImage(runtime.client, dir, image);
+  await buildImage(runtime.client, dir, image, "Dockerfile", buildArgs);
   return image;
 }

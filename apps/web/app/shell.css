@@ -592,3 +592,49 @@
     justify-content: flex-start;
   }
 }
+
+.page__section {
+  max-width: 56rem;
+  margin-top: var(--s-10);
+}
+
+.page__back {
+  margin-top: var(--s-6);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.page__back a {
+  color: var(--ink-60);
+  text-decoration: none;
+}
+
+.page__back a:hover {
+  color: var(--ink);
+}
+
+.project__name {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.project__name:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+
+.field--inline input[type="checkbox"] {
+  accent-color: var(--ink);
+}
+
+.field--inline .field__label {
+  margin: 0;
+}
