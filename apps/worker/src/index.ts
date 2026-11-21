@@ -12,6 +12,7 @@ import { Worker } from "bullmq";
 import { startBackupScheduler } from "./backup-scheduler";
 import { startDatabaseWorker } from "./database-worker";
 import { runDeployment } from "./deploy";
+import { logger } from "./log";
 import { startLogServer } from "./log-server";
 import { startStatsServer } from "./stats-server";
 
@@ -32,10 +33,10 @@ export function startWorker(redisUrl: string): Worker<DeployJob> {
   );
 
   worker.on("failed", (job, error) => {
-    console.error(`[${WORKER_NAME}] job ${job?.id ?? "?"} failed: ${error.message}`);
+    logger.error({ jobId: job?.id, err: error.message }, "deployment job failed");
   });
   worker.on("error", (error) => {
-    console.error(`[${WORKER_NAME}] ${error.message}`);
+    logger.error({ err: error.message }, "queue error");
   });
 
   return worker;
@@ -45,24 +46,25 @@ const redisUrl = process.env.REDIS_URL;
 if (redisUrl) {
   const worker = startWorker(redisUrl);
   startDatabaseWorker(redisUrl);
-  console.log(`[${WORKER_NAME}] listening on ${DEPLOY_QUEUE} and databases`);
+  logger.info({ queues: [DEPLOY_QUEUE, "databases"] }, "listening");
 
   const databaseUrl = process.env.DATABASE_URL;
   if (databaseUrl) {
     startLogServer(databaseUrl);
     startStatsServer(databaseUrl);
     startBackupScheduler(redisUrl);
-    console.log(`[${WORKER_NAME}] backup scheduler running`);
-  } else console.warn(`[${WORKER_NAME}] DATABASE_URL is not set; container logs are unavailable.`);
+    logger.info({ intervalMs: 300_000 }, "backup scheduler running");
+  } else
+    logger.warn("DATABASE_URL is not set; logs, metrics and backup scheduling are unavailable");
 
   const shutdown = async (signal: string) => {
-    console.log(`[${WORKER_NAME}] ${signal}: closing`);
+    logger.info({ signal }, "closing");
     await worker.close();
     process.exit(0);
   };
   process.on("SIGINT", () => void shutdown("SIGINT"));
   process.on("SIGTERM", () => void shutdown("SIGTERM"));
 } else {
-  console.error(`[${WORKER_NAME}] REDIS_URL is not set; nothing to consume.`);
+  logger.error("REDIS_URL is not set; nothing to consume");
   process.exit(1);
 }

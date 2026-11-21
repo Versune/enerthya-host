@@ -1,5 +1,6 @@
 "use client";
 
+import { addHours, formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 
@@ -23,6 +24,13 @@ export function ScheduleForm({ databaseId, intervalHours, retentionDays, lastBac
   const [saved, setSaved] = useState(false);
 
   const enabled = intervalHours !== null && intervalHours > 0;
+  const runAt = lastBackupAt ? new Date(lastBackupAt) : null;
+  const nextRun =
+    enabled && runAt
+      ? formatDistanceToNow(addHours(runAt, intervalHours as number), { addSuffix: true })
+      : enabled
+        ? "on the next sweep"
+        : null;
 
   return (
     <form
@@ -97,7 +105,7 @@ export function ScheduleForm({ databaseId, intervalHours, retentionDays, lastBac
 
       <p className="field__hint">
         {enabled
-          ? `Automatic backups on${lastBackupAt ? ` · last enqueued ${lastBackupAt}` : ""}.`
+          ? `Automatic backups on · next run ${nextRun}.`
           : "No automatic backups; a backup still runs when you ask for one."}{" "}
         Retention never removes the newest successful backup.
       </p>

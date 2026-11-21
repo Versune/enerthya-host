@@ -25,6 +25,7 @@ import {
   selectNewestSuccessfulBackupId,
   selectScheduledDatabases,
 } from "@enerthya/db";
+import { logger } from "./log";
 
 const SWEEP_INTERVAL_MS = 5 * 60_000;
 
@@ -89,9 +90,7 @@ export async function applyRetention(now = new Date()): Promise<number> {
       } catch (error) {
         // A file that cannot be deleted is not worth stopping the sweep for;
         // the row stays so the next run tries again.
-        console.error(
-          `[backup-scheduler] retention failed for ${backup.id}: ${(error as Error).message}`,
-        );
+        logger.warn({ backupId: backup.id, err: (error as Error).message }, "retention failed");
       }
     }
   }
@@ -108,13 +107,11 @@ export function startBackupScheduler(redisUrl: string, intervalMs = SWEEP_INTERV
     running = true;
     try {
       const created = await enqueueDueBackups(redisUrl);
-      if (created.length > 0) {
-        console.log(`[backup-scheduler] enqueued ${created.length} backup(s)`);
-      }
+      if (created.length > 0) logger.info({ count: created.length }, "backups enqueued");
       const removed = await applyRetention();
-      if (removed > 0) console.log(`[backup-scheduler] retention removed ${removed} backup(s)`);
+      if (removed > 0) logger.info({ count: removed }, "backups removed by retention");
     } catch (error) {
-      console.error(`[backup-scheduler] ${(error as Error).message}`);
+      logger.error({ err: (error as Error).message }, "sweep failed");
     } finally {
       running = false;
     }
