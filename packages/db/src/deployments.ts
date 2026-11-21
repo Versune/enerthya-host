@@ -1,5 +1,6 @@
 import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import type { Database } from "./client";
+import { type ChannelListener, listenToChannel } from "./listen";
 import { applications, deployments, environments, projects } from "./schema";
 
 export type DeploymentStatus = (typeof deployments.$inferSelect)["status"];
@@ -251,6 +252,48 @@ export async function selectDeploymentLog(db: Database, id: string): Promise<str
   return row?.log ?? null;
 }
 
+/** The container a running deployment published, for the live log view. */
+export async function selectDeploymentContainer(
+  db: Database,
+  deploymentId: string,
+): Promise<{ deploymentId: string; containerId: string | null; status: DeploymentStatus } | null> {
+  const [row] = await db
+    .select({
+      deploymentId: deployments.id,
+      containerId: deployments.containerId,
+      status: deployments.status,
+    })
+    .from(deployments)
+    .where(eq(deployments.id, deploymentId))
+    .limit(1);
+  return row ?? null;
+}
+
+/** The newest running deployment of an application, with its container. */
+export async function selectRunningContainer(
+  db: Database,
+  organizationId: string,
+  applicationId: string,
+): Promise<{ deploymentId: string; containerId: string } | null> {
+  const [row] = await db
+    .select({ deploymentId: deployments.id, containerId: deployments.containerId })
+    .from(deployments)
+    .innerJoin(applications, eq(deployments.applicationId, applications.id))
+    .innerJoin(environments, eq(applications.environmentId, environments.id))
+    .innerJoin(projects, eq(environments.projectId, projects.id))
+    .where(
+      and(
+        eq(deployments.applicationId, applicationId),
+        eq(deployments.status, "running"),
+        eq(projects.organizationId, organizationId),
+        isNotNull(deployments.containerId),
+      ),
+    )
+    .orderBy(desc(deployments.finishedAt))
+    .limit(1);
+  return row?.containerId ? { deploymentId: row.deploymentId, containerId: row.containerId } : null;
+}
+
 /** True when the deployment belongs to an application in this organization. */
 export async function deploymentInOrganization(
   db: Database,
@@ -266,4 +309,31 @@ export async function deploymentInOrganization(
     .where(and(eq(deployments.id, deploymentId), eq(projects.organizationId, organizationId)))
     .limit(1);
   return Boolean(row);
+}
+
+/** Live log notifications for one deployment. */
+export function listenToDeploymentLog(
+  databaseUrl: string,
+  deploymentId: string,
+  onLine: () => void,
+): ChannelListener {
+  return listenToChannel(databaseUrl, "deployment_log", (payload) => {
+    if (payload === deploymentId) onLine();
+  });
+}
+
+/** Container output for one deployment, published by the worker. */
+export function listenToContainerLog(
+  databaseUrl: string,
+  deploymentId: string,
+  onLine: (line: string) => void,
+): ChannelListener {
+  return listenToChannel(databaseUrl, "container_log", (payload) => {
+    try {
+      const message = JSON.parse(payload) as { id?: string; line?: string };
+      if (message.id === deploymentId && typeof message.line === "string") onLine(message.line);
+    } catch {
+      // Anything that is not one of our messages is ignored.
+    }
+  });
 }

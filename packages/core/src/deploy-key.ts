@@ -16,7 +16,8 @@ export function generateDeployKey(comment = "enerthya-host"): DeployKey {
 export function publicKeyFromPrivate(privateKey: string, comment = "enerthya-host"): string | null {
   const parsed = utils.parseKey(privateKey);
   if (parsed instanceof Error) return null;
-  const ssh = Array.isArray(parsed) ? parsed[0]?.getPublicSSH() : parsed.getPublicSSH();
+  const key = Array.isArray(parsed) ? parsed[0] : parsed;
+  const ssh = key?.getPublicSSH();
   if (!ssh) return null;
-  return `${parsed instanceof Array ? parsed[0]?.type : parsed.type} ${ssh.toString("base64")} ${comment}`;
+  return `${key?.type} ${ssh.toString("base64")} ${comment}`;
 }

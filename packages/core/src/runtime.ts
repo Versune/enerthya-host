@@ -1,4 +1,5 @@
 import { access } from "node:fs/promises";
+import { Writable } from "node:stream";
 import Docker from "dockerode";
 import tar from "tar-fs";
 
@@ -225,4 +226,52 @@ export function containerName(slug: string, deploymentId: string): string {
     .replace(/^-|-$/g, "")
     .slice(0, 40);
   return `enerthya-${safe || "app"}-${deploymentId.slice(0, 8)}`;
+}
+
+/**
+ * Follows a container's output. Each complete line goes to `onLine`; the
+ * returned function stops the stream. Logs arrive multiplexed (stdout/stderr),
+ * so demuxStream is what turns them into text.
+ */
+export function streamContainerLogs(
+  client: Docker,
+  containerId: string,
+  onLine: (line: string) => void,
+  { tail = 200 }: { tail?: number } = {},
+): () => void {
+  const container = client.getContainer(containerId);
+  let pending = "";
+  let opened: { destroy?: () => void } | null = null;
+  let stopped = false;
+
+  const sink = new Writable({
+    write(chunk: Buffer, _encoding, callback) {
+      pending += chunk.toString("utf8");
+      const lines = pending.split("\n");
+      pending = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!stopped && line.trim()) onLine(line.slice(0, 4000));
+      }
+      callback();
+    },
+  });
+
+  container
+    .logs({ follow: true, stdout: true, stderr: true, tail })
+    .then((stream) => {
+      opened = stream as unknown as { destroy?: () => void };
+      client.modem.demuxStream(stream, sink, sink);
+    })
+    .catch((error: Error) => {
+      if (!stopped) onLine(`[enerthya] could not read the container log: ${error.message}`);
+    });
+
+  return () => {
+    stopped = true;
+    try {
+      opened?.destroy?.();
+    } catch {
+      // The container may have gone away first.
+    }
+  };
 }
