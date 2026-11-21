@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.2](https://github.com/Versune/enerthya-host/compare/v0.12.1...v0.12.2) (2026-11-21)
+
+
+### Features
+
+* **applications:** stream the running container's output ([#61](https://github.com/Versune/enerthya-host/issues/61)) ([931eed9](https://github.com/Versune/enerthya-host/commit/931eed97f427670481212d459d478ab84b2e8ea5))
+
 ## [0.12.1](https://github.com/Versune/enerthya-host/compare/v0.12.0...v0.12.1) (2026-11-21)
 
 
