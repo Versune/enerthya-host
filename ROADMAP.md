@@ -33,8 +33,7 @@ Current release: **0.5.0**.
 
 ## Later
 
-- Real-time build and runtime logs (today the log is written and read after the fact), plus a web
-  terminal.
+- A web terminal (the build log is already live, but the running container's output is not).
 - One-click databases (Postgres, MySQL, Redis, MongoDB) with scheduled backups to S3/R2/MinIO and
   a restore that is verified, not assumed.
 - CPU/RAM/network metrics per container and per server.
