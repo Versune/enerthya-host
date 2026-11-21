@@ -66,18 +66,30 @@ Nothing is published by hand, and `./install.sh --version vX.Y.Z` pins an older 
 
 ## Install
 
+One script per platform, Docker-only — no Node install on the host. The installer installs Docker
+when missing, downloads and verifies the release, builds the panel image locally, starts Postgres,
+Redis and the panel with Compose, applies migrations and waits for the healthcheck.
+
+**Linux** (as root)
+
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Versune/enerthya-host/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Versune/enerthya-host/main/install.sh | sudo bash
 ```
 
-Or from a checkout, building locally:
+**Windows:** use WSL2 with Docker Desktop and run the same command inside the WSL2 distro. **macOS:**
+the same script works inside Docker Desktop or colima, since the stack is Docker-only.
+
+Options: `--check` reports the host and installs nothing; `--version v0.3.0` pins a release;
+`--bind` and `--port` choose where the panel listens (default `127.0.0.1:8420`). State lives in
+`/data/enerthya`; rerunning the installer upgrades in place. See `docs/install.md` before exposing
+it on a VPS.
+
+Verify before installing, if you prefer:
 
 ```sh
-./install.sh --from-source "$PWD"
+curl -fsSL https://raw.githubusercontent.com/Versune/enerthya-host/main/install.sh -o install.sh
+less install.sh && bash install.sh --check
 ```
-
-`./install.sh --check` reports what the current machine has and installs nothing. The script
-verifies the release checksum when it downloads a build.
 
 ## Status
 

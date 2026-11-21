@@ -47,6 +47,12 @@ jobs:
           # nesting a second copy inside it.
           rm -rf dist/stage/apps/web/public
           cp -a apps/web/public dist/stage/apps/web/public
+          # The installer applies these with psql; no migration tool at runtime.
+          mkdir -p dist/stage/drizzle
+          cp -a packages/db/drizzle/. dist/stage/drizzle/
+          # The installer builds this image on the host and runs this stack.
+          cp docker/Dockerfile dist/stage/Dockerfile
+          cp docker/compose.yml dist/stage/compose.yml
           tar -czf "dist/enerthya-host-${TAG}.tar.gz" -C dist/stage .
           cd dist
           sha256sum "enerthya-host-${TAG}.tar.gz" > SHA256SUMS

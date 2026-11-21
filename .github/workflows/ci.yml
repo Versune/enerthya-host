@@ -26,6 +26,8 @@ jobs:
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
+      - name: Installer syntax
+        run: bash -n install.sh
       - name: Lint
         run: pnpm lint
       - name: Typecheck
