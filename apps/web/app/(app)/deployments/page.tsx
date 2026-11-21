@@ -34,9 +34,8 @@ export default async function DeploymentsPage() {
               : `${deployments.length} deployments.`
         }
       >
-        Every attempt, including the ones that fail. The worker resolves the source, then stops: it
-        has no container runtime yet, so it says so instead of reporting a deployment that did not
-        happen.
+        Every attempt, including the ones that fail. A deployment pulls or builds its image, starts
+        the container, waits for the health check, and only then stops the previous one.
       </PageHeader>
 
       {deployments.length === 0 ? (
@@ -44,7 +43,7 @@ export default async function DeploymentsPage() {
           <strong className="label">What will live here</strong>
           <p>
             Press Deploy on an application and its attempt appears here with the state it actually
-            reached, the commit it resolved and the reason it stopped.
+            reached, the image or commit it used, and the reason it stopped if it did.
           </p>
         </div>
       ) : (
