@@ -27,7 +27,7 @@ Requirements: Node 24 or newer, pnpm 12, and Podman or Docker for the supporting
 
 ```sh
 pnpm install
-pnpm dev             # http://localhost:3000
+pnpm dev             # first run creates apps/web/.env with generated secrets
 pnpm typecheck
 pnpm lint
 pnpm test
