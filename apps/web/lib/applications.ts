@@ -7,6 +7,7 @@ import {
   getDb,
   insertApplication,
   removeApplication,
+  selectApplication,
   selectApplications,
 } from "@enerthya/db";
 
@@ -14,6 +15,13 @@ export type ApplicationRow = ApplicationSummary;
 
 export function listApplications(organizationId: string): Promise<ApplicationRow[]> {
   return selectApplications(getDb(), organizationId);
+}
+
+export function getApplication(
+  organizationId: string,
+  applicationId: string,
+): Promise<ApplicationRow | null> {
+  return selectApplication(getDb(), organizationId, applicationId);
 }
 
 async function uniqueSlug(environmentId: string, name: string): Promise<string> {

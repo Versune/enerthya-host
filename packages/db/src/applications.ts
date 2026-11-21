@@ -49,6 +49,37 @@ export async function selectApplications(
     .orderBy(asc(projects.name), asc(environments.slug), asc(applications.name));
 }
 
+export async function selectApplication(
+  db: Database,
+  organizationId: string,
+  applicationId: string,
+): Promise<ApplicationSummary | null> {
+  const [row] = await db
+    .select({
+      id: applications.id,
+      name: applications.name,
+      slug: applications.slug,
+      sourceType: applications.sourceType,
+      gitUrl: applications.gitUrl,
+      gitBranch: applications.gitBranch,
+      dockerImage: applications.dockerImage,
+      buildType: applications.buildType,
+      port: applications.port,
+      healthcheckPath: applications.healthcheckPath,
+      environmentId: applications.environmentId,
+      environmentName: environments.name,
+      environmentSlug: environments.slug,
+      projectId: projects.id,
+      projectName: projects.name,
+    })
+    .from(applications)
+    .innerJoin(environments, eq(applications.environmentId, environments.id))
+    .innerJoin(projects, eq(environments.projectId, projects.id))
+    .where(and(eq(applications.id, applicationId), eq(projects.organizationId, organizationId)))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function environmentBelongsTo(
   db: Database,
   organizationId: string,

@@ -1,5 +1,6 @@
 import { roleAtLeast } from "@enerthya/core/roles";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ApplicationActions } from "@/components/applications/ApplicationActions";
 import { ApplicationForm } from "@/components/applications/ApplicationForm";
@@ -60,7 +61,9 @@ export default async function ApplicationsPage() {
           {applications.map((application) => (
             <li className="project" key={application.id}>
               <div className="project__id">
-                <span className="project__name">{application.name}</span>
+                <Link className="project__name" href={`/applications/${application.id}`}>
+                  {application.name}
+                </Link>
                 <span className="project__slug">
                   {application.sourceType === "git"
                     ? `${application.gitUrl} · ${application.gitBranch}`
