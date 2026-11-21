@@ -31,3 +31,4 @@ export {
   probeServer,
   type SshTarget,
 } from "./ssh";
+export { verifyGithubSignature } from "./webhook";

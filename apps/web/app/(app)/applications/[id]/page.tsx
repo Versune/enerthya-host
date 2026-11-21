@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { EnvVarActions } from "@/components/applications/EnvVarActions";
 import { EnvVarForm } from "@/components/applications/EnvVarForm";
 import { PageHeader } from "@/components/shell/PageHeader";
-import { getApplication } from "@/lib/applications";
+import { getApplication, getDeployHook } from "@/lib/applications";
 import { currentOrganization } from "@/lib/current-org";
 import { listEnvVars } from "@/lib/env-vars";
 
@@ -23,7 +23,10 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
   const application = await getApplication(context.organization.id, id);
   if (!application) notFound();
 
-  const envVars = await listEnvVars(context.organization.id, id);
+  const [envVars, hook] = await Promise.all([
+    listEnvVars(context.organization.id, id),
+    getDeployHook(context.organization.id, id),
+  ]);
   const canWrite = roleAtLeast(context.role, "admin");
   const source =
     application.sourceType === "git"
@@ -40,6 +43,31 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
       <p className="page__back">
         <Link href="/applications">← All applications</Link>
       </p>
+
+      <section className="page__section">
+        <h2 className="label">Auto-deploy</h2>
+        <p className="page__lede">
+          GitHub calls this URL on every push. A push to <code>{application.gitBranch}</code> queues
+          a deployment; anything else is ignored. The signature is verified with the secret below,
+          so the URL alone cannot trigger anything.
+        </p>
+        {hook?.webhookSecret && application.sourceType === "git" ? (
+          <dl className="hook">
+            <dt className="label">Payload URL</dt>
+            <dd className="hook__value">
+              {`${process.env.BETTER_AUTH_URL ?? ""}/api/webhooks/github/${application.id}`}
+            </dd>
+            <dt className="label">Secret</dt>
+            <dd className="hook__value">{hook.webhookSecret}</dd>
+            <dt className="label">Content type</dt>
+            <dd className="hook__value">application/json</dd>
+          </dl>
+        ) : (
+          <p className="deployment__meta">
+            This application deploys an image, so there is nothing to hook a push to.
+          </p>
+        )}
+      </section>
 
       <section className="page__section">
         <h2 className="label">Environment variables</h2>

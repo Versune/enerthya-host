@@ -1,14 +1,17 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { toSlug } from "@enerthya/core/slug";
 import {
   type ApplicationSummary,
+  applicationInOrganization,
   applicationSlugTaken,
+  type DeployHook,
   environmentBelongsTo,
   getDb,
   insertApplication,
   removeApplication,
   selectApplication,
   selectApplications,
+  selectDeployHook,
 } from "@enerthya/db";
 
 export type ApplicationRow = ApplicationSummary;
@@ -64,9 +67,20 @@ export async function createApplication(
     buildType: input.buildType,
     port: input.port,
     healthcheckPath: input.healthcheckPath,
+    webhookSecret: randomBytes(32).toString("hex"),
   });
 }
 
 export function deleteApplication(organizationId: string, id: string): Promise<boolean> {
   return removeApplication(getDb(), organizationId, id);
+}
+
+/** The webhook settings for one application, after proving it belongs to the org. */
+export async function getDeployHook(
+  organizationId: string,
+  applicationId: string,
+): Promise<DeployHook | null> {
+  const db = getDb();
+  if (!(await applicationInOrganization(db, organizationId, applicationId))) return null;
+  return selectDeployHook(db, applicationId);
 }
