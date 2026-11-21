@@ -10,9 +10,9 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
 
   const { id } = await params;
   try {
-    const server = await testServer(context.organization.id, id);
-    if (!server) return Response.json({ error: "Server not found" }, { status: 404 });
-    return Response.json({ server });
+    const result = await testServer(context.organization.id, id);
+    if (!result) return Response.json({ error: "Server not found" }, { status: 404 });
+    return Response.json(result);
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "The probe failed" },

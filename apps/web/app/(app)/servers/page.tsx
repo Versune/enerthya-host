@@ -48,8 +48,22 @@ export default async function ServersPage() {
               <span className={`status-dot status-dot--${server.status}`} aria-hidden="true" />
               <span className="server__state">{STATUS_LABEL[server.status]}</span>
               <span className="server__runtime">{server.dockerVersion ?? "no runtime"}</span>
+              {!server.isLocal ? (
+                <span
+                  className="server__fingerprint"
+                  title={server.hostKeyFingerprint ?? "Pinned on the first successful test"}
+                >
+                  {server.hostKeyFingerprint
+                    ? `key ${server.hostKeyFingerprint.slice(0, 18)}…`
+                    : "host key not pinned"}
+                </span>
+              ) : null}
             </div>
-            <ServerActions id={server.id} isLocal={server.isLocal} />
+            <ServerActions
+              id={server.id}
+              isLocal={server.isLocal}
+              hasHostKey={Boolean(server.hostKeyFingerprint)}
+            />
           </li>
         ))}
       </ul>

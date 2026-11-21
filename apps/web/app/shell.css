@@ -437,3 +437,13 @@
     grid-template-columns: 1fr;
   }
 }
+
+.server__fingerprint {
+  overflow: hidden;
+  max-width: 16rem;
+  color: var(--ink-60);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

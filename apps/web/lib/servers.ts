@@ -77,6 +77,8 @@ export async function testServer(organizationId: string, id: string) {
 
   let status: "ready" | "unreachable" = "unreachable";
   let dockerVersion: string | null = null;
+  let hostKeyFingerprint = row.hostKeyFingerprint;
+  let error: string | undefined;
 
   if (row.isLocal) {
     const runtime = await detectRuntimes();
@@ -89,17 +91,40 @@ export async function testServer(organizationId: string, id: string) {
       port: row.port,
       username: row.username,
       privateKey: decryptSecret(row.privateKeyEncrypted),
+      expectedHostKey: row.hostKeyFingerprint,
     });
-    if (result.ok && result.runtime) {
-      status = "ready";
+
+    if (result.ok) {
+      status = result.runtime ? "ready" : "unreachable";
       dockerVersion = result.version;
+      // Trust on first use: pin what the host presented, and never replace a
+      // pinned key from a failed probe.
+      hostKeyFingerprint = row.hostKeyFingerprint ?? result.fingerprint;
+    } else {
+      error = result.error;
     }
   }
 
-  return patchServer(db, row.id, {
+  const server = await patchServer(db, row.id, {
     status,
     dockerVersion,
+    hostKeyFingerprint,
     lastSeenAt: status === "ready" ? new Date() : row.lastSeenAt,
+    updatedAt: new Date(),
+  });
+
+  return server ? { server, error } : null;
+}
+
+/** Trust the host key again on the next probe; used after a legitimate reinstall. */
+export async function forgetHostKey(organizationId: string, id: string) {
+  const db = getDb();
+  const row = await findServer(db, organizationId, id);
+  if (!row) return null;
+
+  return patchServer(db, row.id, {
+    hostKeyFingerprint: null,
+    status: "pending",
     updatedAt: new Date(),
   });
 }
