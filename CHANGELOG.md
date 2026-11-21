@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.8](https://github.com/Versune/enerthya-host/compare/v0.12.7...v0.12.8) (2026-11-21)
+
+
+### Bug Fixes
+
+* **install:** keep COMPOSE_PROFILES across an upgrade ([#75](https://github.com/Versune/enerthya-host/issues/75)) ([378af91](https://github.com/Versune/enerthya-host/commit/378af91fe83726133391fea6ea9a0a8f95c6ceb8))
+
 ## [0.12.7](https://github.com/Versune/enerthya-host/compare/v0.12.6...v0.12.7) (2026-11-21)
 
 
