@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.6](https://github.com/Versune/enerthya-host/compare/v0.12.5...v0.12.6) (2026-11-21)
+
+
+### Features
+
+* **backups:** a backup only counts after its restore is verified ([#71](https://github.com/Versune/enerthya-host/issues/71)) ([2d5f833](https://github.com/Versune/enerthya-host/commit/2d5f83325bfa05d2abbcce42caff870d706ecba2))
+* **databases:** provision a managed Postgres with its own volume ([#69](https://github.com/Versune/enerthya-host/issues/69)) ([d747894](https://github.com/Versune/enerthya-host/commit/d7478946c96367c708b241a66c80b20e93454c62))
+
 ## [0.12.5](https://github.com/Versune/enerthya-host/compare/v0.12.4...v0.12.5) (2026-11-21)
 
 
