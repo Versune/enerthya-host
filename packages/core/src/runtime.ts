@@ -2,6 +2,7 @@ import { access } from "node:fs/promises";
 import { Writable } from "node:stream";
 import Docker from "dockerode";
 import tar from "tar-fs";
+import type { ContainerStatsPayload } from "./stats";
 
 /**
  * The worker talks to a Docker-compatible API. Docker and Podman both serve
@@ -171,6 +172,14 @@ export async function createAndStart(
     );
   }
   return { id: container.id, hostPort };
+}
+
+export async function readContainerStats(
+  client: Docker,
+  containerId: string,
+): Promise<ContainerStatsPayload> {
+  const container = client.getContainer(containerId);
+  return (await container.stats({ stream: false })) as unknown as ContainerStatsPayload;
 }
 
 export async function stopAndRemove(client: Docker, id: string): Promise<void> {

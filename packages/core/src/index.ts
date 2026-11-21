@@ -21,6 +21,7 @@ export {
   pullImage,
   type RuntimeConnection,
   type RuntimeKind,
+  readContainerStats,
   stopAndRemove,
   streamContainerLogs,
   waitForHealthy,
@@ -34,4 +35,5 @@ export {
   probeServer,
   type SshTarget,
 } from "./ssh";
+export { type ContainerStats, type ContainerStatsPayload, readStats } from "./stats";
 export { verifyGithubSignature } from "./webhook";

@@ -17,6 +17,7 @@ Current release: **0.5.0**.
 | Servers | local-first registry, AES-256-GCM SSH keys, runtime probe, host-key pinning |
 | Projects | projects with production/staging environments; writes gated by owner/admin |
 | Applications | repository or image attached to an environment, with build type, port and healthcheck path; unique slug per environment |
+| Metrics | CPU and memory per running container, sampled on demand by the worker |
 | Notifications | Discord webhook or generic endpoint on `deployment.failed`, URL encrypted at rest |
 | Container log | the running container's output, requested over a Postgres channel and tailed by the worker |
 | Deploy log |Each  deployment records every step, from the claim to the swap or the failure |
@@ -38,7 +39,7 @@ Current release: **0.5.0**.
 - An interactive web terminal (logs are live; stdin is not).
 - One-click databases (Postgres, MySQL, Redis, MongoDB) with scheduled backups to S3/R2/MinIO and
   a restore that is verified, not assumed.
-- CPU/RAM/network metrics per container and per server.
+- Network and disk metrics, and per-server numbers (the per-container CPU and memory exist).
 - Email notifications (only webhook and Discord exist today).
 - Service templates.
 - Invitations and full RBAC screens; roles are stored and enforced on project writes today.

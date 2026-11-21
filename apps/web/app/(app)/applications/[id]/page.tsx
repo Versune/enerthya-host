@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ContainerLogs } from "@/components/applications/ContainerLogs";
+import { ContainerStats } from "@/components/applications/ContainerStats";
 import { DomainActions } from "@/components/applications/DomainActions";
 import { DomainForm } from "@/components/applications/DomainForm";
 import { EnvVarActions } from "@/components/applications/EnvVarActions";
@@ -56,6 +57,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
           The running container's output, streamed while this section is open. The worker reads it
           and publishes each line; the panel never touches the runtime.
         </p>
+        <ContainerStats applicationId={application.id} />
         <ContainerLogs applicationId={application.id} />
       </section>
 
