@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import type { Database } from "./client";
 import { applications, deployments, environments, projects } from "./schema";
 
@@ -14,6 +14,7 @@ export type DeploymentSummary = {
   commitSha: string | null;
   imageTag: string | null;
   containerId: string | null;
+  rollbackOfId: string | null;
   error: string | null;
   startedAt: Date | null;
   finishedAt: Date | null;
@@ -33,6 +34,8 @@ export type DeploymentTarget = {
   buildType: (typeof applications.$inferSelect)["buildType"];
   port: number;
   healthcheckPath: string;
+  /** Set when a rollback already chose the image this deployment must run. */
+  presetImage: string | null;
 };
 
 /** Deployment history for one organization, newest first. */
@@ -52,6 +55,7 @@ export async function selectDeployments(
       commitSha: deployments.commitSha,
       imageTag: deployments.imageTag,
       containerId: deployments.containerId,
+      rollbackOfId: deployments.rollbackOfId,
       error: deployments.error,
       startedAt: deployments.startedAt,
       finishedAt: deployments.finishedAt,
@@ -87,7 +91,7 @@ export async function applicationInOrganization(
 
 export async function insertDeployment(
   db: Database,
-  input: { id: string; applicationId: string },
+  input: { id: string; applicationId: string; imageTag?: string; rollbackOfId?: string },
 ): Promise<void> {
   await db.insert(deployments).values(input);
 }
@@ -147,10 +151,76 @@ export async function selectDeploymentTarget(
       buildType: applications.buildType,
       port: applications.port,
       healthcheckPath: applications.healthcheckPath,
+      presetImage: deployments.imageTag,
     })
     .from(deployments)
     .innerJoin(applications, eq(deployments.applicationId, applications.id))
     .where(eq(deployments.id, deploymentId))
     .limit(1);
   return row ?? null;
+}
+
+export type RollbackCandidate = {
+  applicationId: string;
+  deploymentId: string;
+  imageTag: string;
+  finishedAt: Date | null;
+};
+
+/**
+ * The deployments a rollback can return to: the ones that reached `running` and
+ * recorded the image that was actually served. One per application — the newest.
+ */
+export async function selectRollbackCandidates(
+  db: Database,
+  organizationId: string,
+): Promise<RollbackCandidate[]> {
+  const rows = await db
+    .select({
+      applicationId: deployments.applicationId,
+      deploymentId: deployments.id,
+      imageTag: deployments.imageTag,
+      finishedAt: deployments.finishedAt,
+    })
+    .from(deployments)
+    .innerJoin(applications, eq(deployments.applicationId, applications.id))
+    .innerJoin(environments, eq(applications.environmentId, environments.id))
+    .innerJoin(projects, eq(environments.projectId, projects.id))
+    .where(
+      and(
+        eq(projects.organizationId, organizationId),
+        eq(deployments.status, "running"),
+        isNotNull(deployments.imageTag),
+      ),
+    )
+    .orderBy(desc(deployments.finishedAt));
+
+  // Newest first. The candidate is the newest deployment that ran a different
+  // image than the one serving now — going back one version, not re-running the
+  // version that just succeeded. With a single image, that image is the answer:
+  // it restarts an application whose container is gone.
+  const byApplication = new Map<string, RollbackCandidate[]>();
+  for (const row of rows) {
+    if (!row.imageTag) continue;
+    const list = byApplication.get(row.applicationId) ?? [];
+    list.push({ ...row, imageTag: row.imageTag });
+    byApplication.set(row.applicationId, list);
+  }
+
+  const candidates: RollbackCandidate[] = [];
+  for (const list of byApplication.values()) {
+    const current = list[0] as RollbackCandidate;
+    const previous = list.find((entry) => entry.imageTag !== current.imageTag) ?? current;
+    candidates.push(previous);
+  }
+  return candidates;
+}
+
+export async function selectRollbackCandidate(
+  db: Database,
+  organizationId: string,
+  applicationId: string,
+): Promise<RollbackCandidate | null> {
+  const candidates = await selectRollbackCandidates(db, organizationId);
+  return candidates.find((candidate) => candidate.applicationId === applicationId) ?? null;
 }

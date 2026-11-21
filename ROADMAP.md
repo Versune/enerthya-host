@@ -17,12 +17,12 @@ Current release: **0.5.0**.
 | Servers | local-first registry, AES-256-GCM SSH keys, runtime probe, host-key pinning |
 | Projects | projects with production/staging environments; writes gated by owner/admin |
 | Applications | repository or image attached to an environment, with build type, port and healthcheck path; unique slug per environment |
-| Deployments | queue, pipeline and history: pull or clone → build the Dockerfile → start → health check → stop the previous container; a failed run removes its own container and records why |
+| Deployments | queue, pipeline and history: pull or clone → build the Dockerfile → start → health check → stop the previous container; a failed run removes its own container and records why; rollback re-runs the previous image that reached running |
 
 ## Next — the deploy path
 
-1. **Rollback and zero-downtime** — keep two containers during the swap, roll back to the last
-   image that passed its health check, and make a resumed deployment continue instead of restarting.
+1. **Zero-downtime and resumable deploys** — keep the old container serving through the handover
+   and let an interrupted deployment continue instead of restarting from the clone.
 2. **Nixpacks and compose** — the two build types the schema already offers and the worker refuses
    with an explicit message.
 3. **Domains and TLS** — generate Caddy or Traefik config; never reimplement ACME.

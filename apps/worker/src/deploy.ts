@@ -153,6 +153,13 @@ async function prepareImage(
   deploymentId: string,
   onContext: (dir: string) => void,
 ): Promise<string> {
+  // A rollback decided the image when the deployment was queued: rebuild
+  // nothing, run exactly what served before.
+  if (target.presetImage) {
+    await pullImage(runtime.client, target.presetImage);
+    return target.presetImage;
+  }
+
   if (target.sourceType === "image") {
     if (!target.dockerImage) throw new Error("The application has no image reference.");
     await pullImage(runtime.client, target.dockerImage);

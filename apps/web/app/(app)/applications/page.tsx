@@ -6,6 +6,7 @@ import { ApplicationForm } from "@/components/applications/ApplicationForm";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { listApplications } from "@/lib/applications";
 import { currentOrganization } from "@/lib/current-org";
+import { listRollbackCandidates } from "@/lib/deployments";
 import { listProjects } from "@/lib/projects";
 
 export const dynamic = "force-dynamic";
@@ -18,10 +19,12 @@ export default async function ApplicationsPage() {
   const context = await currentOrganization();
   if (!context) redirect("/sign-in");
 
-  const [applications, projects] = await Promise.all([
+  const [applications, projects, rollbackCandidates] = await Promise.all([
     listApplications(context.organization.id),
     listProjects(context.organization.id),
+    listRollbackCandidates(context.organization.id),
   ]);
+  const rollbackable = new Set(rollbackCandidates.map((candidate) => candidate.applicationId));
   const canWrite = roleAtLeast(context.role, "admin");
   const environments = projects.flatMap((project) =>
     project.environments.map((environment) => ({
@@ -68,7 +71,12 @@ export default async function ApplicationsPage() {
                   {application.buildType} · :{application.port}
                 </span>
               </div>
-              {canWrite ? <ApplicationActions id={application.id} /> : null}
+              {canWrite ? (
+                <ApplicationActions
+                  id={application.id}
+                  canRollback={rollbackable.has(application.id)}
+                />
+              ) : null}
             </li>
           ))}
         </ul>

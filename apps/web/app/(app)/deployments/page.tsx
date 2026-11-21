@@ -59,6 +59,9 @@ export default async function DeploymentsPage() {
                   {timestamp(deployment.startedAt ?? deployment.createdAt)}
                   {deployment.commitSha ? ` · ${deployment.commitSha.slice(0, 7)}` : ""}
                   {deployment.imageTag ? ` · ${deployment.imageTag}` : ""}
+                  {deployment.rollbackOfId
+                    ? ` · rollback of ${deployment.rollbackOfId.slice(0, 7)}`
+                    : ""}
                 </span>
                 {deployment.error ? (
                   <span className="deployment__error">{deployment.error}</span>
