@@ -208,4 +208,20 @@ test.describe("services", () => {
       "/apple-icon.png",
     );
   });
+
+  test("robots.txt keeps the panel out of search engines", async ({ request }) => {
+    const response = await request.get("/robots.txt");
+    expect(response.ok()).toBe(true);
+    expect(await response.text()).toContain("Disallow: /");
+  });
+
+  test("sitemap.xml lists only the sessionless routes", async ({ request }) => {
+    const response = await request.get("/sitemap.xml");
+    expect(response.ok()).toBe(true);
+
+    const body = await response.text();
+    expect(body).toContain("<urlset");
+    expect(body).toContain("/sign-in");
+    expect(body).not.toContain("/servers");
+  });
 });
