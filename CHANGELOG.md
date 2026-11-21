@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.4](https://github.com/Versune/enerthya-host/compare/v0.12.3...v0.12.4) (2026-11-21)
+
+
+### Features
+
+* **metrics:** sample CPU and memory per running container ([#65](https://github.com/Versune/enerthya-host/issues/65)) ([50f44fe](https://github.com/Versune/enerthya-host/commit/50f44fee47dd9c34bbb2117c933c587709310448))
+
 ## [0.12.3](https://github.com/Versune/enerthya-host/compare/v0.12.2...v0.12.3) (2026-11-21)
 
 
