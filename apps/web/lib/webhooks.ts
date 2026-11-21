@@ -1,19 +1,7 @@
-import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { enqueueDeployment } from "@enerthya/core/queue";
+import { verifyGithubSignature } from "@enerthya/core/webhook";
 import { getDb, insertDeployment, selectDeployHook, transitionDeployment } from "@enerthya/db";
-
-/** The signature GitHub sends in X-Hub-Signature-256: `sha256=<hex>`. */
-export function verifyGithubSignature(
-  secret: string,
-  payload: string,
-  header: string | null,
-): boolean {
-  if (!header || !header.startsWith("sha256=")) return false;
-  const expected = createHmac("sha256", secret).update(payload, "utf8").digest();
-  const received = Buffer.from(header.slice("sha256=".length), "hex");
-  if (received.length !== expected.length) return false;
-  return timingSafeEqual(received, expected);
-}
 
 export type PushOutcome =
   | { status: "queued"; deploymentId: string }
