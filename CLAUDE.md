@@ -38,6 +38,7 @@ packages/config tsconfig presets and typed env validation (@t3-oss/env-nextjs).
 ```sh
 pnpm install           # install the whole workspace
 pnpm dev               # http://localhost:3000 (web only)
+pnpm dev:worker        # BullMQ consumer for the deployment queue (needs Redis)
 pnpm build             # standalone Next build
 pnpm start             # run the standalone server
 pnpm typecheck         # tsc --noEmit in every package — must pass before any commit
@@ -77,9 +78,9 @@ AES-256-GCM), plus `PORT`/`HOSTNAME` for the panel. Typed validation lands with
 apps/web/app/          `/` (dashboard), `/sign-in`, `/sign-up`
 apps/web/app/api/      auth/[...all] (better-auth), health, runtime
 apps/web/lib/          auth.ts (server instance), auth-client.ts, validation/, runtime.ts
-apps/worker/src/       BullMQ process; queue wiring arrives with the deploy engine
+apps/worker/src/       BullMQ consumer for the deployment queue; resolves the source today
 packages/core/src/     domain logic; `toSlug` is the first shared primitive
-packages/db/src/       empty until Stage 2 creates the schema
+packages/db/src/       Drizzle schema, migrations and every query (Postgres)
 DESIGN.md              the design system — currently describes the legacy panel, rewritten in
                        Stage 5 (dark mode default, shadcn)
 PRODUCT.md             product truth

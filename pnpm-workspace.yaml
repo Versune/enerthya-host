@@ -9,6 +9,9 @@ allowBuilds:
   esbuild: true
   ssh2: true
   cpu-features: false
+  # msgpackr-extract is an optional native accelerator for BullMQ's msgpack.
+  # The pure-JS path is used instead, so the build script stays denied.
+  msgpackr-extract: false
 
 minimumReleaseAgeExclude:
   - lucide-react@1.76.0

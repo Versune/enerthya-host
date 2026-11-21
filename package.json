@@ -10,6 +10,7 @@
   "scripts": {
     "predev": "node scripts/dev-env.mjs",
     "dev": "pnpm --filter @enerthya/web dev",
+    "dev:worker": "pnpm --filter @enerthya/worker dev",
     "build": "pnpm --filter @enerthya/web build",
     "start": "pnpm --filter @enerthya/web start",
     "lint": "biome check .",

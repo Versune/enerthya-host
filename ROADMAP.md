@@ -4,7 +4,7 @@ Enerthya Host is an open-source, self-hosted PaaS built around one claim: a depl
 good as its last verified restore. This roadmap is directional, not a promise of dates; each stage
 ships working instead of appearing as a disabled button.
 
-Current release: **0.3.0**.
+Current release: **0.4.0**.
 
 ## Shipped
 
@@ -16,17 +16,19 @@ Current release: **0.3.0**.
 | Dashboard | shell with sidebar, ⌘K palette, dark by default |
 | Servers | local-first registry, AES-256-GCM SSH keys, runtime probe, host-key pinning |
 | Projects | projects with production/staging environments; writes gated by owner/admin |
+| Applications | repository or image attached to an environment, with build type, port and healthcheck path; unique slug per environment |
+| Deployments | queue and history: Deploy writes a row and a BullMQ job, the worker resolves the commit, and a run that cannot continue records why |
 
 ## Next — the deploy path
 
-1. **Applications** — attach a repository (public, or private with a deploy key) or an image;
-   choose Dockerfile, Nixpacks or compose; per-environment configuration.
-2. **Worker** — BullMQ consumers for build, deploy, healthcheck, backups and cron; the panel only
-   enqueues and reads state.
-3. **Deploy pipeline** — clone → build → healthcheck → zero-downtime swap → rollback, idempotent
-   and resumable, with the commit and image recorded per deployment.
-4. **Domains and TLS** — generate Caddy or Traefik config; never reimplement ACME.
-5. **Env vars** — encrypted at rest, with the build-time/runtime distinction per variable.
+1. **Container runtime** — connect the worker to Docker or Podman, so a deployment reaches a
+   running container instead of stopping at the runtime it does not have.
+2. **Deploy pipeline** — clone → build → healthcheck → zero-downtime swap → rollback, idempotent
+   and resumable, with the image recorded per deployment.
+3. **Domains and TLS** — generate Caddy or Traefik config; never reimplement ACME.
+4. **Env vars** — encrypted at rest, with the build-time/runtime distinction per variable.
+5. **Private repositories** — deploy keys, encrypted at rest, and a webhook that enqueues a
+   deployment on push.
 
 ## Later
 
