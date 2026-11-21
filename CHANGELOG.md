@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.3](https://github.com/Versune/enerthya-host/compare/v0.12.2...v0.12.3) (2026-11-21)
+
+
+### Features
+
+* **notifications:** report a failed deployment to Discord or a webhook ([#63](https://github.com/Versune/enerthya-host/issues/63)) ([8c43bf4](https://github.com/Versune/enerthya-host/commit/8c43bf4c407e81dae37360a2ce18a6e65c3f9090))
+
 ## [0.12.2](https://github.com/Versune/enerthya-host/compare/v0.12.1...v0.12.2) (2026-11-21)
 
 
