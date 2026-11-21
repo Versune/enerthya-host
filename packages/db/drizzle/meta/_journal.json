@@ -29,6 +29,13 @@
       "when": 1795239292610,
       "tag": "0003_public_ender_wiggin",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795242567945,
+      "tag": "0004_nappy_rafael_vega",
+      "breakpoints": true
     }
   ]
 }

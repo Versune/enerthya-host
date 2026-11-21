@@ -16,6 +16,7 @@ import {
   waitForHealthy,
 } from "@enerthya/core/runtime";
 import {
+  appendDeploymentLog,
   type DeploymentTarget,
   getDb,
   selectDeploymentTarget,
@@ -85,8 +86,12 @@ export async function runDeployment(deploymentId: string): Promise<void> {
   });
   if (!claimed) return;
 
+  const log = (line: string) => appendDeploymentLog(db, deploymentId, line).catch(() => undefined);
+  await log("Deployment claimed by the worker.");
+
   const target = await selectDeploymentTarget(db, deploymentId);
   if (!target) {
+    await log("The application no longer exists.");
     await transitionDeployment(db, deploymentId, ["building"], "failed", {
       error: "The application this deployment belongs to no longer exists.",
       finishedAt: new Date(),
@@ -105,18 +110,25 @@ export async function runDeployment(deploymentId: string): Promise<void> {
     return;
   }
   if (!runtime) {
+    await log(missingRuntimeMessage());
     await transitionDeployment(db, deploymentId, ["building"], "failed", {
       error: missingRuntimeMessage(),
       finishedAt: new Date(),
     });
     return;
   }
+  await log(`Runtime: ${runtime.kind} at ${runtime.address}.`);
 
   let contextDir: string | null = null;
   let containerId: string | null = null;
 
   try {
     const variables = await loadEnvVars(target.applicationId);
+    await log(
+      target.presetImage
+        ? `Rollback: running the image ${target.presetImage}.`
+        : `Source: ${target.sourceType === "git" ? `${target.gitUrl} (${target.gitBranch})` : target.dockerImage}.`,
+    );
     const image = await prepareImage(
       runtime,
       target,
@@ -127,6 +139,7 @@ export async function runDeployment(deploymentId: string): Promise<void> {
       variables.build,
     );
     await setDeploymentRuntime(db, deploymentId, { imageTag: image });
+    await log(`Image ready: ${image}.`);
 
     await transitionDeployment(db, deploymentId, ["building"], "deploying");
     const started = await createAndStart(runtime.client, {
@@ -142,19 +155,25 @@ export async function runDeployment(deploymentId: string): Promise<void> {
       env: variables.runtime,
     });
     containerId = started.id;
+    await log(`Container started on host port ${started.hostPort}.`);
     await setDeploymentRuntime(db, deploymentId, {
       containerId,
       hostPort: started.hostPort,
     });
 
     await transitionDeployment(db, deploymentId, ["deploying"], "healthcheck");
+    await log(`Health check: ${target.healthcheckPath} on port ${started.hostPort}.`);
     await waitForHealthy(`http://127.0.0.1:${started.hostPort}${target.healthcheckPath}`);
 
     // The new container answers, so the older ones for this application can go.
     for (const container of await listApplicationContainers(runtime.client, target.applicationId)) {
-      if (container.id !== containerId) await stopAndRemove(runtime.client, container.id);
+      if (container.id !== containerId) {
+        await log(`Stopping the previous container ${container.id.slice(0, 12)}.`);
+        await stopAndRemove(runtime.client, container.id);
+      }
     }
 
+    await log("Health check passed; traffic moved to the new container.");
     await transitionDeployment(db, deploymentId, ["healthcheck"], "running", {
       finishedAt: new Date(),
     });
@@ -168,15 +187,14 @@ export async function runDeployment(deploymentId: string): Promise<void> {
       await stopAndRemove(runtime.client, containerId).catch(() => undefined);
       containerId = null;
     }
+    const message = error instanceof Error ? error.message : "The deployment failed.";
+    await log(`Failed: ${message}`);
     await transitionDeployment(
       db,
       deploymentId,
       ["building", "deploying", "healthcheck"],
       "failed",
-      {
-        error: error instanceof Error ? error.message : "The deployment failed.",
-        finishedAt: new Date(),
-      },
+      { error: message, finishedAt: new Date() },
     );
   } finally {
     if (contextDir) await rm(contextDir, { recursive: true, force: true }).catch(() => undefined);
