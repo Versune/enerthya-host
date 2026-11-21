@@ -102,11 +102,12 @@ less install.sh && bash install.sh --check
 - Also works: projects with production and staging environments created in one step, applications
   attached to an environment with a Git repository or an image plus their build settings, and
   write endpoints guarded by the caller's role (owner/admin write, member reads).
-- Also works: the deployment queue. Pressing Deploy writes a deployment row and a BullMQ job; the
-  worker resolves the commit with `git ls-remote` and then stops, because it has no container
-  runtime yet. The row shows that reason.
-- Not yet: building and running containers, domains and SSL, encrypted env vars, logs and
-  terminal, managed databases, backups, metrics, notifications, invitations.
+- Also works: deployments. Pressing Deploy writes a deployment row and a BullMQ job; the worker
+  pulls an image (or clones a repository and builds its Dockerfile), starts the container on a
+  published port, waits for its health check, and only then stops the previous container for that
+  application. A deployment that fails removes its own container and leaves the old one running.
+- Not yet: Nixpacks and compose builds, rollback as a command, domains and SSL, encrypted env
+  vars, logs and terminal, managed databases, backups, metrics, notifications, invitations.
 
 See `ROADMAP.md` for what ships next, `CLAUDE.md` for the architecture rules and the stage order,
 and `PRODUCT.md` for product truth.

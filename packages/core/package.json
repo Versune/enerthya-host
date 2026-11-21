@@ -12,14 +12,18 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@types/dockerode": "^4.0.2",
     "@types/node": "24.19.2",
     "@types/ssh2": "^1.15.6",
+    "@types/tar-fs": "^2.0.4",
     "typescript": "5.9.3",
     "vitest": "5.1.1"
   },
   "dependencies": {
     "bullmq": "^6.7.8",
+    "dockerode": "^5.0.1",
     "ioredis": "^6.0.0",
-    "ssh2": "^1.17.0"
+    "ssh2": "^1.17.0",
+    "tar-fs": "^3.1.3"
   }
 }

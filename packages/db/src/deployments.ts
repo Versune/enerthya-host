@@ -24,11 +24,15 @@ export type DeploymentTarget = {
   deploymentId: string;
   applicationId: string;
   applicationName: string;
+  applicationSlug: string;
+  environmentId: string;
   sourceType: (typeof applications.$inferSelect)["sourceType"];
   gitUrl: string | null;
   gitBranch: string;
   dockerImage: string | null;
   buildType: (typeof applications.$inferSelect)["buildType"];
+  port: number;
+  healthcheckPath: string;
 };
 
 /** Deployment history for one organization, newest first. */
@@ -116,6 +120,14 @@ export async function setDeploymentSource(
   await db.update(deployments).set(source).where(eq(deployments.id, id));
 }
 
+export async function setDeploymentRuntime(
+  db: Database,
+  id: string,
+  runtime: { containerId?: string; imageTag?: string },
+): Promise<void> {
+  await db.update(deployments).set(runtime).where(eq(deployments.id, id));
+}
+
 /** What the worker needs to run a deployment, independent of any organization. */
 export async function selectDeploymentTarget(
   db: Database,
@@ -126,11 +138,15 @@ export async function selectDeploymentTarget(
       deploymentId: deployments.id,
       applicationId: applications.id,
       applicationName: applications.name,
+      applicationSlug: applications.slug,
+      environmentId: applications.environmentId,
       sourceType: applications.sourceType,
       gitUrl: applications.gitUrl,
       gitBranch: applications.gitBranch,
       dockerImage: applications.dockerImage,
       buildType: applications.buildType,
+      port: applications.port,
+      healthcheckPath: applications.healthcheckPath,
     })
     .from(deployments)
     .innerJoin(applications, eq(deployments.applicationId, applications.id))

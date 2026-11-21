@@ -8,6 +8,20 @@ export {
   redisConnection,
 } from "./queue";
 export { type Role, roleAtLeast } from "./roles";
+export {
+  buildImage,
+  connectRuntime,
+  containerName,
+  createAndStart,
+  describeRuntime,
+  listApplicationContainers,
+  missingRuntimeMessage,
+  pullImage,
+  type RuntimeConnection,
+  type RuntimeKind,
+  stopAndRemove,
+  waitForHealthy,
+} from "./runtime";
 export { toSlug } from "./slug";
 export {
   checkHostKey,
