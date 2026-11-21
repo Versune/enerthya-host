@@ -214,4 +214,14 @@ test.describe("services", () => {
     expect(response.ok()).toBe(true);
     expect(await response.text()).toContain("Disallow: /");
   });
+
+  test("sitemap.xml lists only the sessionless routes", async ({ request }) => {
+    const response = await request.get("/sitemap.xml");
+    expect(response.ok()).toBe(true);
+
+    const body = await response.text();
+    expect(body).toContain("<urlset");
+    expect(body).toContain("/sign-in");
+    expect(body).not.toContain("/servers");
+  });
 });
