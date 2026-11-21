@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.9](https://github.com/Versune/enerthya-host/compare/v0.12.8...v0.12.9) (2026-11-21)
+
+
+### Features
+
+* **backups:** schedule backups per database, with retention ([#80](https://github.com/Versune/enerthya-host/issues/80)) ([b06351b](https://github.com/Versune/enerthya-host/commit/b06351b487fc5038aea946df5ba7fe939eecfb9d))
+
+
+### Bug Fixes
+
+* **install:** start the runtime whenever the profile asks for it ([#79](https://github.com/Versune/enerthya-host/issues/79)) ([63929be](https://github.com/Versune/enerthya-host/commit/63929be5d2c006db07992e2553a6c7d8e499de1b))
+
 ## [0.12.8](https://github.com/Versune/enerthya-host/compare/v0.12.7...v0.12.8) (2026-11-21)
 
 
