@@ -450,6 +450,19 @@
   margin-top: var(--s-6);
 }
 
+/* Two fields, not three: the server form's row is sized for name/port/user. */
+.schedule-form__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+  margin-top: var(--s-6);
+}
+
+/* The schedule panel sits under the whole row, not inside its first column. */
+.project__schedule {
+  grid-column: 1 / -1;
+}
+
 .field__input--area {
   padding: var(--s-3);
   border: 1px solid var(--rule-strong);
@@ -472,7 +485,8 @@
     justify-content: flex-start;
   }
 
-  .server-form__row {
+  .server-form__row,
+  .schedule-form__row {
     grid-template-columns: 1fr;
   }
 }
