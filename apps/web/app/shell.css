@@ -365,6 +365,32 @@
   font-size: var(--text-xs);
 }
 
+.server__note {
+  color: var(--ink-60);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+/* A failed deployment is ink, not red: colour in this panel names a state,
+   and the row already says "failed". */
+.env-chip--failed {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.deployment__error {
+  max-width: 52ch;
+  color: var(--ink-80);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.deployment__meta {
+  color: var(--ink-60);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
 .btn--quiet {
   min-height: 2.25rem;
   padding: 0.4rem 0.75rem;

@@ -4,9 +4,10 @@ An open-source, self-hosted PaaS. Connect your servers, point at a Git repositor
 image, and Enerthya Host handles the build, the deploy, the domain, the TLS certificate, the
 logs, the backups and the monitoring — on hardware you control.
 
-Early build. The monorepo, shared packages and the worker boundary exist; authentication,
-deployments, backups and restore are the next stages and are not wired yet. Nothing here claims
-to host an application until it can.
+Early build. The monorepo, shared packages, authentication, servers, projects, applications and
+the deployment queue exist; the container runtime, builds, backups and restore are the next
+stages and are not wired yet. A deployment that cannot finish says why instead of reporting
+success.
 
 ## Architecture
 
@@ -98,10 +99,14 @@ less install.sh && bash install.sh --check
   sign-up, the dashboard shell, and a server registry: the local machine is always the first row,
   remote servers take an SSH key encrypted with AES-256-GCM, and a probe reports the runtime,
   pinning the SSH host key on first connect and refusing a changed one.
-- Also works: projects with production and staging environments created in one step, and write
-  endpoints guarded by the caller's role (owner/admin write, member reads).
-- Not yet: invitations, applications, deployments, domains and SSL, encrypted env vars, logs and
-  terminal, managed databases, backups, metrics, notifications.
+- Also works: projects with production and staging environments created in one step, applications
+  attached to an environment with a Git repository or an image plus their build settings, and
+  write endpoints guarded by the caller's role (owner/admin write, member reads).
+- Also works: the deployment queue. Pressing Deploy writes a deployment row and a BullMQ job; the
+  worker resolves the commit with `git ls-remote` and then stops, because it has no container
+  runtime yet. The row shows that reason.
+- Not yet: building and running containers, domains and SSL, encrypted env vars, logs and
+  terminal, managed databases, backups, metrics, notifications, invitations.
 
 See `ROADMAP.md` for what ships next, `CLAUDE.md` for the architecture rules and the stage order,
 and `PRODUCT.md` for product truth.
