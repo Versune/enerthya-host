@@ -450,6 +450,12 @@
   margin-top: var(--s-6);
 }
 
+/* Container CPU history: same paper surface, no chrome around the chart. */
+.stats__chart {
+  margin-top: var(--s-4);
+  height: 120px;
+}
+
 .terminal {
   display: grid;
   gap: var(--s-3);

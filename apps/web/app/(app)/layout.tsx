@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { getAuth } from "@/lib/auth";
 import { requireSession } from "@/lib/require-session";
+import { Providers } from "../providers";
 
 export const dynamic = "force-dynamic";
 
@@ -16,15 +17,17 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     organizations[0];
 
   return (
-    <div className="shell">
-      <Sidebar />
-      <div className="shell__main">
-        <Topbar organization={active?.name ?? "No organization"} />
-        <main className="page" id="main">
-          {children}
-        </main>
+    <Providers>
+      <div className="shell">
+        <Sidebar />
+        <div className="shell__main">
+          <Topbar organization={active?.name ?? "No organization"} />
+          <main className="page" id="main">
+            {children}
+          </main>
+        </div>
+        <CommandPalette />
       </div>
-      <CommandPalette />
-    </div>
+    </Providers>
   );
 }
