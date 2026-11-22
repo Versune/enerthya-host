@@ -56,6 +56,20 @@ export async function deleteDomain(
   return rows.length > 0;
 }
 
+/**
+ * Whether any hostname points at this application. The worker asks before it
+ * promises a swap without a gap: with a domain, the proxy is the thing that
+ * moves the traffic, and a failed publish is a failed deployment.
+ */
+export async function applicationHasDomains(db: Database, applicationId: string): Promise<boolean> {
+  const rows = await db
+    .select({ id: domains.id })
+    .from(domains)
+    .where(eq(domains.applicationId, applicationId))
+    .limit(1);
+  return rows.length > 0;
+}
+
 export type DomainRoute = { hostname: string; port: number };
 
 /**
