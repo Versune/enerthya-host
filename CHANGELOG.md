@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.15](https://github.com/Versune/enerthya-host/compare/v0.12.14...v0.12.15) (2026-11-22)
+
+
+### Bug Fixes
+
+* **install:** stop the piped script from eating itself ([#96](https://github.com/Versune/enerthya-host/issues/96)) ([737c849](https://github.com/Versune/enerthya-host/commit/737c8498bccd52f3b9445df17c8dd7f993fa4e3b))
+
 ## [0.12.14](https://github.com/Versune/enerthya-host/compare/v0.12.13...v0.12.14) (2026-11-22)
 
 
