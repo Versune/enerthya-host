@@ -31,7 +31,10 @@ if ! docker info >/dev/null 2>&1; then
     if [ -S "$sock" ]; then export DOCKER_HOST="unix://$sock"; break; fi
   done
 fi
-COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$ROOT/docker/compose.yml" --profile runtime)
+# The compose file pins the project name `enerthya`, which is also the name of
+# a developer stack that may already be running. A separate project keeps this
+# harness from recreating somebody's dev containers.
+COMPOSE=(docker compose -p "${COMPOSE_PROJECT:-enerthya-swap-test}" --env-file "$ENV_FILE" -f "$ROOT/docker/compose.yml" --profile runtime)
 
 say() { printf '%s\n' "$*"; }
 fail() { printf 'error: %s\n' "$*" >&2; exit 1; }
@@ -45,6 +48,11 @@ write_env() {
 POSTGRES_PASSWORD=swap-test
 ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000
 ENERTHYA_VERSION=swap-test
+# Away from 5432/6379 so a developer's own stack keeps its ports.
+BETTER_AUTH_SECRET=swap-test-secret-not-a-real-one
+BETTER_AUTH_URL=http://127.0.0.1:8420
+POSTGRES_PORT=55432
+REDIS_PORT=56379
 EOF
   chmod 600 "$ENV_FILE"
   say "wrote $ENV_FILE"
@@ -80,26 +88,63 @@ cmd_up() {
   docker compose version >/dev/null 2>&1 || fail "docker compose is missing"
   have_docker || fail "Docker is not reachable (is the daemon, or DOCKER_HOST, up?)"
   write_env
-  say "== building $IMAGE from the working tree"
-  docker build -q -t "$IMAGE" -f "$ROOT/Dockerfile" "$ROOT" >/dev/null
-  say "== starting postgres, redis, proxy, worker"
-  "${COMPOSE[@]}" up -d postgres redis proxy worker
+  # The runtime image is built from a release tarball: it copies apps/,
+  # node_modules/ and drizzle/ as the packager lays them out, which a checkout
+  # does not have. The worker is a Node process, so the harness runs it from
+  # the working tree instead — which is also the only way to test the code that
+  # has not been released yet.
+  say "== starting postgres, redis, proxy"
+  "${COMPOSE[@]}" up -d postgres redis proxy
   wait_for_postgres
   say "== applying migrations"
   apply_migrations
   say ""
   say "Stack up. Caddy admin: $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:2019/config/ || true)"
-  say "Worker: $(docker ps --filter name=enerthya-worker --format '{{.Status}}')"
+  cmd_worker_start
   say ""
   say "Next: seed an application + domain, deploy it, and watch it under load."
 }
 
-cmd_down() { "${COMPOSE[@]}" down; }
-cmd_reset() { "${COMPOSE[@]}" down -v; rm -f "$ENV_FILE"; say "volumes and $ENV_FILE removed"; }
+cmd_worker_start() {
+  local log="$ROOT/.swap-test-worker.log"
+  if [ -f "$ROOT/.swap-test-worker.pid" ] && kill -0 "$(cat "$ROOT/.swap-test-worker.pid")" 2>/dev/null; then
+    say "Worker already running (pid $(cat "$ROOT/.swap-test-worker.pid"))"
+    return 0
+  fi
+  # The worker is bundled for production: ssh2 is CommonJS and its named
+  # exports only exist after the esbuild pass, so running src/index.ts directly
+  # fails on `import { utils } from "ssh2"`. Bundle from the working tree — that
+  # is the same code, through the same path the release uses.
+  say "== bundling the worker"
+  pnpm --filter @enerthya/worker build >/dev/null 2>&1 ||
+    fail "the worker bundle did not build"
+  say "== starting the worker from the working tree (log: $log)"
+  DATABASE_URL="postgres://enerthya:swap-test@127.0.0.1:55432/enerthya" \
+  REDIS_URL="redis://127.0.0.1:56379" \
+  ENCRYPTION_KEY="0000000000000000000000000000000000000000000000000000000000000000" \
+  CADDY_ADMIN_URL="http://127.0.0.1:2019" \
+    node apps/worker/dist/index.cjs >"$log" 2>&1 &
+  echo $! >"$ROOT/.swap-test-worker.pid"
+  sleep 3
+  kill -0 "$(cat "$ROOT/.swap-test-worker.pid")" 2>/dev/null ||
+    fail "the worker exited on start — see $log"
+  say "Worker up (pid $(cat "$ROOT/.swap-test-worker.pid"))"
+}
+
+cmd_worker_stop() {
+  if [ -f "$ROOT/.swap-test-worker.pid" ]; then
+    kill "$(cat "$ROOT/.swap-test-worker.pid")" 2>/dev/null || true
+    rm -f "$ROOT/.swap-test-worker.pid"
+  fi
+}
+
+cmd_down() { cmd_worker_stop; "${COMPOSE[@]}" down; }
+cmd_reset() { cmd_worker_stop; "${COMPOSE[@]}" down -v; rm -f "$ENV_FILE"; say "volumes and $ENV_FILE removed"; }
 
 case "${1:-up}" in
   up) cmd_up ;;
   down) cmd_down ;;
+  worker) cmd_worker_start ;;
   reset) cmd_reset ;;
   *) fail "unknown command: ${1:-} (use up, down or reset)" ;;
 esac
