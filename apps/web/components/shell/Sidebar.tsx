@@ -1,6 +1,15 @@
 "use client";
 
-import { Bell, Boxes, Database, FolderKanban, LayoutDashboard, Rocket, Server } from "lucide-react";
+import {
+  Bell,
+  Boxes,
+  Database,
+  FolderKanban,
+  LayoutDashboard,
+  Rocket,
+  Server,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Brand } from "@/components/Brand";
@@ -13,6 +22,7 @@ export const NAV_ITEMS = [
   { href: "/deployments", label: "Deployments", icon: Rocket },
   { href: "/databases", label: "Databases", icon: Database },
   { href: "/notifications", label: "Notifications", icon: Bell },
+  { href: "/members", label: "Members", icon: Users },
 ] as const;
 
 export function Sidebar() {
