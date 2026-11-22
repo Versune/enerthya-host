@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.14](https://github.com/Versune/enerthya-host/compare/v0.12.13...v0.12.14) (2026-11-22)
+
+
+### Bug Fixes
+
+* **deps:** pin esbuild and minimatch past their advisories ([#94](https://github.com/Versune/enerthya-host/issues/94)) ([adaa673](https://github.com/Versune/enerthya-host/commit/adaa6736f18f9c761b7de672f34d595ffbc94ba0))
+
 ## [0.12.13](https://github.com/Versune/enerthya-host/compare/v0.12.12...v0.12.13) (2026-11-22)
 
 
