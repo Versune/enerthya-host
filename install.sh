@@ -230,18 +230,18 @@ step "Starting Postgres and Redis"
 "${COMPOSE[@]}" up -d postgres redis
 READY=0
 for _ in $(seq 1 60); do
-  "${COMPOSE[@]}" exec -T postgres pg_isready -U enerthya -d enerthya >/dev/null 2>&1 && { READY=1; break; }
+  "${COMPOSE[@]}" exec -T postgres pg_isready -U enerthya -d enerthya </dev/null >/dev/null 2>&1 && { READY=1; break; }
   sleep 2
 done
 [ "$READY" = "1" ] || fail "Postgres did not become ready. Check: ${COMPOSE[*]} logs postgres"
 
 step "Applying migrations"
-"${COMPOSE[@]}" exec -T postgres psql -U enerthya -d enerthya -v ON_ERROR_STOP=1 \
+"${COMPOSE[@]}" exec -T postgres psql -U enerthya -d enerthya -v ON_ERROR_STOP=1 </dev/null \
   -c "CREATE TABLE IF NOT EXISTS enerthya_migrations (filename text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())" >/dev/null
 for file in "$SOURCE"/drizzle/*.sql; do
   [ -f "$file" ] || continue
   base="$(basename "$file")"
-  applied="$("${COMPOSE[@]}" exec -T postgres psql -U enerthya -d enerthya -tAc "SELECT 1 FROM enerthya_migrations WHERE filename = '$base'")"
+  applied="$("${COMPOSE[@]}" exec -T postgres psql -U enerthya -d enerthya -tAc "SELECT 1 FROM enerthya_migrations WHERE filename = '$base'" </dev/null)"
   [ "$applied" = "1" ] && continue
   say "  $base"
   {
