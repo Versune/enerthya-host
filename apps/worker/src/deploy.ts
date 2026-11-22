@@ -17,6 +17,7 @@ import {
 } from "@enerthya/core/runtime";
 import {
   appendDeploymentLog,
+  applicationHasDomains,
   type DeploymentTarget,
   getDb,
   selectDeploymentTarget,
@@ -89,6 +90,9 @@ export async function runDeployment(deploymentId: string): Promise<void> {
 
   const log = (line: string) => appendDeploymentLog(db, deploymentId, line).catch(() => undefined);
   await log("Deployment claimed by the worker.");
+  // Set when this run moved the row to `running`. A failure after that point
+  // has to hand the route back, not only mark the deployment failed.
+  let promoted = false;
 
   const target = await selectDeploymentTarget(db, deploymentId);
   if (!target) {
@@ -166,23 +170,33 @@ export async function runDeployment(deploymentId: string): Promise<void> {
     await log(`Health check: ${target.healthcheckPath} on port ${started.hostPort}.`);
     await waitForHealthy(`http://127.0.0.1:${started.hostPort}${target.healthcheckPath}`);
 
-    // The new container answers, so the older ones for this application can go.
+    await log("Health check passed.");
+
+    // The row becomes `running` before the proxy is touched, because
+    // selectDomainRoutes resolves the newest running deployment: this is the
+    // moment the route table would answer with the new port. Publishing it is
+    // what actually moves the traffic, and it happens while the previous
+    // container is still up and answering.
+    promoted = await transitionDeployment(db, deploymentId, ["healthcheck"], "running", {
+      finishedAt: new Date(),
+    });
+    if (!promoted)
+      throw new Error("The deployment left the health check before it could be promoted.");
+
+    if (await applicationHasDomains(db, target.applicationId)) {
+      await publishDomainRoutes({ strict: true });
+      await log("Traffic moved to the new container.");
+    }
+
+    // Traffic is on the new container — or there was no proxy to move — so the
+    // older containers for this application can go. Doing this any earlier
+    // leaves a window where the proxy dials a port whose container is gone.
     for (const container of await listApplicationContainers(runtime.client, target.applicationId)) {
       if (container.id !== containerId) {
         await log(`Stopping the previous container ${container.id.slice(0, 12)}.`);
         await stopAndRemove(runtime.client, container.id);
       }
     }
-
-    await log("Health check passed; traffic moved to the new container.");
-    await transitionDeployment(db, deploymentId, ["healthcheck"], "running", {
-      finishedAt: new Date(),
-    });
-
-    // The container serves; now point the domains at it. A proxy that is not
-    // running yet is not a deployment failure — the application is up, and the
-    // next deployment will publish again.
-    await publishDomainRoutes();
   } catch (error) {
     if (containerId) {
       await stopAndRemove(runtime.client, containerId).catch(() => undefined);
@@ -199,25 +213,33 @@ export async function runDeployment(deploymentId: string): Promise<void> {
     await transitionDeployment(
       db,
       deploymentId,
-      ["building", "deploying", "healthcheck"],
+      ["building", "deploying", "healthcheck", "running"],
       "failed",
       { error: message, finishedAt: new Date() },
     );
+    // A deployment that failed after it was promoted must stop being the
+    // route's answer: the previous deployment is still `running`, so
+    // republishing hands the domain back to the container that never stopped.
+    if (promoted) await publishDomainRoutes();
   } finally {
     if (contextDir) await rm(contextDir, { recursive: true, force: true }).catch(() => undefined);
   }
 }
 
 /** Loads every domain the panel knows about into the reverse proxy. */
-async function publishDomainRoutes(): Promise<void> {
+async function publishDomainRoutes({ strict = false }: { strict?: boolean } = {}): Promise<void> {
   const adminUrl = process.env.CADDY_ADMIN_URL;
+  // No admin URL means this worker does not run the proxy. The deployment still
+  // succeeds there; the domain is simply not served from this machine.
   if (!adminUrl) return;
   try {
     await publishRoutes(adminUrl, await selectDomainRoutes(getDb()));
   } catch (error) {
-    console.error(
-      `[enerthya-worker] could not publish proxy routes: ${error instanceof Error ? error.message : error}`,
-    );
+    const message = error instanceof Error ? error.message : String(error);
+    // Strict is the swap: a deployment that cannot move the traffic must not be
+    // reported as running, and the previous container must not be stopped.
+    if (strict) throw new Error(`The proxy did not accept the new route: ${message}`);
+    console.error(`[enerthya-worker] could not publish proxy routes: ${message}`);
   }
 }
 
