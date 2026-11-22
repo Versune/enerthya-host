@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.13](https://github.com/Versune/enerthya-host/compare/v0.12.12...v0.12.13) (2026-11-22)
+
+
+### Features
+
+* **members:** invite people, change roles, remove members ([#90](https://github.com/Versune/enerthya-host/issues/90)) ([0416aeb](https://github.com/Versune/enerthya-host/commit/0416aeb8084881b07d44cd8cff01c53d97721eac))
+
 ## [0.12.12](https://github.com/Versune/enerthya-host/compare/v0.12.11...v0.12.12) (2026-11-21)
 
 

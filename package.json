@@ -1,6 +1,6 @@
 {
   "name": "enerthya",
-  "version": "0.12.12",
+  "version": "0.12.13",
   "private": true,
   "description": "Self-hosted deployment platform: servers, projects, deployments, domains, backups.",
   "packageManager": "pnpm@12.21.0",
