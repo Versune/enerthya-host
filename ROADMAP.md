@@ -28,6 +28,11 @@ Current release: **0.5.0**.
 | Auto-deploy | GitHub webhook per application, HMAC-verified against the application's own secret, branch-filtered |
 | Env vars | per application, encrypted at rest, runtime and optional build-time, injected by the worker |
 | Deployments | queue, pipeline and history: pull or clone → build the Dockerfile → start → health check → stop the previous container; a failed run removes its own container and records why; rollback re-runs the previous image that reached running |
+| Web terminal | a shell inside the running container, opened from the panel, run as a TTY exec in the worker and carried over Postgres channels |
+| Scheduled backups | an interval and a retention window per database, with the upload to S3/R2/MinIO and the restore check done by a sweep in the worker |
+| Host metrics | CPU, memory, disk and uptime from the machine, polled by the panel over a channel |
+| Email | deployment failures rendered with react-email and sent through SMTP by the worker |
+| Team | members and invitations with owner/admin/member roles, the invitation link accepted by the invitee |
 
 ## Next — the deploy path
 
@@ -38,13 +43,9 @@ Current release: **0.5.0**.
 
 ## Later
 
-- An interactive web terminal (logs are live; stdin is not).
-- One-click databases (Postgres, MySQL, Redis, MongoDB) with scheduled backups to S3/R2/MinIO and
-  a restore that is verified, not assumed.
-- Network and disk metrics, and per-server numbers (the per-container CPU and memory exist).
-- Email notifications (only webhook and Discord exist today).
+- Network metrics, and per-server numbers for remote hosts (host metrics read the local machine;
+  per-container CPU and memory already exist).
 - Service templates.
-- Invitations and full RBAC screens; roles are stored and enforced on project writes today.
 - Docker socket mount (or agent) so the panel container can manage the host runtime directly.
 - Published container images, so installing pulls instead of building locally.
 
