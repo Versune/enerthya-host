@@ -4,10 +4,12 @@ An open-source, self-hosted PaaS. Connect your servers, point at a Git repositor
 image, and Enerthya Host handles the build, the deploy, the domain, the TLS certificate, the
 logs, the backups and the monitoring — on hardware you control.
 
-Early build. The monorepo, shared packages, authentication, servers, projects, applications and
-the deployment queue exist; the container runtime, builds, backups and restore are the next
-stages and are not wired yet. A deployment that cannot finish says why instead of reporting
-success.
+Early build, but the loop is real. The monorepo, shared packages, authentication, servers,
+projects, applications and the deployment pipeline work: a build, a health check, and only then
+the swap. Domains and TLS, encrypted environment variables, real-time logs and a web terminal,
+managed databases with scheduled backups verified by a restore, host and container metrics,
+email notifications and team invitations are in place too. What is missing is listed under
+Status, and a deployment that cannot finish says why instead of reporting success.
 
 ## Architecture
 
@@ -108,8 +110,21 @@ less install.sh && bash install.sh --check
   application. A deployment that fails removes its own container and leaves the old one running.
 - Also works: the installer ships that worker as an opt-in Compose profile (`--with-runtime`),
   because it mounts the host's container socket.
-- Not yet: Nixpacks and compose builds, rollback as a command, domains and SSL, encrypted env
-  vars, logs and terminal, managed databases, backups, metrics, notifications, invitations.
+- Also works: domains with a generated Caddy config, the certificate issued and renewed by the
+  proxy (the hop is proven on the host topology, not yet against a live DNS record), and
+  environment variables encrypted at rest with a build-time/runtime split.
+- Also works: real-time deploy logs and a web terminal carried over Postgres channels, the shell
+  running as a TTY exec in the worker so the panel never holds the runtime socket.
+- Also works: managed Postgres databases created in one step, scheduled backups to S3-compatible
+  storage, each one verified by an actual restore, with an interval and a retention window per
+  database.
+- Also works: host metrics (CPU, memory, disk, uptime) and per-container CPU and memory, drawn
+  from the live window; failure notifications over Discord, a generic webhook and email, the last
+  rendered and sent by the worker so the relay credentials never reach the panel; members, roles
+  and invitations.
+- Not yet: Nixpacks and compose builds (refused with an explicit message), zero-downtime handover
+  and resumable deployments, per-server metrics for remote hosts, service templates, and stored
+  metrics history — the charts read the live window, not a series.
 
 See `ROADMAP.md` for what ships next, `CLAUDE.md` for the architecture rules and the stage order,
 and `PRODUCT.md` for product truth.
