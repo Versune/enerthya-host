@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.16](https://github.com/Versune/enerthya-host/compare/v0.12.15...v0.12.16) (2026-11-22)
+
+
+### Features
+
+* **deploy:** move the traffic before the old container stops ([#98](https://github.com/Versune/enerthya-host/issues/98)) ([ef44ecd](https://github.com/Versune/enerthya-host/commit/ef44ecd25b207b72835b0a9166be8e6b5ac76e94))
+
 ## [0.12.15](https://github.com/Versune/enerthya-host/compare/v0.12.14...v0.12.15) (2026-11-22)
 
 
