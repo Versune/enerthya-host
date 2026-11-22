@@ -43,3 +43,7 @@ apps/worker/dist
 
 # Local backup dumps written while developing.
 .backups
+
+# Release videos: the mp4 and the frames are generated, the spec and the sheet are not.
+marketing/releases/*/release.mp4
+marketing/releases/*/.build/

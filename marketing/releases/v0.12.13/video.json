@@ -1,0 +1,34 @@
+{
+  "version": "v0.12.13",
+  "title": "Enerthya Host v0.12.13",
+  "subtitle": "Invite a teammate, and a shell inside the container",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "slides": [
+    {
+      "kind": "title",
+      "title": "People, not one login",
+      "body": "v0.12.13",
+      "seconds": 3
+    },
+    {
+      "kind": "text",
+      "title": "What changed",
+      "body": "- invite by address, with a role\n- change a role, remove a member\n- the invite email leaves through your relay\n- a shell inside the running container",
+      "seconds": 6
+    },
+    {
+      "kind": "text",
+      "title": "The rule that did not change",
+      "body": "A deploy is done when the health check passes,\nnot when the process starts.",
+      "seconds": 4
+    },
+    {
+      "kind": "text",
+      "title": "Apache-2.0",
+      "body": "github.com/Versune/enerthya-host",
+      "seconds": 3
+    }
+  ]
+}
