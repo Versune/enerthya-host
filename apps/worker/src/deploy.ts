@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { decryptSecret } from "@enerthya/core/crypto";
 import { publishRoutes } from "@enerthya/core/proxy";
+import { redactCredentials } from "@enerthya/core/redact";
 import {
   buildImage,
   connectRuntime,
@@ -63,7 +64,7 @@ export async function cloneRepository(
     });
     if (clone.exitCode !== 0) {
       const detail = clone.stderr.trim() || `git exited with ${clone.exitCode}`;
-      throw new Error(`Could not clone ${url} (${branch}): ${detail}`);
+      throw new Error(`Could not clone ${redactCredentials(url)} (${branch}): ${detail}`);
     }
 
     const head = await execa("git", ["rev-parse", "HEAD"], { cwd: dir, timeout: 30_000 });
@@ -167,7 +168,7 @@ export async function runDeployment(
       await log(
         target.presetImage
           ? `Rollback: running the image ${target.presetImage}.`
-          : `Source: ${target.sourceType === "git" ? `${target.gitUrl} (${target.gitBranch})` : target.dockerImage}.`,
+          : `Source: ${target.sourceType === "git" ? `${redactCredentials(target.gitUrl ?? "")} (${target.gitBranch})` : target.dockerImage}.`,
       );
       image = await prepareImage(
         runtime,

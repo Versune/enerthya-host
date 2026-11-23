@@ -146,6 +146,16 @@ export async function buildImage(
   });
 }
 
+/**
+ * Every published container port is bound to loopback. The reverse proxy dials
+ * 127.0.0.1, and nothing else should reach an application, a managed database
+ * or a verification container directly — a public binding would bypass Caddy
+ * and therefore TLS.
+ */
+export function portBindings(containerPort: number) {
+  return { [`${containerPort}/tcp`]: [{ HostIp: "127.0.0.1", HostPort: "" }] };
+}
+
 export async function createAndStart(
   client: Docker,
   spec: CreateContainerSpec,
@@ -158,7 +168,7 @@ export async function createAndStart(
     Env: spec.env,
     ExposedPorts: { [portKey]: {} },
     HostConfig: {
-      PortBindings: { [portKey]: [{ HostPort: "" }] },
+      PortBindings: portBindings(spec.containerPort),
       RestartPolicy: { Name: "unless-stopped" },
       Binds: spec.volumes?.map((volume) => `${volume.source}:${volume.target}`),
     },
@@ -210,7 +220,13 @@ export async function listApplicationContainers(
   return containers.map((container) => ({ id: container.Id, state: container.State }));
 }
 
-/** Polls a URL until it answers below 500 or the deadline passes. */
+/** Only 2xx is healthy: a 404 or a redirect means the application is not
+ * answering the way its health check promises. */
+export function isHealthy(status: number): boolean {
+  return status >= 200 && status < 300;
+}
+
+/** Polls a URL until it answers 2xx or the deadline passes. */
 export async function waitForHealthy(
   url: string,
   { timeoutMs = 60_000, intervalMs = 2_000 }: { timeoutMs?: number; intervalMs?: number } = {},
@@ -219,15 +235,23 @@ export async function waitForHealthy(
   let last = "no response";
   while (Date.now() < deadline) {
     try {
-      const response = await fetch(url, { signal: AbortSignal.timeout(3_000) });
-      if (response.status < 500) return;
+      // redirect: "manual" — a redirect to a login page or an external host
+      // is not the application answering its own health check.
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(3_000),
+        redirect: "manual",
+      });
+      await response.body?.cancel();
+      if (isHealthy(response.status)) return;
       last = `HTTP ${response.status}`;
     } catch (error) {
       last = error instanceof Error ? error.message : "unreachable";
     }
     await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
-  throw new Error(`The health check at ${url} did not pass within 60s (last: ${last}).`);
+  throw new Error(
+    `The health check at ${url} did not pass within ${Math.round(timeoutMs / 1000)}s (last: ${last}).`,
+  );
 }
 
 export function containerName(slug: string, deploymentId: string): string {

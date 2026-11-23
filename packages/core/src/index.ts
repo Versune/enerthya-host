@@ -7,6 +7,7 @@ export {
 } from "./backup-schedule";
 export { decryptSecret, encryptSecret } from "./crypto";
 export { type DeployKey, generateDeployKey, publicKeyFromPrivate } from "./deploy-key";
+export { isAcceptableRepositoryUrl } from "./git-url";
 export { type HostStats, type HostStatsInput, readHostStats } from "./host-stats";
 export { type CaddyConfig, caddyConfig, type ProxyRoute, publishRoutes } from "./proxy";
 export {
@@ -21,6 +22,7 @@ export {
   type RedisConnection,
   redisConnection,
 } from "./queue";
+export { redactCredentials } from "./redact";
 export { type Role, roleAtLeast } from "./roles";
 export {
   buildImage,
