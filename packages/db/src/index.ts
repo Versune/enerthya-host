@@ -6,6 +6,7 @@ export * from "./deployments";
 export * from "./domains";
 export * from "./env-vars";
 export * from "./listen";
+export * from "./locks";
 export * from "./members";
 export * from "./notifications";
 export * from "./projects";
