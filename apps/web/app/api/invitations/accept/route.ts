@@ -1,11 +1,14 @@
-import { currentOrganization } from "@/lib/current-org";
+import { headers } from "next/headers";
+import { getAuth } from "@/lib/auth";
 import { acceptInvitation } from "@/lib/members";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const context = await currentOrganization();
-  if (!context) return Response.json({ error: "Sign in first." }, { status: 401 });
+  // A session, not a membership: the whole point is that this account does not
+  // belong to an organization yet.
+  const session = await getAuth().api.getSession({ headers: await headers() });
+  if (!session) return Response.json({ error: "Sign in first." }, { status: 401 });
 
   const body = (await request.json().catch(() => ({}))) as { id?: string };
   if (!body.id) return Response.json({ error: "id is required" }, { status: 400 });

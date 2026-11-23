@@ -1,4 +1,4 @@
-import { getDb, notifyChannel } from "@enerthya/db";
+import { getDb, notifyChannel, selectInvitation } from "@enerthya/db";
 import { headers } from "next/headers";
 import { getAuth } from "@/lib/auth";
 
@@ -112,14 +112,17 @@ export async function acceptInvitation(invitationId: string): Promise<void> {
   });
 }
 
+/**
+ * An invitation can be accepted while it is pending and inside its window.
+ * Kept pure so the rule is testable without a session or a database.
+ */
+export function invitationAcceptable(
+  invitation: { status: string; expiresAt: Date },
+  now: Date = new Date(),
+): boolean {
+  return invitation.status === "pending" && invitation.expiresAt.getTime() > now.getTime();
+}
+
 export async function invitationById(invitationId: string) {
-  return (await getAuth().api.getInvitation({
-    query: { id: invitationId },
-    headers: await headers(),
-  })) as unknown as {
-    email: string;
-    role: string;
-    status: string;
-    organizationName?: string;
-  } | null;
+  return selectInvitation(getDb(), invitationId);
 }
