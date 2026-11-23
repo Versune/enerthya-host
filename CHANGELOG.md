@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.19](https://github.com/Versune/enerthya-host/compare/v0.12.18...v0.12.19) (2026-11-23)
+
+
+### Features
+
+* **auth:** let an invited person create the account the invitation names ([#113](https://github.com/Versune/enerthya-host/issues/113)) ([cd20349](https://github.com/Versune/enerthya-host/commit/cd20349f8e009083bd8d05a183e495171ed86462))
+
 ## [0.12.18](https://github.com/Versune/enerthya-host/compare/v0.12.17...v0.12.18) (2026-11-23)
 
 
