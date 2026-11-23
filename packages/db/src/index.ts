@@ -9,5 +9,6 @@ export * from "./listen";
 export * from "./members";
 export * from "./notifications";
 export * from "./projects";
+export * from "./registration";
 export * from "./schema";
 export * from "./servers";
