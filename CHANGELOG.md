@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.21](https://github.com/Versune/enerthya-host/compare/v0.12.20...v0.12.21) (2026-11-23)
+
+
+### Bug Fixes
+
+* **worker:** serialize per application, and let nothing after the swap fail ([#117](https://github.com/Versune/enerthya-host/issues/117)) ([82cff66](https://github.com/Versune/enerthya-host/commit/82cff668091f36e6d0ed5b1a18fc9d2e683a3099))
+
 ## [0.12.20](https://github.com/Versune/enerthya-host/compare/v0.12.19...v0.12.20) (2026-11-23)
 
 
