@@ -20,6 +20,8 @@ import {
   databaseEngine,
   databaseStatus,
   deploymentStatus,
+  deploymentStepName,
+  deploymentStepStatus,
   domainStatus,
   environmentKind,
   notificationType,
@@ -158,6 +160,29 @@ export const deployments = pgTable(
     index("deployment_application_idx").on(table.applicationId, table.createdAt),
     index("deployment_status_idx").on(table.status),
   ],
+);
+
+/**
+ * One row per step of a deployment. The status on `deployment` says how far the
+ * deployment got; this says which work is finished, so a retried job resumes
+ * instead of cloning the repository again.
+ */
+export const deploymentSteps = pgTable(
+  "deployment_step",
+  {
+    // One row per (deployment, step); the id is that pair, so a re-recorded
+    // step updates instead of duplicating.
+    id: text("id").primaryKey(),
+    deploymentId: text("deployment_id")
+      .notNull()
+      .references(() => deployments.id, { onDelete: "cascade" }),
+    name: deploymentStepName("name").notNull(),
+    status: deploymentStepStatus("status").notNull().default("pending"),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    error: text("error"),
+  },
+  (table) => [uniqueIndex("deployment_step_key_idx").on(table.deploymentId, table.name)],
 );
 
 export const domains = pgTable(
