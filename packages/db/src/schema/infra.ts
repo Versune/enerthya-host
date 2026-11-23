@@ -13,6 +13,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { organizations } from "./auth";
 import {
+  applicationKind,
   applicationSource,
   backupDestination,
   backupStatus,
@@ -104,6 +105,7 @@ export const applications = pgTable(
     slug: text("slug").notNull(),
 
     sourceType: applicationSource("source_type").notNull(),
+    kind: applicationKind("kind").notNull().default("web"),
     gitUrl: text("git_url"),
     gitBranch: text("git_branch").notNull().default("main"),
     gitProvider: text("git_provider"),
@@ -122,6 +124,12 @@ export const applications = pgTable(
 
     /** Legacy plaintext column. New rows leave it null; reads backfill it into
      * webhookSecretEncrypted and a later release drops it. */
+    /**
+     * Bind mounts for a service: the files a background process reads, kept on
+     * the host under /data/enerthya/apps/<applicationId>/ and mounted into the
+     * container. A web application has none.
+     */
+    volumes: jsonb("volumes").$type<{ source: string; target: string }[]>(),
     webhookSecret: text("webhook_secret"),
     webhookSecretEncrypted: text("webhook_secret_encrypted"),
     deployKeyEncrypted: text("deploy_key_encrypted"),

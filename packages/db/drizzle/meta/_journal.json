@@ -64,6 +64,13 @@
       "when": 1795406274876,
       "tag": "0008_green_kate_bishop",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795409207491,
+      "tag": "0009_gigantic_sabretooth",
+      "breakpoints": true
     }
   ]
 }

@@ -45,6 +45,8 @@ export async function createApplication(
     name: string;
     environmentId: string;
     sourceType: "git" | "image";
+    kind: "web" | "service";
+    volumes: { source: string; target: string }[];
     gitUrl?: string;
     dockerImage?: string;
     gitBranch: string;
@@ -64,6 +66,8 @@ export async function createApplication(
     name: input.name,
     slug: await uniqueSlug(input.environmentId, input.name),
     sourceType: input.sourceType,
+    kind: input.kind,
+    volumes: input.volumes.length > 0 ? input.volumes : null,
     gitUrl: input.sourceType === "git" ? (input.gitUrl ?? null) : null,
     gitBranch: input.gitBranch,
     dockerImage: input.sourceType === "image" ? (input.dockerImage ?? null) : null,

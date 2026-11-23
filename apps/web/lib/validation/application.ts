@@ -10,6 +10,30 @@ export const applicationSchema = z
       .max(60, "Use at most 60 characters."),
     environmentId: z.string().min(1, "Choose an environment."),
     sourceType: z.enum(["git", "image"]),
+    /** web answers HTTP; service is a background process with no port. */
+    kind: z.enum(["web", "service"]).default("web"),
+    /**
+     * Files a service reads from the host, mounted into the container. Kept
+     * absolute and free of "..": the worker runs as root on the host, so a
+     * path is exactly as powerful as the operator who typed it.
+     */
+    volumes: z
+      .array(
+        z.object({
+          source: z
+            .string()
+            .trim()
+            .startsWith("/", "Use an absolute host path.")
+            .refine((value) => !value.includes(".."), "A mount path cannot contain .."),
+          target: z
+            .string()
+            .trim()
+            .startsWith("/", "Use an absolute container path.")
+            .refine((value) => !value.includes(".."), "A mount path cannot contain .."),
+        }),
+      )
+      .max(8, "Use at most 8 mounts.")
+      .default([]),
     gitUrl: z
       .string()
       .trim()

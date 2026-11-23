@@ -21,6 +21,8 @@ export type CreateContainerSpec = {
   name: string;
   image: string;
   containerPort: number;
+  /** A service has no HTTP port; nothing is exposed or published for it. */
+  publishPort?: boolean;
   labels: Record<string, string>;
   /** KEY=value pairs handed to the container. */
   env?: string[];
@@ -161,20 +163,22 @@ export async function createAndStart(
   spec: CreateContainerSpec,
 ): Promise<{ id: string; hostPort: number }> {
   const portKey = `${spec.containerPort}/tcp`;
+  const publish = spec.publishPort !== false;
   const container = await client.createContainer({
     name: spec.name,
     Image: spec.image,
     Labels: spec.labels,
     Env: spec.env,
-    ExposedPorts: { [portKey]: {} },
+    ...(publish ? { ExposedPorts: { [portKey]: {} } } : {}),
     HostConfig: {
-      PortBindings: portBindings(spec.containerPort),
+      ...(publish ? { PortBindings: portBindings(spec.containerPort) } : {}),
       RestartPolicy: { Name: "unless-stopped" },
       Binds: spec.volumes?.map((volume) => `${volume.source}:${volume.target}`),
     },
   });
 
   await container.start();
+  if (!publish) return { id: container.id, hostPort: 0 };
 
   const info = await container.inspect();
   const binding = info.NetworkSettings.Ports?.[portKey]?.[0];

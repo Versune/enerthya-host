@@ -196,18 +196,25 @@ export async function runDeployment(
         .inspect()
         .catch(() => null);
       const published = existing?.NetworkSettings?.Ports?.[`${target.port}/tcp`]?.[0]?.HostPort;
-      if (existing && published) {
+      // A service publishes nothing, so its container is reusable when it is
+      // simply alive.
+      const reusable =
+        existing && (target.kind === "service" ? existing.State?.Running : !!published);
+      if (existing && reusable) {
         containerId = existing.Id;
-        hostPort = Number(published);
+        hostPort = published ? Number(published) : 0;
         await setDeploymentRuntime(db, deploymentId, { containerId, hostPort });
         await log(`Container already running: ${containerId.slice(0, 12)} on port ${hostPort}.`);
       }
     }
     if (!containerId) {
+      const service = target.kind === "service";
       const started = await createAndStart(runtime.client, {
         name,
         image,
         containerPort: target.port,
+        publishPort: !service,
+        volumes: target.volumes ?? undefined,
         labels: {
           "enerthya.managed": "true",
           "enerthya.application": target.applicationId,
@@ -220,20 +227,31 @@ export async function runDeployment(
       hostPort = started.hostPort;
       await setDeploymentRuntime(db, deploymentId, { containerId, hostPort });
       await recordStep(db, deploymentId, "container", "done");
-      await log(`Container started on host port ${hostPort}.`);
+      await log(
+        service
+          ? `Service container started: ${containerId.slice(0, 12)}.`
+          : `Container started on host port ${hostPort}.`,
+      );
     }
 
     await transitionDeployment(db, deploymentId, ["deploying"], "healthcheck");
     currentStep = "health";
     if (isStepDone(steps, "health")) {
       await log("Health check already passed.");
+    } else if (target.kind === "service") {
+      // A background process has no HTTP surface: "healthy" means it is still
+      // running a moment after start, not that it answers a path.
+      if (!containerId) throw new Error("The service container is missing.");
+      await log("Service started; waiting for it to stay up.");
+      await waitForRunning(runtime.client, containerId, 20_000);
+      await recordStep(db, deploymentId, "health", "done");
     } else {
       await log(`Health check: ${target.healthcheckPath} on port ${hostPort}.`);
       await waitForHealthy(`http://127.0.0.1:${hostPort}${target.healthcheckPath}`);
       await recordStep(db, deploymentId, "health", "done");
     }
 
-    await log("Health check passed.");
+    await log(target.kind === "service" ? "Service is up." : "Health check passed.");
 
     // The row becomes `running` before the proxy is touched, because
     // selectDomainRoutes resolves the newest running deployment: this is the
@@ -246,7 +264,7 @@ export async function runDeployment(
     if (!promoted)
       throw new Error("The deployment left the health check before it could be promoted.");
 
-    if (await applicationHasDomains(db, target.applicationId)) {
+    if (target.kind === "web" && (await applicationHasDomains(db, target.applicationId))) {
       await publishDomainRoutes({ strict: true });
       await log("Traffic moved to the new container.");
     }
@@ -291,6 +309,29 @@ export async function runDeployment(
   } finally {
     if (contextDir) await rm(contextDir, { recursive: true, force: true }).catch(() => undefined);
   }
+}
+
+/**
+ * A service is ready when its process is still alive after it had time to
+ * crash. The runtime restarts a container that exits, so the check looks at
+ * the current state rather than trusting that start() returning meant success.
+ */
+async function waitForRunning(
+  client: RuntimeConnection["client"],
+  containerId: string,
+  timeoutMs: number,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  let last = "unknown";
+  while (Date.now() < deadline) {
+    const info = await client.getContainer(containerId).inspect();
+    if (info.State?.Running && !info.State.Restarting) return;
+    last = info.State?.Status ?? "unknown";
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(
+    `The service did not stay running within ${Math.round(timeoutMs / 1000)}s (last: ${last}).`,
+  );
 }
 
 /** Loads every domain the panel knows about into the reverse proxy. */

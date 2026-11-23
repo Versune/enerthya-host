@@ -7,6 +7,7 @@ export type ApplicationSummary = {
   name: string;
   slug: string;
   sourceType: "git" | "image";
+  kind: "web" | "service";
   gitUrl: string | null;
   gitBranch: string;
   dockerImage: string | null;
@@ -30,6 +31,7 @@ export async function selectApplications(
       name: applications.name,
       slug: applications.slug,
       sourceType: applications.sourceType,
+      kind: applications.kind,
       gitUrl: applications.gitUrl,
       gitBranch: applications.gitBranch,
       dockerImage: applications.dockerImage,
@@ -60,6 +62,7 @@ export async function selectApplication(
       name: applications.name,
       slug: applications.slug,
       sourceType: applications.sourceType,
+      kind: applications.kind,
       gitUrl: applications.gitUrl,
       gitBranch: applications.gitBranch,
       dockerImage: applications.dockerImage,

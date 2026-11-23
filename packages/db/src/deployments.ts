@@ -30,6 +30,8 @@ export type DeploymentTarget = {
   applicationSlug: string;
   environmentId: string;
   sourceType: (typeof applications.$inferSelect)["sourceType"];
+  kind: (typeof applications.$inferSelect)["kind"];
+  volumes: (typeof applications.$inferSelect)["volumes"];
   gitUrl: string | null;
   gitBranch: string;
   dockerImage: string | null;
@@ -149,6 +151,8 @@ export async function selectDeploymentTarget(
       applicationSlug: applications.slug,
       environmentId: applications.environmentId,
       sourceType: applications.sourceType,
+      kind: applications.kind,
+      volumes: applications.volumes,
       gitUrl: applications.gitUrl,
       gitBranch: applications.gitBranch,
       dockerImage: applications.dockerImage,
