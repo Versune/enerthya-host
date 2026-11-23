@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.20](https://github.com/Versune/enerthya-host/compare/v0.12.19...v0.12.20) (2026-11-23)
+
+
+### Features
+
+* **compose:** give the worker the SMTP and S3 settings it already reads ([#115](https://github.com/Versune/enerthya-host/issues/115)) ([457f116](https://github.com/Versune/enerthya-host/commit/457f116f06a2765756226fd8af379898d2f99b58))
+
 ## [0.12.19](https://github.com/Versune/enerthya-host/compare/v0.12.18...v0.12.19) (2026-11-23)
 
 
