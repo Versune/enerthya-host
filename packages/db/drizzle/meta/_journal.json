@@ -54,15 +54,8 @@
     {
       "idx": 7,
       "version": "7",
-      "when": 1795392468487,
-      "tag": "0007_lethal_lilandra",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1795392502562,
-      "tag": "0008_windy_sharon_carter",
+      "when": 1795392907016,
+      "tag": "0007_magical_silver_centurion",
       "breakpoints": true
     }
   ]

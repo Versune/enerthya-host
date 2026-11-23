@@ -1,5 +1,5 @@
 {
-  "id": "8ab2bb21-c23f-424b-b092-9ce72115f19a",
+  "id": "a11900a3-39a9-4e66-947f-488799a531f3",
   "prevId": "d9f23c16-b425-4549-9dc2-51943be1e00f",
   "version": "7",
   "dialect": "postgresql",
@@ -1250,6 +1250,12 @@
       "name": "deployment_step",
       "schema": "",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
         "deployment_id": {
           "name": "deployment_id",
           "type": "text",
@@ -1290,7 +1296,29 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "deployment_step_key_idx": {
+          "name": "deployment_step_key_idx",
+          "columns": [
+            {
+              "expression": "deployment_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "deployment_step_deployment_id_deployment_id_fk": {
           "name": "deployment_step_deployment_id_deployment_id_fk",
@@ -1306,15 +1334,7 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "deployment_step_deployment_id_name_pk": {
-          "name": "deployment_step_deployment_id_name_pk",
-          "columns": [
-            "deployment_id",
-            "name"
-          ]
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
