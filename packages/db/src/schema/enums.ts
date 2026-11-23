@@ -13,6 +13,9 @@ export const environmentKind = pgEnum("environment_kind", ["production", "stagin
 
 export const applicationSource = pgEnum("application_source", ["git", "image"]);
 
+/** web answers HTTP on a port; service is a long-running process with none. */
+export const applicationKind = pgEnum("application_kind", ["web", "service"]);
+
 export const buildType = pgEnum("build_type", ["dockerfile", "nixpacks", "docker-compose"]);
 
 export const deploymentStatus = pgEnum("deployment_status", [

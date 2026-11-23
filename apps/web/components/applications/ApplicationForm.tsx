@@ -17,10 +17,13 @@ export function ApplicationForm({ environments }: { environments: EnvironmentOpt
     branch: useId(),
     build: useId(),
     port: useId(),
+    kind: useId(),
+    mounts: useId(),
   };
 
   const [name, setName] = useState("");
   const [environmentId, setEnvironmentId] = useState(environments[0]?.id ?? "");
+  const [kind, setKind] = useState<"web" | "service">("web");
   const [sourceType, setSourceType] = useState<"git" | "image">("git");
   const [gitUrl, setGitUrl] = useState("");
   const [dockerImage, setDockerImage] = useState("");
@@ -29,6 +32,7 @@ export function ApplicationForm({ environments }: { environments: EnvironmentOpt
     "nixpacks",
   );
   const [port, setPort] = useState("3000");
+  const [mounts, setMounts] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -38,10 +42,21 @@ export function ApplicationForm({ environments }: { environments: EnvironmentOpt
     event.preventDefault();
     setError(null);
 
+    // One per line, "host path:container path".
+    const volumes = mounts
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const [source, ...rest] = line.split(":");
+        return { source: source ?? "", target: rest.join(":") };
+      });
     const parsed = applicationSchema.safeParse({
       name,
       environmentId,
       sourceType,
+      kind,
+      volumes,
       gitUrl,
       dockerImage,
       gitBranch,
@@ -110,6 +125,21 @@ export function ApplicationForm({ environments }: { environments: EnvironmentOpt
               {environment.label}
             </option>
           ))}
+        </select>
+      </div>
+
+      <div className="field">
+        <label className="field__label" htmlFor={ids.kind}>
+          Type
+        </label>
+        <select
+          className="field__input"
+          id={ids.kind}
+          value={kind}
+          onChange={(event) => setKind(event.target.value as "web" | "service")}
+        >
+          <option value="web">Web application — answers HTTP on a port</option>
+          <option value="service">Background service — a process, no port</option>
         </select>
       </div>
 
@@ -196,21 +226,40 @@ export function ApplicationForm({ environments }: { environments: EnvironmentOpt
           </select>
         </div>
 
+        {kind === "web" ? (
+          <div className="field">
+            <label className="field__label" htmlFor={ids.port}>
+              Port
+            </label>
+            <input
+              className="field__input"
+              id={ids.port}
+              type="number"
+              min={1}
+              max={65535}
+              value={port}
+              onChange={(event) => setPort(event.target.value)}
+            />
+          </div>
+        ) : null}
+      </div>
+
+      {kind === "service" ? (
         <div className="field">
-          <label className="field__label" htmlFor={ids.port}>
-            Port
+          <label className="field__label" htmlFor={ids.mounts}>
+            Mounts — one per line, host path:container path
           </label>
-          <input
+          <textarea
             className="field__input"
-            id={ids.port}
-            type="number"
-            min={1}
-            max={65535}
-            value={port}
-            onChange={(event) => setPort(event.target.value)}
+            id={ids.mounts}
+            rows={3}
+            value={mounts}
+            onChange={(event) => setMounts(event.target.value)}
+            placeholder="/data/enerthya/apps/<id>/config.yml:/app/config.yml"
+            spellCheck={false}
           />
         </div>
-      </div>
+      ) : null}
 
       <div className="form__actions">
         <button className="btn" type="submit" disabled={submitting}>

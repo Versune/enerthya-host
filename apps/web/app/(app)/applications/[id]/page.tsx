@@ -53,7 +53,8 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
     <>
       <PageHeader label="Application" title={`${application.name}.`}>
         {application.projectName} · {application.environmentSlug} · {source} ·{" "}
-        {application.buildType} · :{application.port}
+        {application.buildType}
+        {application.kind === "web" ? ` · :${application.port}` : " · background service"}
       </PageHeader>
 
       <p className="page__back">
@@ -71,46 +72,48 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
         {canWrite ? <TerminalPanel applicationId={application.id} /> : null}
       </section>
 
-      <section className="page__section">
-        <h2 className="label">Domains</h2>
-        <p className="page__lede">
-          Point the domain's DNS at this machine, then add it here. The proxy picks it up on the
-          next deployment and obtains the certificate; nothing is served until a deployment has
-          reached running.
-        </p>
+      {application.kind === "web" ? (
+        <section className="page__section">
+          <h2 className="label">Domains</h2>
+          <p className="page__lede">
+            Point the domain's DNS at this machine, then add it here. The proxy picks it up on the
+            next deployment and obtains the certificate; nothing is served until a deployment has
+            reached running.
+          </p>
 
-        {domainList.length === 0 ? (
-          <div className="empty">
-            <strong className="label">No domains</strong>
-            <p>
-              {canWrite
-                ? "Add one below once its DNS record points here."
-                : "An admin can add domains here."}
-            </p>
-          </div>
-        ) : (
-          <ul className="projects">
-            {domainList.map((domain) => (
-              <li className="project" key={domain.id}>
-                <div className="project__id">
-                  <span className="project__name">{domain.hostname}</span>
-                  <span className="deployment__meta">{domain.status}</span>
-                </div>
-                {canWrite ? (
-                  <DomainActions applicationId={application.id} domainId={domain.id} />
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
+          {domainList.length === 0 ? (
+            <div className="empty">
+              <strong className="label">No domains</strong>
+              <p>
+                {canWrite
+                  ? "Add one below once its DNS record points here."
+                  : "An admin can add domains here."}
+              </p>
+            </div>
+          ) : (
+            <ul className="projects">
+              {domainList.map((domain) => (
+                <li className="project" key={domain.id}>
+                  <div className="project__id">
+                    <span className="project__name">{domain.hostname}</span>
+                    <span className="deployment__meta">{domain.status}</span>
+                  </div>
+                  {canWrite ? (
+                    <DomainActions applicationId={application.id} domainId={domain.id} />
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
 
-        {canWrite ? (
-          <details className="add-project">
-            <summary className="btn btn--quiet">Add a domain</summary>
-            <DomainForm applicationId={application.id} />
-          </details>
-        ) : null}
-      </section>
+          {canWrite ? (
+            <details className="add-project">
+              <summary className="btn btn--quiet">Add a domain</summary>
+              <DomainForm applicationId={application.id} />
+            </details>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className="page__section">
         <h2 className="label">Auto-deploy</h2>
