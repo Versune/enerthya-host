@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.18](https://github.com/Versune/enerthya-host/compare/v0.12.17...v0.12.18) (2026-11-23)
+
+
+### Features
+
+* **auth:** close registration after the first account ([#111](https://github.com/Versune/enerthya-host/issues/111)) ([2229237](https://github.com/Versune/enerthya-host/commit/22292376b3e299c1e6214fc659f2fd79c3ae1610))
+
 ## [0.12.17](https://github.com/Versune/enerthya-host/compare/v0.12.16...v0.12.17) (2026-11-23)
 
 
