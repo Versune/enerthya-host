@@ -1,5 +1,7 @@
 # Enerthya Host
 
+![Your servers. Your deploys. — an open-source, self-hosted PaaS](docs/hero.png)
+
 An open-source, self-hosted PaaS. Connect your servers, point at a Git repository or a Docker
 image, and Enerthya Host handles the build, the deploy, the domain, the TLS certificate, the
 logs, the backups and the monitoring — on hardware you control.
@@ -10,6 +12,13 @@ the swap. Domains and TLS, encrypted environment variables, real-time logs and a
 managed databases with scheduled backups verified by a restore, host and container metrics,
 email notifications and team invitations are in place too. What is missing is listed under
 Status, and a deployment that cannot finish says why instead of reporting success.
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Versune/enerthya-host/main/install.sh | sudo bash
+```
+
+Docker on a Debian or Ubuntu box; [what the installer does](#install) and [what is still
+missing](#status).
 
 ## Architecture
 
