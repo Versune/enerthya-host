@@ -117,7 +117,10 @@ export async function runDeployment(
     db,
     target.applicationId,
     () => executeDeployment(db, deploymentId, resume, target, log),
-    { waitMs: 5 * 60_000 },
+    {
+      waitMs: 5 * 60_000,
+      onAcquired: () => log("Application lock held."),
+    },
   );
   if (!lock.locked) {
     // The row belongs to the run that holds the lock; touching it here would

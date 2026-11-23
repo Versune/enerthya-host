@@ -19,7 +19,7 @@ export async function withApplicationLock<T>(
   db: Database,
   applicationId: string,
   run: () => Promise<T>,
-  { waitMs = 0 }: { waitMs?: number } = {},
+  { waitMs = 0, onAcquired }: { waitMs?: number; onAcquired?: () => void | Promise<void> } = {},
 ): Promise<{ locked: true; value: T } | { locked: false }> {
   const sql = await db.$client.reserve();
   try {
@@ -31,6 +31,7 @@ export async function withApplicationLock<T>(
       await new Promise((resolve) => setTimeout(resolve, RETRY_MS));
     }
     try {
+      await onAcquired?.();
       return { locked: true, value: await run() };
     } finally {
       await sql`select pg_advisory_unlock(hashtext(${applicationId}))`;
