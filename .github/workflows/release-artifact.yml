@@ -9,8 +9,9 @@ on:
         description: Existing release tag to attach the build to
         required: true
 
+# Least privilege at the top; the one job that writes the release asks for it.
 permissions:
-  contents: write
+  contents: read
 
 # One build per tag. A rerun waits instead of racing the first one and
 # clobbering its half-uploaded assets.
@@ -19,7 +20,31 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # A release whose tests fail is not a release. The artifact job used to be
+  # the first thing CI did with a tag; now it waits for this.
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, GitHub API verified
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: 12.21.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0, GitHub API verified
+        with:
+          node-version: "24"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
   artifact:
+    needs: verify
+    permissions:
+      contents: write # attach the archive to the release
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
@@ -93,6 +118,39 @@ jobs:
             fi
           done
           echo "staged tree has every path the installer needs"
+
+      # The installer runs this on a customer's host. Boot it here first, with
+      # nothing but dummy env, so a missing static asset or a bad standalone
+      # path fails CI instead of the install.
+      - name: Boot the staged server
+        run: |
+          set -euo pipefail
+          cd dist/stage
+          PORT=8399 HOSTNAME=127.0.0.1 \
+          BETTER_AUTH_SECRET="$(openssl rand -hex 32)" \
+          BETTER_AUTH_URL=http://127.0.0.1:8399 \
+          ENCRYPTION_KEY="$(openssl rand -hex 32)" \
+          DATABASE_URL=postgres://user:pass@127.0.0.1:1/enerthya \
+            node apps/web/server.js > "$RUNNER_TEMP/server.log" 2>&1 &
+          pid=$!
+          code=000
+          for _ in $(seq 1 30); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8399/api/health || true)"
+            [ "$code" = "200" ] && break
+            sleep 1
+          done
+          kill "$pid" 2>/dev/null || true
+          if [ "$code" != "200" ]; then
+            echo "::error::the staged server answered /api/health with $code"
+            tail -40 "$RUNNER_TEMP/server.log"
+            exit 1
+          fi
+          echo "staged server answers /api/health"
+
+      # The Dockerfile is what actually ships. Build it from the same tree so a
+      # path the installer relies on cannot be missing.
+      - name: Build the image from the staged tree
+        run: docker build --tag "enerthya-host:${TAG}" dist/stage
 
       # Sorted entries, fixed mtime and ownership: the same commit yields the
       # same archive, so the checksum means something across rebuilds.
