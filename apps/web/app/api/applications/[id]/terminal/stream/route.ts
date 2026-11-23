@@ -1,18 +1,19 @@
 import { applicationInOrganization, getDb, listenToChannel } from "@enerthya/db";
-import { currentOrganization } from "@/lib/current-org";
+import { requireAdmin } from "@/lib/require-admin";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-type Payload = { sessionId: string; data?: string; error?: string };
+type Payload = { sessionId: string; applicationId?: string; data?: string; error?: string };
 
 /**
  * The shell's output, as server-sent events. The worker writes to
  * terminal_output; this stream forwards only the frames of one session.
  */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const context = await currentOrganization();
-  if (!context) return Response.json({ error: "Not signed in" }, { status: 401 });
+  const gate = await requireAdmin("read a terminal");
+  if (!gate.ok) return gate.response;
+  const { context } = gate;
 
   const sessionId = new URL(request.url).searchParams.get("session");
   if (!sessionId) return Response.json({ error: "session is required" }, { status: 400 });
@@ -38,7 +39,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       const listener = listenToChannel(url, "terminal_output", (payload) => {
         try {
           const parsed = JSON.parse(payload) as Payload;
-          if (parsed.sessionId !== sessionId) return;
+          // A session belongs to one application: a panel user who learns an
+          // id from another application gets nothing from this stream.
+          if (parsed.sessionId !== sessionId || parsed.applicationId !== id) return;
           if (parsed.error) send("failure", parsed.error);
           else if (parsed.data) send("data", parsed.data);
         } catch {

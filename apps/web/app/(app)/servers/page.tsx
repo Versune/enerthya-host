@@ -1,3 +1,4 @@
+import { roleAtLeast } from "@enerthya/core/roles";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ServerActions } from "@/components/servers/ServerActions";
@@ -24,6 +25,9 @@ export default async function ServersPage() {
 
   await ensureLocalServer(context.organization.id);
   const servers = await listServers(context.organization.id);
+  // A member reads the list; every control on this page reaches a route that
+  // now refuses a member, so they are not drawn for one.
+  const canWrite = roleAtLeast(context.role, "admin");
 
   return (
     <>
@@ -59,19 +63,23 @@ export default async function ServersPage() {
                 </span>
               ) : null}
             </div>
-            <ServerActions
-              id={server.id}
-              isLocal={server.isLocal}
-              hasHostKey={Boolean(server.hostKeyFingerprint)}
-            />
+            {canWrite ? (
+              <ServerActions
+                id={server.id}
+                isLocal={server.isLocal}
+                hasHostKey={Boolean(server.hostKeyFingerprint)}
+              />
+            ) : null}
           </li>
         ))}
       </ul>
 
-      <details className="add-server">
-        <summary className="btn btn--quiet">Add a server</summary>
-        <ServerForm />
-      </details>
+      {canWrite ? (
+        <details className="add-server">
+          <summary className="btn btn--quiet">Add a server</summary>
+          <ServerForm />
+        </details>
+      ) : null}
     </>
   );
 }
