@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import type { Database } from "./client";
 import { type ChannelListener, listenToChannel } from "./listen";
-import { applications, deployments, environments, projects } from "./schema";
+import { applications, deploymentSteps, deployments, environments, projects } from "./schema";
 
 export type DeploymentStatus = (typeof deployments.$inferSelect)["status"];
 
@@ -231,6 +231,63 @@ export async function selectRollbackCandidate(
 }
 
 /** Appends one line to the deployment's log, keeping the newest 4000 lines. */
+/**
+ * Records that one step of a deployment finished (or failed). The row is the
+ * only thing a retried job trusts: it says what not to do again.
+ */
+export async function recordStep(
+  db: Database,
+  deploymentId: string,
+  name: "image" | "container" | "health" | "swap",
+  status: "pending" | "done" | "failed",
+  patch: { error?: string } = {},
+): Promise<void> {
+  const now = new Date();
+  await db
+    .insert(deploymentSteps)
+    .values({
+      id: `${deploymentId}:${name}`,
+      deploymentId,
+      name,
+      status,
+      startedAt: status === "pending" ? now : undefined,
+      finishedAt: status === "pending" ? undefined : now,
+      error: patch.error,
+    })
+    .onConflictDoUpdate({
+      target: [deploymentSteps.id],
+      set: {
+        status,
+        finishedAt: status === "pending" ? null : now,
+        ...(patch.error ? { error: patch.error } : {}),
+      },
+    });
+}
+
+export async function selectSteps(
+  db: Database,
+  deploymentId: string,
+): Promise<{ name: string; status: "pending" | "done" | "failed" }[]> {
+  return db
+    .select({ name: deploymentSteps.name, status: deploymentSteps.status })
+    .from(deploymentSteps)
+    .where(eq(deploymentSteps.deploymentId, deploymentId));
+}
+
+/**
+ * Deployments that started and never finished: the worker died, the container
+ * was restarted, the machine rebooted. The reconciler puts them back on the
+ * queue with `resume`, and each one picks up at its own first unfinished step.
+ */
+export async function selectInFlightDeployments(db: Database): Promise<string[]> {
+  const rows = await db
+    .select({ id: deployments.id })
+    .from(deployments)
+    .where(inArray(deployments.status, ["building", "deploying", "healthcheck"]))
+    .orderBy(deployments.createdAt);
+  return rows.map((row) => row.id);
+}
+
 export async function appendDeploymentLog(db: Database, id: string, line: string): Promise<void> {
   const stamp = new Date().toISOString().slice(11, 19);
   await db.execute(sql`

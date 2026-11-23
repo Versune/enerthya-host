@@ -9,6 +9,7 @@ const EXPECTED_TABLES = [
   "backup",
   "database",
   "deployment",
+  "deployment_step",
   "domain",
   "environment",
   "environment_variable",

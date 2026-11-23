@@ -8,7 +8,7 @@ import { Queue } from "bullmq";
 export const DEPLOY_QUEUE = "deployments";
 export const DATABASE_QUEUE = "databases";
 
-export type DeployJob = { deploymentId: string };
+export type DeployJob = { deploymentId: string; resume?: boolean };
 export type DatabaseJob =
   | { databaseId: string; action: "provision" | "remove"; backupId?: never }
   | { backupId: string; action: "backup"; databaseId?: never };
@@ -64,13 +64,20 @@ export function deployQueue(redisUrl: string): Queue<DeployJob> {
  * Enqueues one deployment. The job id is the deployment id, so a retried
  * request cannot queue the same deployment twice.
  */
-export async function enqueueDeployment(redisUrl: string, deploymentId: string): Promise<void> {
+export async function enqueueDeployment(
+  redisUrl: string,
+  deploymentId: string,
+  options: { resume?: boolean } = {},
+): Promise<void> {
   const queue = deployQueue(redisUrl);
+  // A resume is a second job for the same deployment, so it cannot reuse the
+  // id: the original job is still in Redis, completed or not.
+  const jobId = options.resume ? `${deploymentId}:resume:${Date.now()}` : deploymentId;
   try {
     await queue.add(
       "deploy",
-      { deploymentId },
-      { jobId: deploymentId, attempts: 1, removeOnComplete: 200, removeOnFail: 200 },
+      { deploymentId, ...(options.resume ? { resume: true } : {}) },
+      { jobId, attempts: 1, removeOnComplete: 200, removeOnFail: 200 },
     );
   } finally {
     await queue.close();

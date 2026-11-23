@@ -47,3 +47,12 @@ export const backupStatus = pgEnum("backup_status", [
 export const backupDestination = pgEnum("backup_destination", ["s3", "r2", "minio", "local"]);
 
 export const notificationType = pgEnum("notification_type", ["discord", "email", "webhook"]);
+
+export const deploymentStepName = pgEnum("deployment_step_name", [
+  "image",
+  "container",
+  "health",
+  "swap",
+]);
+
+export const deploymentStepStatus = pgEnum("deployment_step_status", ["pending", "done", "failed"]);

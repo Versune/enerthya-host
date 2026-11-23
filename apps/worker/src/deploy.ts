@@ -20,14 +20,17 @@ import {
   applicationHasDomains,
   type DeploymentTarget,
   getDb,
+  recordStep,
   selectDeploymentTarget,
   selectDomainRoutes,
   selectEncryptedEnvVars,
+  selectSteps,
   setDeploymentRuntime,
   setDeploymentSource,
   transitionDeployment,
 } from "@enerthya/db";
 import { execa } from "execa";
+import { isStepDone } from "./deploy-steps";
 import { imageTagFor } from "./naming";
 import { notifyFailure } from "./notify";
 
@@ -80,12 +83,27 @@ export async function cloneRepository(
  * previous one running: a broken release never takes traffic away from a
  * working one.
  */
-export async function runDeployment(deploymentId: string): Promise<void> {
+export async function runDeployment(
+  deploymentId: string,
+  options: { resume?: boolean } = {},
+): Promise<void> {
   const db = getDb();
+  const resume = options.resume === true;
 
-  const claimed = await transitionDeployment(db, deploymentId, ["queued"], "building", {
-    startedAt: new Date(),
-  });
+  // A fresh request may only claim `queued`. A resume is the reconciler saying
+  // this deployment was interrupted, so it may claim the states this worker
+  // itself owns — and nothing else: `running` is already serving, `failed` is
+  // somebody's decision.
+  const claimed = resume
+    ? await transitionDeployment(
+        db,
+        deploymentId,
+        ["building", "deploying", "healthcheck"],
+        "building",
+      )
+    : await transitionDeployment(db, deploymentId, ["queued"], "building", {
+        startedAt: new Date(),
+      });
   if (!claimed) return;
 
   const log = (line: string) => appendDeploymentLog(db, deploymentId, line).catch(() => undefined);
@@ -126,49 +144,93 @@ export async function runDeployment(deploymentId: string): Promise<void> {
 
   let contextDir: string | null = null;
   let containerId: string | null = null;
+  // The step this run is in, so a failure records which one broke.
+  let currentStep: "image" | "container" | "health" | "swap" = "image";
 
   try {
     const variables = await loadEnvVars(target.applicationId);
-    await log(
-      target.presetImage
-        ? `Rollback: running the image ${target.presetImage}.`
-        : `Source: ${target.sourceType === "git" ? `${target.gitUrl} (${target.gitBranch})` : target.dockerImage}.`,
-    );
-    const image = await prepareImage(
-      runtime,
-      target,
-      deploymentId,
-      (dir) => {
-        contextDir = dir;
-      },
-      variables.build,
-    );
-    await setDeploymentRuntime(db, deploymentId, { imageTag: image });
-    await log(`Image ready: ${image}.`);
+    const steps = resume ? await selectSteps(db, deploymentId) : [];
+    if (resume) {
+      const finished = steps.filter((step) => step.status === "done").map((step) => step.name);
+      await log(`Resuming: ${finished.length > 0 ? finished.join(", ") : "no step finished"}.`);
+    }
+
+    currentStep = "image";
+    let image: string;
+    if (isStepDone(steps, "image") && target.presetImage) {
+      // The bundle that survived the interruption is the one this deployment
+      // builds; cloning and building again would produce a second image and a
+      // second wait for nothing.
+      image = target.presetImage;
+      await log(`Image already built: ${image}.`);
+    } else {
+      await log(
+        target.presetImage
+          ? `Rollback: running the image ${target.presetImage}.`
+          : `Source: ${target.sourceType === "git" ? `${target.gitUrl} (${target.gitBranch})` : target.dockerImage}.`,
+      );
+      image = await prepareImage(
+        runtime,
+        target,
+        deploymentId,
+        (dir) => {
+          contextDir = dir;
+        },
+        variables.build,
+      );
+      await setDeploymentRuntime(db, deploymentId, { imageTag: image });
+      await recordStep(db, deploymentId, "image", "done");
+      await log(`Image ready: ${image}.`);
+    }
 
     await transitionDeployment(db, deploymentId, ["building"], "deploying");
-    const started = await createAndStart(runtime.client, {
-      name: containerName(target.applicationSlug, deploymentId),
-      image,
-      containerPort: target.port,
-      labels: {
-        "enerthya.managed": "true",
-        "enerthya.application": target.applicationId,
-        "enerthya.environment": target.environmentId,
-        "enerthya.deployment": deploymentId,
-      },
-      env: variables.runtime,
-    });
-    containerId = started.id;
-    await log(`Container started on host port ${started.hostPort}.`);
-    await setDeploymentRuntime(db, deploymentId, {
-      containerId,
-      hostPort: started.hostPort,
-    });
+    currentStep = "container";
+    let hostPort = 0;
+    // The container name is deterministic for a deployment, so a resumed run
+    // can look for the one it already started instead of starting another.
+    const name = containerName(target.applicationSlug, deploymentId);
+    if (isStepDone(steps, "container")) {
+      const existing = await runtime.client
+        .getContainer(name)
+        .inspect()
+        .catch(() => null);
+      const published = existing?.NetworkSettings?.Ports?.[`${target.port}/tcp`]?.[0]?.HostPort;
+      if (existing && published) {
+        containerId = existing.Id;
+        hostPort = Number(published);
+        await setDeploymentRuntime(db, deploymentId, { containerId, hostPort });
+        await log(`Container already running: ${containerId.slice(0, 12)} on port ${hostPort}.`);
+      }
+    }
+    if (!containerId) {
+      const started = await createAndStart(runtime.client, {
+        name,
+        image,
+        containerPort: target.port,
+        labels: {
+          "enerthya.managed": "true",
+          "enerthya.application": target.applicationId,
+          "enerthya.environment": target.environmentId,
+          "enerthya.deployment": deploymentId,
+        },
+        env: variables.runtime,
+      });
+      containerId = started.id;
+      hostPort = started.hostPort;
+      await setDeploymentRuntime(db, deploymentId, { containerId, hostPort });
+      await recordStep(db, deploymentId, "container", "done");
+      await log(`Container started on host port ${hostPort}.`);
+    }
 
     await transitionDeployment(db, deploymentId, ["deploying"], "healthcheck");
-    await log(`Health check: ${target.healthcheckPath} on port ${started.hostPort}.`);
-    await waitForHealthy(`http://127.0.0.1:${started.hostPort}${target.healthcheckPath}`);
+    currentStep = "health";
+    if (isStepDone(steps, "health")) {
+      await log("Health check already passed.");
+    } else {
+      await log(`Health check: ${target.healthcheckPath} on port ${hostPort}.`);
+      await waitForHealthy(`http://127.0.0.1:${hostPort}${target.healthcheckPath}`);
+      await recordStep(db, deploymentId, "health", "done");
+    }
 
     await log("Health check passed.");
 
@@ -197,12 +259,16 @@ export async function runDeployment(deploymentId: string): Promise<void> {
         await stopAndRemove(runtime.client, container.id);
       }
     }
+    await recordStep(db, deploymentId, "swap", "done");
   } catch (error) {
     if (containerId) {
       await stopAndRemove(runtime.client, containerId).catch(() => undefined);
       containerId = null;
     }
     const message = error instanceof Error ? error.message : "The deployment failed.";
+    await recordStep(db, deploymentId, currentStep, "failed", { error: message }).catch(
+      () => undefined,
+    );
     await log(`Failed: ${message}`);
     void notifyFailure(target.applicationId, {
       applicationName: target.applicationName,
