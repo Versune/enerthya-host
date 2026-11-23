@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.12.17](https://github.com/Versune/enerthya-host/compare/v0.12.16...v0.12.17) (2026-11-23)
+
+
+### Features
+
+* **applications:** run a background service, not only an HTTP app ([#107](https://github.com/Versune/enerthya-host/issues/107)) ([b134240](https://github.com/Versune/enerthya-host/commit/b13424050207b36d661e66b9256b74bfa13334fe))
+* **deploy:** resume an interrupted deployment instead of restarting it ([#101](https://github.com/Versune/enerthya-host/issues/101)) ([2854f63](https://github.com/Versune/enerthya-host/commit/2854f63aeb00fa56781f4a2189e22f81ce89ff1d))
+
+
+### Bug Fixes
+
+* **core:** publish to loopback, require 2xx from the health check ([#104](https://github.com/Versune/enerthya-host/issues/104)) ([4eceacf](https://github.com/Versune/enerthya-host/commit/4eceacfe14917913f1b719be4b28a7d3954570b2))
+* **web:** encrypt the webhook secret and show it only to writers ([#106](https://github.com/Versune/enerthya-host/issues/106)) ([2292590](https://github.com/Versune/enerthya-host/commit/2292590d1552bbda667feb8ca4aa4865bdf1b562))
+* **web:** make server and terminal writes admin-only ([#102](https://github.com/Versune/enerthya-host/issues/102)) ([f3edee0](https://github.com/Versune/enerthya-host/commit/f3edee001f54d39392284563850b433e832f1733))
+
 ## [0.12.16](https://github.com/Versune/enerthya-host/compare/v0.12.15...v0.12.16) (2026-11-22)
 
 
