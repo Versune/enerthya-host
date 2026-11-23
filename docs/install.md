@@ -78,14 +78,29 @@ Install Docker Desktop or colima and run the same command inside the Docker VM. 
 | `ENERTHYA_SMTP_PASSWORD` | relay password |
 | `ENERTHYA_SMTP_FROM` | envelope sender, e.g. `Enerthya <panel@example.com>` |
 
-With the five `ENERTHYA_S3_*` values set, a verified backup is uploaded and the local copy is
-removed; the row records `s3://<bucket>/<key>`. Without them the dump stays on the host, next to
-the database it protects.
+The worker container receives these values; a key left empty is a feature switched off, not a
+crash.
 
-Email channels use the install's relay, not their own: with `ENERTHYA_SMTP_HOST` and
-`ENERTHYA_SMTP_FROM` set, a channel that carries an address receives the deployment-failure
-notice. Without them the channel is accepted and the worker logs that it skipped the send, so a
-missing relay is visible instead of silent.
+With the five `ENERTHYA_S3_*` values set, a verified backup is uploaded and the local copy is
+removed; the row records `s3://<bucket>/<key>`. Without them the dump stays inside the worker
+container, next to the database it protects — and is lost when that container is recreated, so
+set them for anything you mean to keep.
+
+Email uses one relay for the whole install: deployment notices and team invitations both leave
+through it. With `ENERTHYA_SMTP_HOST` and `ENERTHYA_SMTP_FROM` set, an invited address receives
+the invitation link and an email channel receives the deployment-failure notice. Without them
+the panel still creates the invitation and shows the link on the Members screen, and the worker
+logs that it skipped the send.
+
+A working invitation relay, for reference:
+
+```sh
+ENERTHYA_SMTP_HOST=smtp.example.com
+ENERTHYA_SMTP_PORT=587
+ENERTHYA_SMTP_USER=panel@example.com
+ENERTHYA_SMTP_PASSWORD=the-relay-password
+ENERTHYA_SMTP_FROM=Enerthya Host <panel@example.com>
+```
 
 Back up `.env` with the data volumes: without `ENCRYPTION_KEY`, secrets stored in the database
 cannot be decrypted.

@@ -78,6 +78,20 @@ services:
       DOCKER_HOST: unix:///var/run/docker.sock
       CADDY_ADMIN_URL: http://127.0.0.1:2019
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env}
+      # The relay every email leaves through (notifications, invitations).
+      # Empty means "not configured": the worker says so and sends nothing.
+      ENERTHYA_SMTP_HOST: ${ENERTHYA_SMTP_HOST:-}
+      ENERTHYA_SMTP_PORT: ${ENERTHYA_SMTP_PORT:-}
+      ENERTHYA_SMTP_SECURE: ${ENERTHYA_SMTP_SECURE:-}
+      ENERTHYA_SMTP_USER: ${ENERTHYA_SMTP_USER:-}
+      ENERTHYA_SMTP_PASSWORD: ${ENERTHYA_SMTP_PASSWORD:-}
+      ENERTHYA_SMTP_FROM: ${ENERTHYA_SMTP_FROM:-}
+      # Verified backups leave for this bucket; without it they stay local.
+      ENERTHYA_S3_ENDPOINT: ${ENERTHYA_S3_ENDPOINT:-}
+      ENERTHYA_S3_BUCKET: ${ENERTHYA_S3_BUCKET:-}
+      ENERTHYA_S3_REGION: ${ENERTHYA_S3_REGION:-}
+      ENERTHYA_S3_ACCESS_KEY_ID: ${ENERTHYA_S3_ACCESS_KEY_ID:-}
+      ENERTHYA_S3_SECRET_ACCESS_KEY: ${ENERTHYA_S3_SECRET_ACCESS_KEY:-}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
