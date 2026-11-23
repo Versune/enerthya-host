@@ -158,6 +158,16 @@ export function portBindings(containerPort: number) {
   return { [`${containerPort}/tcp`]: [{ HostIp: "127.0.0.1", HostPort: "" }] };
 }
 
+/** Whether the runtime already holds this image locally. */
+export async function imageExists(client: Docker, reference: string): Promise<boolean> {
+  try {
+    await client.getImage(reference).inspect();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function createAndStart(
   client: Docker,
   spec: CreateContainerSpec,

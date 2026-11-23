@@ -9,6 +9,7 @@ import {
   connectRuntime,
   containerName,
   createAndStart,
+  imageExists,
   listApplicationContainers,
   missingRuntimeMessage,
   pullImage,
@@ -19,6 +20,7 @@ import {
 import {
   appendDeploymentLog,
   applicationHasDomains,
+  type Database,
   type DeploymentTarget,
   getDb,
   recordStep,
@@ -29,6 +31,7 @@ import {
   setDeploymentRuntime,
   setDeploymentSource,
   transitionDeployment,
+  withApplicationLock,
 } from "@enerthya/db";
 import { execa } from "execa";
 import { isStepDone } from "./deploy-steps";
@@ -90,7 +93,55 @@ export async function runDeployment(
 ): Promise<void> {
   const db = getDb();
   const resume = options.resume === true;
+  const log = (line: string) => appendDeploymentLog(db, deploymentId, line).catch(() => undefined);
 
+  // The application is read before the claim so the run can take its lock: two
+  // deployments of one application stop each other's containers, and a resume
+  // must not adopt a deployment another worker is still running.
+  const target = await selectDeploymentTarget(db, deploymentId);
+  if (!target) {
+    await transitionDeployment(
+      db,
+      deploymentId,
+      ["queued", "building", "deploying", "healthcheck"],
+      "failed",
+      {
+        error: "The application this deployment belongs to no longer exists.",
+        finishedAt: new Date(),
+      },
+    );
+    return;
+  }
+
+  const lock = await withApplicationLock(
+    db,
+    target.applicationId,
+    () => executeDeployment(db, deploymentId, resume, target, log),
+    { waitMs: 5 * 60_000 },
+  );
+  if (!lock.locked) {
+    // The row belongs to the run that holds the lock; touching it here would
+    // fight that run. Leave it alone and say so.
+    await log("Another deployment of this application is still running.");
+  }
+}
+
+/**
+ * The body of a deployment, already holding the application lock. The first
+ * transition claims the job, so a second worker (or a retried job) finds the
+ * row out of `queued` and leaves it alone.
+ *
+ * A failure removes the container this deployment created and leaves the
+ * previous one running: a broken release never takes traffic away from a
+ * working one.
+ */
+async function executeDeployment(
+  db: Database,
+  deploymentId: string,
+  resume: boolean,
+  target: DeploymentTarget,
+  log: (line: string) => Promise<unknown>,
+): Promise<void> {
   // A fresh request may only claim `queued`. A resume is the reconciler saying
   // this deployment was interrupted, so it may claim the states this worker
   // itself owns — and nothing else: `running` is already serving, `failed` is
@@ -107,21 +158,10 @@ export async function runDeployment(
       });
   if (!claimed) return;
 
-  const log = (line: string) => appendDeploymentLog(db, deploymentId, line).catch(() => undefined);
   await log("Deployment claimed by the worker.");
   // Set when this run moved the row to `running`. A failure after that point
   // has to hand the route back, not only mark the deployment failed.
   let promoted = false;
-
-  const target = await selectDeploymentTarget(db, deploymentId);
-  if (!target) {
-    await log("The application no longer exists.");
-    await transitionDeployment(db, deploymentId, ["building"], "failed", {
-      error: "The application this deployment belongs to no longer exists.",
-      finishedAt: new Date(),
-    });
-    return;
-  }
 
   let runtime: RuntimeConnection | null = null;
   try {
@@ -184,27 +224,32 @@ export async function runDeployment(
       await log(`Image ready: ${image}.`);
     }
 
-    await transitionDeployment(db, deploymentId, ["building"], "deploying");
+    // Losing `building` means another process owns the row now; continuing
+    // would race it for the container and the route.
+    if (!(await transitionDeployment(db, deploymentId, ["building"], "deploying")))
+      throw new Error("The deployment left building before its container could start.");
+
     currentStep = "container";
     let hostPort = 0;
-    // The container name is deterministic for a deployment, so a resumed run
-    // can look for the one it already started instead of starting another.
+    // The name is deterministic for a deployment, so whatever survived an
+    // interruption is found by name — reused when it is still alive, removed
+    // when it is a corpse, instead of colliding with it on create.
     const name = containerName(target.applicationSlug, deploymentId);
-    if (isStepDone(steps, "container")) {
-      const existing = await runtime.client
-        .getContainer(name)
-        .inspect()
-        .catch(() => null);
-      const published = existing?.NetworkSettings?.Ports?.[`${target.port}/tcp`]?.[0]?.HostPort;
-      // A service publishes nothing, so its container is reusable when it is
-      // simply alive.
-      const reusable =
-        existing && (target.kind === "service" ? existing.State?.Running : !!published);
-      if (existing && reusable) {
+    const existing = await runtime.client
+      .getContainer(name)
+      .inspect()
+      .catch(() => null);
+    if (existing) {
+      const published = existing.NetworkSettings?.Ports?.[`${target.port}/tcp`]?.[0]?.HostPort;
+      const service = target.kind === "service";
+      const reusable = existing.State?.Running && (service || !!published);
+      if (reusable) {
         containerId = existing.Id;
         hostPort = published ? Number(published) : 0;
         await setDeploymentRuntime(db, deploymentId, { containerId, hostPort });
-        await log(`Container already running: ${containerId.slice(0, 12)} on port ${hostPort}.`);
+        await log(`Container already running: ${containerId.slice(0, 12)}.`);
+      } else {
+        await stopAndRemove(runtime.client, existing.Id).catch(() => undefined);
       }
     }
     if (!containerId) {
@@ -234,7 +279,9 @@ export async function runDeployment(
       );
     }
 
-    await transitionDeployment(db, deploymentId, ["deploying"], "healthcheck");
+    if (!(await transitionDeployment(db, deploymentId, ["deploying"], "healthcheck")))
+      throw new Error("The deployment left deploying before its health check.");
+
     currentStep = "health";
     if (isStepDone(steps, "health")) {
       await log("Health check already passed.");
@@ -258,6 +305,7 @@ export async function runDeployment(
     // moment the route table would answer with the new port. Publishing it is
     // what actually moves the traffic, and it happens while the previous
     // container is still up and answering.
+    currentStep = "swap";
     promoted = await transitionDeployment(db, deploymentId, ["healthcheck"], "running", {
       finishedAt: new Date(),
     });
@@ -269,16 +317,28 @@ export async function runDeployment(
       await log("Traffic moved to the new container.");
     }
 
-    // Traffic is on the new container — or there was no proxy to move — so the
-    // older containers for this application can go. Doing this any earlier
-    // leaves a window where the proxy dials a port whose container is gone.
-    for (const container of await listApplicationContainers(runtime.client, target.applicationId)) {
-      if (container.id !== containerId) {
-        await log(`Stopping the previous container ${container.id.slice(0, 12)}.`);
-        await stopAndRemove(runtime.client, container.id);
-      }
-    }
+    // Traffic has moved; the swap is done and is recorded before anything
+    // destructive happens, so a failure below cannot mark the deployment as
+    // failed after it is already serving.
     await recordStep(db, deploymentId, "swap", "done");
+
+    // Older containers go now — after the route points at the new one. A
+    // failure here leaves a stray container, not a broken deployment.
+    try {
+      for (const container of await listApplicationContainers(
+        runtime.client,
+        target.applicationId,
+      )) {
+        if (container.id !== containerId) {
+          await log(`Stopping the previous container ${container.id.slice(0, 12)}.`);
+          await stopAndRemove(runtime.client, container.id);
+        }
+      }
+    } catch (error) {
+      await log(
+        `Could not stop every previous container: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   } catch (error) {
     if (containerId) {
       await stopAndRemove(runtime.client, containerId).catch(() => undefined);
@@ -381,13 +441,18 @@ async function prepareImage(
   // A rollback decided the image when the deployment was queued: rebuild
   // nothing, run exactly what served before.
   if (target.presetImage) {
-    await pullImage(runtime.client, target.presetImage);
+    // A rollback to an image this host already built must not need a registry.
+    if (!(await imageExists(runtime.client, target.presetImage))) {
+      await pullImage(runtime.client, target.presetImage);
+    }
     return target.presetImage;
   }
 
   if (target.sourceType === "image") {
     if (!target.dockerImage) throw new Error("The application has no image reference.");
-    await pullImage(runtime.client, target.dockerImage);
+    if (!(await imageExists(runtime.client, target.dockerImage))) {
+      await pullImage(runtime.client, target.dockerImage);
+    }
     return target.dockerImage;
   }
 
