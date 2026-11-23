@@ -56,6 +56,7 @@ describe("schema", () => {
     expect(secretColumns).toEqual(
       expect.arrayContaining([
         "application.deploy_key_encrypted",
+        "application.webhook_secret_encrypted",
         "database.credentials_encrypted",
         "environment_variable.value_encrypted",
         "notification_channel.config_encrypted",
