@@ -2,7 +2,9 @@ import * as schema from "@enerthya/db";
 import { getDb } from "@enerthya/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError } from "better-auth/api";
 import { organization, twoFactor } from "better-auth/plugins";
+import { signUpOpenFor } from "@/lib/registration";
 
 /**
  * better-auth reads its secret and database lazily so `next build` never needs
@@ -45,6 +47,24 @@ function createAuth() {
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 12,
+      // The first account claims the install; after that only an invitation
+      // for the address opens the door (enforced in databaseHooks below).
+      disableSignUp: false,
+    },
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user: { email?: string }) => {
+            const open = await signUpOpenFor(user.email);
+            if (!open) {
+              throw new APIError("FORBIDDEN", {
+                message: "Registration is closed on this install. Ask an owner for an invitation.",
+              });
+            }
+            return { data: user };
+          },
+        },
+      },
     },
     session: {
       expiresIn: 60 * 60 * 8,
