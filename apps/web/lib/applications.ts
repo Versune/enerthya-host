@@ -14,6 +14,7 @@ import {
   selectApplication,
   selectApplications,
   selectDeployHook,
+  setWebhookSecret,
 } from "@enerthya/db";
 
 export type ApplicationRow = ApplicationSummary;
@@ -69,7 +70,8 @@ export async function createApplication(
     buildType: input.buildType,
     port: input.port,
     healthcheckPath: input.healthcheckPath,
-    webhookSecret: randomBytes(32).toString("hex"),
+    webhookSecret: null,
+    webhookSecretEncrypted: encryptSecret(randomBytes(32).toString("hex")),
     deployKeyEncrypted:
       input.sourceType === "git" ? encryptSecret(generateDeployKey().privateKey) : null,
   });
@@ -99,4 +101,28 @@ export async function getDeployHook(
   const db = getDb();
   if (!(await applicationInOrganization(db, organizationId, applicationId))) return null;
   return selectDeployHook(db, applicationId);
+}
+
+/**
+ * The secret the webhook verifier needs. A row created before the column was
+ * encrypted still holds plaintext: the first read enciphers it in place and
+ * clears the old column, so the plaintext stops being readable at rest.
+ */
+export async function webhookSecretFor(hook: DeployHook): Promise<string | null> {
+  if (hook.webhookSecretEncrypted) return decryptSecret(hook.webhookSecretEncrypted);
+  if (!hook.webhookSecret) return null;
+  await setWebhookSecret(getDb(), hook.id, encryptSecret(hook.webhookSecret));
+  return hook.webhookSecret;
+}
+
+/** Replaces the secret. The old one stops verifying immediately. */
+export async function rotateWebhookSecret(
+  organizationId: string,
+  applicationId: string,
+): Promise<string | null> {
+  const db = getDb();
+  if (!(await applicationInOrganization(db, organizationId, applicationId))) return null;
+  const secret = randomBytes(32).toString("hex");
+  await setWebhookSecret(db, applicationId, encryptSecret(secret));
+  return secret;
 }

@@ -120,7 +120,10 @@ export const applications = pgTable(
     replicas: integer("replicas").notNull().default(1),
     autoDeploy: boolean("auto_deploy").notNull().default(true),
 
+    /** Legacy plaintext column. New rows leave it null; reads backfill it into
+     * webhookSecretEncrypted and a later release drops it. */
     webhookSecret: text("webhook_secret"),
+    webhookSecretEncrypted: text("webhook_secret_encrypted"),
     deployKeyEncrypted: text("deploy_key_encrypted"),
 
     createdAt,

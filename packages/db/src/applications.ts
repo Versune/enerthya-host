@@ -142,7 +142,9 @@ export type DeployHook = {
   name: string;
   gitBranch: string;
   autoDeploy: boolean;
+  /** Legacy plaintext; only present on rows created before the secret was encrypted. */
   webhookSecret: string | null;
+  webhookSecretEncrypted: string | null;
   deployKeyEncrypted: string | null;
 };
 
@@ -157,10 +159,23 @@ export async function selectDeployHook(
       gitBranch: applications.gitBranch,
       autoDeploy: applications.autoDeploy,
       webhookSecret: applications.webhookSecret,
+      webhookSecretEncrypted: applications.webhookSecretEncrypted,
       deployKeyEncrypted: applications.deployKeyEncrypted,
     })
     .from(applications)
     .where(eq(applications.id, applicationId))
     .limit(1);
   return row ?? null;
+}
+
+/** Stores a newly encrypted secret and clears the legacy plaintext one. */
+export async function setWebhookSecret(
+  db: Database,
+  applicationId: string,
+  encrypted: string,
+): Promise<void> {
+  await db
+    .update(applications)
+    .set({ webhookSecretEncrypted: encrypted, webhookSecret: null })
+    .where(eq(applications.id, applicationId));
 }

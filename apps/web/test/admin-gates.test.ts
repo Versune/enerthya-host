@@ -66,6 +66,16 @@ describe("a read-only member is refused", () => {
     expect(response.status).toBe(403);
   });
 
+  it("POST /api/applications/[id]/webhook-secret", async () => {
+    context.mockResolvedValue(member);
+    const { POST } = await import("@/app/api/applications/[id]/webhook-secret/route");
+    const response = await POST(
+      new Request("http://panel.test/api/applications/a1/webhook-secret", { method: "POST" }),
+      params("a1"),
+    );
+    expect(response.status).toBe(403);
+  });
+
   it("refuses every one of them with a message the panel can show", async () => {
     context.mockResolvedValue(member);
     const { POST } = await import("@/app/api/servers/route");

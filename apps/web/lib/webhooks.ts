@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { enqueueDeployment } from "@enerthya/core/queue";
 import { verifyGithubSignature } from "@enerthya/core/webhook";
 import { getDb, insertDeployment, selectDeployHook, transitionDeployment } from "@enerthya/db";
+import { webhookSecretFor } from "@/lib/applications";
 
 export type PushOutcome =
   | { status: "queued"; deploymentId: string }
@@ -22,8 +23,9 @@ export async function handlePush(
   if (!hook) return "unknown";
   if (!hook.autoDeploy)
     return { status: "ignored", reason: "Auto-deploy is disabled for this application." };
-  if (!hook.webhookSecret) return "forbidden";
-  if (!verifyGithubSignature(hook.webhookSecret, rawBody, signature)) return "forbidden";
+  const secret = await webhookSecretFor(hook);
+  if (!secret) return "forbidden";
+  if (!verifyGithubSignature(secret, rawBody, signature)) return "forbidden";
 
   let payload: { ref?: string; after?: string };
   try {

@@ -57,6 +57,13 @@
       "when": 1795392907016,
       "tag": "0007_magical_silver_centurion",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795406274876,
+      "tag": "0008_green_kate_bishop",
+      "breakpoints": true
     }
   ]
 }
