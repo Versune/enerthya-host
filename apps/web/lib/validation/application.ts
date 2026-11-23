@@ -1,3 +1,4 @@
+import { isAcceptableRepositoryUrl } from "@enerthya/core/git-url";
 import { z } from "zod";
 
 export const applicationSchema = z
@@ -17,7 +18,12 @@ export const applicationSchema = z
       .pipe(
         z.union([
           z.literal(""),
-          z.url({ error: "Enter a valid repository URL." }),
+          z
+            .url({ error: "Enter a valid repository URL." })
+            .refine(
+              isAcceptableRepositoryUrl,
+              "Clone with https:// or ssh:// and keep credentials in the deploy key.",
+            ),
           // git@github.com:owner/repo.git — the form a private repository
           // usually has, and not a URL.
           z
