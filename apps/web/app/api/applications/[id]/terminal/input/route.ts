@@ -26,7 +26,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   await notifyChannel(
     db,
     "terminal_input",
-    JSON.stringify({ sessionId: body.sessionId, data: body.data }),
+    JSON.stringify({ sessionId: body.sessionId, applicationId: id, data: body.data }),
   );
   return Response.json({ ok: true });
 }

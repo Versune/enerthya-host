@@ -1,4 +1,5 @@
 import { currentOrganization } from "@/lib/current-org";
+import { requireAdmin } from "@/lib/require-admin";
 import { createServer, listServers } from "@/lib/servers";
 import { serverSchema } from "@/lib/validation/server";
 
@@ -12,8 +13,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const context = await currentOrganization();
-  if (!context) return Response.json({ error: "Not signed in" }, { status: 401 });
+  const gate = await requireAdmin("add a server");
+  if (!gate.ok) return gate.response;
+  const { context } = gate;
 
   const parsed = serverSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {

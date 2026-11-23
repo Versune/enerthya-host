@@ -1,12 +1,14 @@
-import { currentOrganization } from "@/lib/current-org";
+import { requireAdmin } from "@/lib/require-admin";
 import { testServer } from "@/lib/servers";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const context = await currentOrganization();
-  if (!context) return Response.json({ error: "Not signed in" }, { status: 401 });
+  // The probe opens an outbound SSH connection to a host the caller chose.
+  const gate = await requireAdmin("test a server");
+  if (!gate.ok) return gate.response;
+  const { context } = gate;
 
   const { id } = await params;
   try {

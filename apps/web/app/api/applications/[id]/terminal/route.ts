@@ -38,6 +38,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     "terminal_start",
     JSON.stringify({
       sessionId,
+      applicationId: id,
       containerId: running.containerId,
       cols: Math.max(20, Math.min(300, Number(size.cols) || 80)),
       rows: Math.max(5, Math.min(120, Number(size.rows) || 24)),
@@ -63,6 +64,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!(await applicationInOrganization(db, context.organization.id, id))) {
     return Response.json({ error: "Application not found" }, { status: 404 });
   }
-  await notifyChannel(db, "terminal_close", JSON.stringify({ sessionId }));
+  await notifyChannel(db, "terminal_close", JSON.stringify({ sessionId, applicationId: id }));
   return Response.json({ ok: true });
 }

@@ -21,16 +21,18 @@ const MAX_LIFETIME_MS = 30 * 60_000;
 
 type StartMessage = {
   sessionId: string;
+  applicationId: string;
   containerId: string;
   cols?: number;
   rows?: number;
 };
 
-type InputMessage = { sessionId: string; data: string };
+type InputMessage = { sessionId: string; applicationId: string; data: string };
 
 type Running = {
   session: TerminalSession;
   timer: NodeJS.Timeout;
+  applicationId: string;
 };
 
 /** Keeps one process from holding the runtime open forever. */
@@ -52,7 +54,11 @@ export function startTerminalServer(databaseUrl: string): ChannelListener {
       await notifyChannel(
         db,
         "terminal_output",
-        JSON.stringify({ sessionId: message.sessionId, error: "Too many open terminals." }),
+        JSON.stringify({
+          sessionId: message.sessionId,
+          applicationId: message.applicationId,
+          error: "Too many open terminals.",
+        }),
       );
       return;
     }
@@ -62,7 +68,11 @@ export function startTerminalServer(databaseUrl: string): ChannelListener {
       await notifyChannel(
         db,
         "terminal_output",
-        JSON.stringify({ sessionId: message.sessionId, error: "No container runtime answered." }),
+        JSON.stringify({
+          sessionId: message.sessionId,
+          applicationId: message.applicationId,
+          error: "No container runtime answered.",
+        }),
       );
       return;
     }
@@ -75,7 +85,11 @@ export function startTerminalServer(databaseUrl: string): ChannelListener {
           void notifyChannel(
             db,
             "terminal_output",
-            JSON.stringify({ sessionId: message.sessionId, data: chunk }),
+            JSON.stringify({
+              sessionId: message.sessionId,
+              applicationId: message.applicationId,
+              data: chunk,
+            }),
           );
         },
         onExit: () => stop(message.sessionId, "process exited"),
@@ -83,7 +97,7 @@ export function startTerminalServer(databaseUrl: string): ChannelListener {
 
       const timer = setTimeout(() => stop(message.sessionId, "lifetime exceeded"), MAX_LIFETIME_MS);
       timer.unref();
-      sessions.set(message.sessionId, { session, timer });
+      sessions.set(message.sessionId, { session, timer, applicationId: message.applicationId });
       logger.info({ sessionId: message.sessionId }, "terminal opened");
     } catch (error) {
       await notifyChannel(
@@ -91,6 +105,7 @@ export function startTerminalServer(databaseUrl: string): ChannelListener {
         "terminal_output",
         JSON.stringify({
           sessionId: message.sessionId,
+          applicationId: message.applicationId,
           error: `Could not open a shell: ${(error as Error).message}`,
         }),
       );
@@ -104,15 +119,25 @@ export function startTerminalServer(databaseUrl: string): ChannelListener {
     })();
   });
 
+  // A session is only addressable from the application that opened it; an id
+  // alone is not enough to type into or end someone else's shell.
   const inputListener = listenToChannel(databaseUrl, "terminal_input", (payload) => {
     const parsed = safeParse<InputMessage>(payload);
     if (!parsed) return;
-    sessions.get(parsed.sessionId)?.session.write(parsed.data);
+    const running = sessions.get(parsed.sessionId);
+    if (!running || running.applicationId !== parsed.applicationId) {
+      logger.warn({ sessionId: parsed.sessionId }, "terminal input ignored: wrong application");
+      return;
+    }
+    running.session.write(parsed.data);
   });
 
   const closeListener = listenToChannel(databaseUrl, "terminal_close", (payload) => {
-    const parsed = safeParse<{ sessionId: string }>(payload);
-    if (parsed) stop(parsed.sessionId, "requested by the panel");
+    const parsed = safeParse<{ sessionId: string; applicationId: string }>(payload);
+    if (!parsed) return;
+    const running = sessions.get(parsed.sessionId);
+    if (!running || running.applicationId !== parsed.applicationId) return;
+    stop(parsed.sessionId, "requested by the panel");
   });
 
   // The listeners live as long as the process; the first one is returned so the
