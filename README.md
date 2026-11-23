@@ -76,6 +76,12 @@ Nothing is published by hand, and `./install.sh --version vX.Y.Z` pins an older 
 | `PORT` | Panel port (default `8420` in a source install) |
 | `HOSTNAME` | Bind address; keep it loopback unless TLS terminates in front |
 
+## What it looks like
+
+![The deployments screen: claimed by the worker, image ready, container started, health check passed, running](docs/deployments.png)
+
+![Projects: one project, with production and staging environments](docs/projects.png)
+
 ## Install
 
 One script per platform, Docker-only — no Node install on the host. The installer installs Docker
