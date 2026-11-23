@@ -8,9 +8,15 @@ import { DomainActions } from "@/components/applications/DomainActions";
 import { DomainForm } from "@/components/applications/DomainForm";
 import { EnvVarActions } from "@/components/applications/EnvVarActions";
 import { EnvVarForm } from "@/components/applications/EnvVarForm";
+import { RotateWebhookSecret } from "@/components/applications/RotateWebhookSecret";
 import { TerminalPanel } from "@/components/applications/TerminalPanel";
 import { PageHeader } from "@/components/shell/PageHeader";
-import { getApplication, getDeployHook, getDeployKeyPublic } from "@/lib/applications";
+import {
+  getApplication,
+  getDeployHook,
+  getDeployKeyPublic,
+  webhookSecretFor,
+} from "@/lib/applications";
 import { currentOrganization } from "@/lib/current-org";
 import { listDomains } from "@/lib/domains";
 import { listEnvVars } from "@/lib/env-vars";
@@ -36,6 +42,8 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
     getDeployKeyPublic(context.organization.id, id),
   ]);
   const canWrite = roleAtLeast(context.role, "admin");
+  // The secret signs a deploy: only a role that could deploy sees it.
+  const webhookSecret = canWrite && hook ? await webhookSecretFor(hook) : null;
   const source =
     application.sourceType === "git"
       ? `${application.gitUrl} · ${application.gitBranch}`
@@ -112,14 +120,17 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
           so the URL alone cannot trigger anything. The deploy key is what lets a private repository
           be cloned — add it under the repository's Deploy keys, read-only.
         </p>
-        {hook?.webhookSecret && application.sourceType === "git" ? (
+        {application.sourceType === "git" ? (
           <dl className="hook">
             <dt className="label">Payload URL</dt>
             <dd className="hook__value">
               {`${process.env.BETTER_AUTH_URL ?? ""}/api/webhooks/github/${application.id}`}
             </dd>
             <dt className="label">Secret</dt>
-            <dd className="hook__value">{hook.webhookSecret}</dd>
+            <dd className="hook__value">
+              {webhookSecret ?? (canWrite ? "no secret" : "only owners and admins can see it")}
+              {canWrite ? <RotateWebhookSecret applicationId={application.id} /> : null}
+            </dd>
             <dt className="label">Content type</dt>
             <dd className="hook__value">application/json</dd>
             {deployKey ? (

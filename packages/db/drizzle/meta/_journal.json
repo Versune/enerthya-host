@@ -50,6 +50,13 @@
       "when": 1795293456651,
       "tag": "0006_normal_mercury",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795403091117,
+      "tag": "0007_elite_bastion",
+      "breakpoints": true
     }
   ]
 }
