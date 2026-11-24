@@ -82,9 +82,10 @@ The worker container receives these values; a key left empty is a feature switch
 crash.
 
 With the five `ENERTHYA_S3_*` values set, a verified backup is uploaded and the local copy is
-removed; the row records `s3://<bucket>/<key>`. Without them the dump stays inside the worker
-container, next to the database it protects — and is lost when that container is recreated, so
-set them for anything you mean to keep.
+removed; the row records `s3://<bucket>/<key>`. Without them the dump stays in the `backups`
+volume (`enerthya_backups`), which survives recreating and upgrading the worker — but lives on
+the same host as the database it protects, so it covers a bad deploy, not a lost machine. Set the
+S3 values for anything you mean to keep.
 
 Email uses one relay for the whole install: deployment notices and team invitations both leave
 through it. With `ENERTHYA_SMTP_HOST` and `ENERTHYA_SMTP_FROM` set, an invited address receives
