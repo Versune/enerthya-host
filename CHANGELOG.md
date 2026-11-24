@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.25](https://github.com/Versune/enerthya-host/compare/v0.12.24...v0.12.25) (2026-11-24)
+
+
+### Bug Fixes
+
+* **install:** verify, prove and switch — or leave the running version alone ([#127](https://github.com/Versune/enerthya-host/issues/127)) ([07a81b4](https://github.com/Versune/enerthya-host/commit/07a81b400d44ee5aa1670c2be1b2103c35e6fbab))
+
 ## [0.12.24](https://github.com/Versune/enerthya-host/compare/v0.12.23...v0.12.24) (2026-11-24)
 
 
