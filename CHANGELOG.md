@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.23](https://github.com/Versune/enerthya-host/compare/v0.12.22...v0.12.23) (2026-11-24)
+
+
+### Bug Fixes
+
+* **compose:** keep a local backup in a volume, not in the worker's layer ([#122](https://github.com/Versune/enerthya-host/issues/122)) ([fa5b56d](https://github.com/Versune/enerthya-host/commit/fa5b56d5427706b9aeb4a7ee0f97530704a1c05c))
+
 ## [0.12.22](https://github.com/Versune/enerthya-host/compare/v0.12.21...v0.12.22) (2026-11-24)
 
 
