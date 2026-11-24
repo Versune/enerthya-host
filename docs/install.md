@@ -147,8 +147,12 @@ test but sends credentials over plain HTTP.
 
 ## Upgrade and uninstall
 
-- Upgrade: rerun the installer (add `--version` to pin). Migrations apply before the new panel
-  starts; the previous image stays tagged on disk.
+- Upgrade: rerun the installer (add `--version` to pin). The installer takes a lock so two runs
+  cannot overlap, verifies the release checksum on every run, applies migrations, and then
+  **starts the new image on a spare loopback port** to see it answer `/api/health` before
+  touching the running panel. `.env` is switched last. If the new version does not come up, the
+  previous `.env` is restored and the previous containers are started again — a failed upgrade
+  leaves the version that was working running, and the error says which one it rolled back to.
 - Uninstall: `docker compose --env-file /data/enerthya/.env -f /data/enerthya/compose.yml down`
   removes the containers but keeps the volumes; add `-v` to delete the data. Remove
   `/data/enerthya` for a full reset.
