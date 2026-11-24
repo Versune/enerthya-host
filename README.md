@@ -82,6 +82,19 @@ Nothing is published by hand, and `./install.sh --version vX.Y.Z` pins an older 
 
 ![Projects: one project, with production and staging environments](docs/projects.png)
 
+## Try it
+
+A read-only demo of the panel runs on this project's own VPS:
+
+- **<http://104.207.90.242:8420/sign-in>**
+- email `demo@enerthya.website` · password `demo-enerthya-2026`
+
+It signs in as a **member**, the role the product itself treats as read-only: applications,
+deployments, logs and host metrics are visible; creating, deploying, editing a variable or
+opening a terminal are refused with 403 — enforced by the same routes as a real install, not by
+a demo mode. The organization holds demo data and may be reset; the address is plain HTTP and
+there is nothing private in it.
+
 ## Install
 
 One script per platform, Docker-only — no Node install on the host. The installer installs Docker
