@@ -72,6 +72,10 @@ vi.mock("@enerthya/db", () => ({
     locked: true as const,
     value: await run(),
   }),
+  withAdvisoryLock: async (_db: unknown, _key: string, run: () => Promise<unknown>) => ({
+    locked: true as const,
+    value: await run(),
+  }),
 }));
 
 vi.mock("./notify", () => ({ notifyFailure: async () => undefined }));

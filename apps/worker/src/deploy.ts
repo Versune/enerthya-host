@@ -31,6 +31,7 @@ import {
   setDeploymentRuntime,
   setDeploymentSource,
   transitionDeployment,
+  withAdvisoryLock,
   withApplicationLock,
 } from "@enerthya/db";
 import { execa } from "execa";
@@ -404,7 +405,16 @@ async function publishDomainRoutes({ strict = false }: { strict?: boolean } = {}
   // succeeds there; the domain is simply not served from this machine.
   if (!adminUrl) return;
   try {
-    await publishRoutes(adminUrl, await selectDomainRoutes(getDb()));
+    // One writer for the whole route table: the read and the /load happen
+    // inside the lock, so a publish cannot be built from a snapshot another
+    // publish has already made stale.
+    const result = await withAdvisoryLock(
+      getDb(),
+      "proxy:routes",
+      async () => publishRoutes(adminUrl, await selectDomainRoutes(getDb())),
+      { waitMs: 60_000 },
+    );
+    if (!result.locked) throw new Error("another route publish is still running");
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     // Strict is the swap: a deployment that cannot move the traffic must not be

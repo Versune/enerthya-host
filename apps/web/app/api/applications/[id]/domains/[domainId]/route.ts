@@ -1,4 +1,5 @@
 import { roleAtLeast } from "@enerthya/core/roles";
+import { getDb, notifyChannel } from "@enerthya/db";
 import { currentOrganization } from "@/lib/current-org";
 import { removeDomain } from "@/lib/domains";
 
@@ -18,5 +19,7 @@ export async function DELETE(
   const removed = await removeDomain(context.organization.id, id, domainId);
   if (!removed) return Response.json({ error: "Domain not found" }, { status: 404 });
 
+  // Without this the removed host keeps being served until the next deploy.
+  await notifyChannel(getDb(), "proxy_publish", "{}").catch(() => undefined);
   return new Response(null, { status: 204 });
 }

@@ -1,3 +1,5 @@
+import { isValidHostname, isValidPort } from "./hostname";
+
 /**
  * The reverse proxy is generated from the database, never edited by hand. This
  * module turns the routes the panel knows about into Caddy's JSON config and
@@ -38,9 +40,31 @@ export const ADMIN_ORIGIN = "http://127.0.0.1:2019";
 /**
  * Deterministic by design: the same routes always produce the same document,
  * so a reload with nothing changed is a no-op instead of a diff.
+ *
+ * Invalid input throws here rather than reaching Caddy: one hostname it cannot
+ * parse fails the whole /load, which would block every other route too, and a
+ * duplicate host silently picks a winner by sort order.
  */
 export function caddyConfig(routes: ProxyRoute[]): CaddyConfig {
-  const sorted = [...routes].sort((a, b) => a.hostname.localeCompare(b.hostname));
+  const seen = new Set<string>();
+  for (const route of routes) {
+    if (!isValidHostname(route.hostname)) {
+      throw new Error(`The proxy cannot route "${route.hostname}": not a hostname.`);
+    }
+    if (!isValidPort(route.port)) {
+      throw new Error(`The proxy cannot route ${route.hostname}: ${route.port} is not a port.`);
+    }
+    if (seen.has(route.hostname)) {
+      throw new Error(`Two applications claim ${route.hostname}; only one can be routed.`);
+    }
+    seen.add(route.hostname);
+  }
+
+  // Byte order, not locale order: the sort decides which of two equivalent
+  // hosts wins in Caddy, and it must not vary with the host's locale.
+  const sorted = [...routes].sort((a, b) =>
+    a.hostname < b.hostname ? -1 : a.hostname > b.hostname ? 1 : 0,
+  );
 
   return {
     admin: { listen: ADMIN_LISTEN, origins: [ADMIN_ORIGIN] },
