@@ -40,3 +40,44 @@ describe("caddyConfig", () => {
     expect(config.apps.http.servers.enerthya.routes).toEqual([]);
   });
 });
+
+describe("caddyConfig follows the routes it is given", () => {
+  it("a removed host is absent from the next document", () => {
+    const before = caddyConfig([
+      { hostname: "a.example.com", port: 3000 },
+      { hostname: "b.example.com", port: 3001 },
+    ]);
+    const after = caddyConfig([{ hostname: "b.example.com", port: 3001 }]);
+    expect(before.apps.http.servers.enerthya.routes).toHaveLength(2);
+    expect(after.apps.http.servers.enerthya.routes.map((r) => r.match[0]?.host[0])).toEqual([
+      "b.example.com",
+    ]);
+  });
+});
+
+describe("caddyConfig refuses what Caddy would reject", () => {
+  it("refuses a hostname Caddy cannot match", () => {
+    // A wildcard is syntax to Caddy, not a hostname; a single invalid entry
+    // fails the whole /load and would block every other route.
+    expect(() => caddyConfig([{ hostname: "*.example.com", port: 3000 }])).toThrow(
+      /not a hostname/,
+    );
+    expect(() => caddyConfig([{ hostname: "example", port: 3000 }])).toThrow(/not a hostname/);
+  });
+
+  it("refuses a port outside 1–65535", () => {
+    expect(() => caddyConfig([{ hostname: "app.example.com", port: 0 }])).toThrow(/not a port/);
+    expect(() => caddyConfig([{ hostname: "app.example.com", port: Number.NaN }])).toThrow(
+      /not a port/,
+    );
+  });
+
+  it("refuses two applications claiming one host instead of picking a winner", () => {
+    expect(() =>
+      caddyConfig([
+        { hostname: "app.example.com", port: 3000 },
+        { hostname: "app.example.com", port: 3001 },
+      ]),
+    ).toThrow(/Two applications claim app\.example\.com/);
+  });
+});

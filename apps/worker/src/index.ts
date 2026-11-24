@@ -23,6 +23,7 @@ import { startEmailServer } from "./email-server";
 import { startHostStatsServer } from "./host-stats-server";
 import { logger } from "./log";
 import { startLogServer } from "./log-server";
+import { startProxyServer } from "./proxy-server";
 import { startStatsServer } from "./stats-server";
 import { startTerminalServer } from "./terminal-server";
 
@@ -91,6 +92,7 @@ if (redisUrl) {
     startEmailServer(databaseUrl);
     startHostStatsServer(databaseUrl);
     startTerminalServer(databaseUrl);
+    startProxyServer(databaseUrl);
     logger.info("terminal server listening on terminal_start");
   } else
     logger.warn("DATABASE_URL is not set; logs, metrics and backup scheduling are unavailable");

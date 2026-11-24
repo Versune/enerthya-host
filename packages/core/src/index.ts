@@ -9,6 +9,7 @@ export { decryptSecret, encryptSecret } from "./crypto";
 export { type DeployKey, generateDeployKey, publicKeyFromPrivate } from "./deploy-key";
 export { isAcceptableRepositoryUrl } from "./git-url";
 export { type HostStats, type HostStatsInput, readHostStats } from "./host-stats";
+export { isValidHostname, isValidPort } from "./hostname";
 export { type CaddyConfig, caddyConfig, type ProxyRoute, publishRoutes } from "./proxy";
 export {
   DATABASE_QUEUE,

@@ -1,4 +1,5 @@
 import { roleAtLeast } from "@enerthya/core/roles";
+import { getDb, notifyChannel } from "@enerthya/db";
 import { currentOrganization } from "@/lib/current-org";
 import { addDomain } from "@/lib/domains";
 import { firstIssue } from "@/lib/validation/auth";
@@ -19,6 +20,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   try {
     await addDomain(context.organization.id, id, parsed.data.hostname);
+    // The proxy is the worker's to touch; ask it to rebuild the route table.
+    await notifyChannel(getDb(), "proxy_publish", "{}").catch(() => undefined);
     return Response.json({ hostname: parsed.data.hostname }, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.message === "Application not found") {
