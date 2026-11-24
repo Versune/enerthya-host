@@ -94,6 +94,10 @@ services:
       ENERTHYA_S3_SECRET_ACCESS_KEY: ${ENERTHYA_S3_SECRET_ACCESS_KEY:-}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      # A verified dump that stays local must outlive the container: this
+      # directory is inside the worker's writable layer otherwise, and an
+      # upgrade recreates that layer.
+      - backups:/data/enerthya/backups
 
   # The reverse proxy, generated from the database. Host networking so it can
   # reach the port each container published on the host's loopback, and so :80
@@ -116,3 +120,4 @@ volumes:
   postgres-data:
   redis-data:
   caddy-data:
+  backups:
