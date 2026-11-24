@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.24](https://github.com/Versune/enerthya-host/compare/v0.12.23...v0.12.24) (2026-11-24)
+
+
+### Bug Fixes
+
+* **web:** the invitation page must not live behind the session layout ([#124](https://github.com/Versune/enerthya-host/issues/124)) ([f8f558b](https://github.com/Versune/enerthya-host/commit/f8f558b442a36c56ba46b1475d8eca4e658c077c))
+
 ## [0.12.23](https://github.com/Versune/enerthya-host/compare/v0.12.22...v0.12.23) (2026-11-24)
 
 
