@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.22](https://github.com/Versune/enerthya-host/compare/v0.12.21...v0.12.22) (2026-11-24)
+
+
+### Bug Fixes
+
+* **proxy:** serialize the route table, and republish when a domain changes ([#120](https://github.com/Versune/enerthya-host/issues/120)) ([5e8ba1e](https://github.com/Versune/enerthya-host/commit/5e8ba1eb01163d11f24fa5431b8a6a66fd20b183))
+
 ## [0.12.21](https://github.com/Versune/enerthya-host/compare/v0.12.20...v0.12.21) (2026-11-23)
 
 
