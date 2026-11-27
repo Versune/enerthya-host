@@ -1,5 +1,5 @@
 import * as schema from "@enerthya/db";
-import { getDb } from "@enerthya/db";
+import { getDb, notifyChannel } from "@enerthya/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
@@ -20,6 +20,10 @@ function required(name: string): string {
 
 function createAuth() {
   const baseURL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+  // Verification is only enforceable when the install can actually send mail.
+  // Without SMTP the invitation link stays the sole channel, so requiring a
+  // verified address would lock every invitee out.
+  const smtpConfigured = Boolean(process.env.ENERTHYA_SMTP_HOST);
 
   return betterAuth({
     appName: "Enerthya Host",
@@ -51,6 +55,21 @@ function createAuth() {
       // for the address opens the door (enforced in databaseHooks below).
       disableSignUp: false,
     },
+    emailVerification: {
+      sendOnSignUp: smtpConfigured,
+      sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
+        await notifyChannel(
+          getDb(),
+          "email_send",
+          JSON.stringify({
+            to: user.email,
+            subject: "Verify your address on Enerthya Host",
+            text: `Confirm your address: ${url}`,
+            html: `<p>Confirm your address: <a href="${url}">${url}</a></p>`,
+          }),
+        ).catch(() => undefined);
+      },
+    },
     databaseHooks: {
       user: {
         create: {
@@ -74,6 +93,7 @@ function createAuth() {
       organization({
         allowUserToCreateOrganization: true,
         membershipLimit: 100,
+        requireEmailVerificationOnInvitation: smtpConfigured,
       }),
       twoFactor(),
     ],

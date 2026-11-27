@@ -10,7 +10,7 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
  * same-origin. `/api/auth/*` is left to better-auth, whose trusted-origin list
  * is intentionally wider than same-origin.
  */
-export function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (SAFE_METHODS.has(request.method)) return NextResponse.next();
   if (pathname.startsWith("/api/auth")) return NextResponse.next();

@@ -23,6 +23,8 @@ export type CreateContainerSpec = {
   containerPort: number;
   /** A service has no HTTP port; nothing is exposed or published for it. */
   publishPort?: boolean;
+  /** Backups use "no": a restart policy would keep a database copy alive. */
+  restartPolicy?: "no" | "always" | "unless-stopped";
   labels: Record<string, string>;
   /** KEY=value pairs handed to the container. */
   env?: string[];
@@ -182,7 +184,7 @@ export async function createAndStart(
     ...(publish ? { ExposedPorts: { [portKey]: {} } } : {}),
     HostConfig: {
       ...(publish ? { PortBindings: portBindings(spec.containerPort) } : {}),
-      RestartPolicy: { Name: "unless-stopped" },
+      RestartPolicy: { Name: spec.restartPolicy ?? "unless-stopped" },
       Binds: spec.volumes?.map((volume) => `${volume.source}:${volume.target}`),
     },
   });

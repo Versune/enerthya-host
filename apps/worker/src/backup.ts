@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { decryptSecret } from "@enerthya/core/crypto";
@@ -101,8 +101,12 @@ export async function runBackup(backupId: string): Promise<void> {
       name: `enerthya-verify-${backupId.slice(0, 8)}`,
       image: `postgres:${backup.version}-alpine`,
       containerPort: 5432,
+      // No host port, no restart policy, a per-run password: if the worker
+      // dies mid-backup this container must not survive with a customer dump.
+      publishPort: false,
+      restartPolicy: "no",
       labels: { "enerthya.managed": "true", "enerthya.verification": backupId },
-      env: ["POSTGRES_PASSWORD=verify-only", "POSTGRES_DB=postgres"],
+      env: [`POSTGRES_PASSWORD=${randomBytes(24).toString("hex")}`, "POSTGRES_DB=postgres"],
     });
     verificationId = verification.id;
     await waitReady(runtime, verification.id);
