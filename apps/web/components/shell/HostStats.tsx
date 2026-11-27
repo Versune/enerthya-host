@@ -30,6 +30,38 @@ function days(seconds: number): string {
   return value === 1 ? "1 day" : `${value} days`;
 }
 
+function StatCard({
+  label,
+  value,
+  detail,
+  percent,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  percent?: number;
+}) {
+  return (
+    <div className="stat-card">
+      <span className="label">{label}</span>
+      <strong className="stat-card__value">{value}</strong>
+      {typeof percent === "number" ? (
+        <div
+          className="stat-card__bar"
+          role="progressbar"
+          aria-label={`${label} usage`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(percent)}
+        >
+          <span style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} />
+        </div>
+      ) : null}
+      <span className="stat-card__detail">{detail}</span>
+    </div>
+  );
+}
+
 /**
  * The machine the worker runs on, polled every ten seconds while the panel is
  * open. Container numbers answer "is the app healthy"; these answer "is the host".
@@ -64,26 +96,31 @@ export function HostStats() {
   if (error) return <p className="deployment__meta">{error.message}</p>;
   if (!data) return <p className="deployment__meta">Reading this machine…</p>;
 
+  const memoryPercent = data.memoryTotal > 0 ? (data.memoryUsed / data.memoryTotal) * 100 : 0;
+
   return (
     <div className="stats">
-      <dl className="hook">
-        <dt className="label">CPU</dt>
-        <dd className="hook__value">
-          {data.cpuPercent}% · load {data.loadAverage.toFixed(2)} · {data.cores} cores
-        </dd>
-        <dt className="label">Memory</dt>
-        <dd className="hook__value">
-          {gigabytes(data.memoryUsed)} of {gigabytes(data.memoryTotal)}
-        </dd>
-        <dt className="label">Disk</dt>
-        <dd className="hook__value">
-          {data.diskPercent}% · {gigabytes(data.diskUsed)} of {gigabytes(data.diskTotal)}
-        </dd>
-        <dt className="label">Uptime</dt>
-        <dd className="hook__value">
-          {days(data.uptimeSeconds)} · {data.platform}
-        </dd>
-      </dl>
+      <div className="stats-grid">
+        <StatCard
+          label="CPU"
+          value={`${data.cpuPercent}%`}
+          detail={`load ${data.loadAverage.toFixed(2)} · ${data.cores} cores`}
+          percent={data.cpuPercent}
+        />
+        <StatCard
+          label="Memory"
+          value={gigabytes(data.memoryUsed)}
+          detail={`of ${gigabytes(data.memoryTotal)}`}
+          percent={memoryPercent}
+        />
+        <StatCard
+          label="Disk"
+          value={`${data.diskPercent}%`}
+          detail={`${gigabytes(data.diskUsed)} of ${gigabytes(data.diskTotal)}`}
+          percent={data.diskPercent}
+        />
+        <StatCard label="Uptime" value={days(data.uptimeSeconds)} detail={data.platform} />
+      </div>
 
       {history.length > 1 ? (
         <div className="stats__chart" role="img" aria-label="Host CPU over the last five minutes">
@@ -92,19 +129,22 @@ export function HostStats() {
               <YAxis hide domain={[0, 100]} />
               <Tooltip
                 contentStyle={{
-                  background: "#ffffff",
-                  border: "1px solid #d9d9d9",
-                  borderRadius: 0,
-                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                  background: "var(--paper)",
+                  border: "1px solid var(--rule)",
+                  borderRadius: 2,
+                  color: "var(--ink)",
+                  fontFamily: "var(--font-mono)",
                   fontSize: 12,
                 }}
+                labelStyle={{ color: "var(--ink-60)" }}
+                itemStyle={{ color: "var(--ink)" }}
                 formatter={(value) => [`${value}%`, "CPU"]}
                 labelFormatter={(label) => String(label ?? "")}
               />
               <Line
                 type="monotone"
                 dataKey="cpu"
-                stroke="#111111"
+                stroke="var(--ink)"
                 strokeWidth={1.5}
                 dot={false}
                 isAnimationActive={false}

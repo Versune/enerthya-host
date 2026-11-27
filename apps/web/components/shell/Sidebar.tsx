@@ -55,10 +55,7 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      <p className="sidebar__foot">
-        Servers, projects, applications and deployments, with domains, logs, metrics, databases and
-        verified backups.
-      </p>
+      <p className="sidebar__foot">Enerthya Host · self-hosted</p>
     </aside>
   );
 }
