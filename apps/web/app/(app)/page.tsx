@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { HostStats } from "@/components/shell/HostStats";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { getAuth } from "@/lib/auth";
@@ -26,7 +27,28 @@ export default async function OverviewPage() {
       </PageHeader>
 
       <section className="page__section">
-        <h2 className="label">This machine</h2>
+        <div className="section-head">
+          <h2 className="section-head__title">Start</h2>
+          <span className="section-head__meta">application · project · server</span>
+        </div>
+        <div className="quick-actions">
+          <Link className="btn" href="/applications">
+            New application
+          </Link>
+          <Link className="btn btn--quiet" href="/projects">
+            New project
+          </Link>
+          <Link className="btn btn--quiet" href="/servers">
+            Add a server
+          </Link>
+        </div>
+      </section>
+
+      <section className="page__section">
+        <div className="section-head">
+          <h2 className="section-head__title">Host</h2>
+          <span className="section-head__meta">refreshes every 10s</span>
+        </div>
         <p className="page__lede">
           The host the worker runs on. Container numbers answer whether an application is healthy;
           these answer whether the machine is.
