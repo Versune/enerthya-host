@@ -982,3 +982,45 @@
   background: transparent;
   border: 1px solid var(--ink-45);
 }
+
+/* ---- recent activity ------------------------------------------------------ */
+
+.recent {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+
+.recent__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.recent__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.recent__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent__more {
+  color: var(--ink-60);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-decoration: none;
+}
+
+.recent__more:hover {
+  color: var(--ink);
+}
