@@ -945,3 +945,40 @@
   margin: var(--s-1) 0;
   background: var(--rule);
 }
+
+/* ---- status dot ------------------------------------------------------------
+   State is legible without colour: hollow = waiting, muted fill = working,
+   ink fill = finished. The label always spells it out. */
+
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--ink-60);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.status-dot__dot {
+  width: 7px;
+  height: 7px;
+  background: var(--ink-45);
+}
+
+.status-dot[data-state="ready"] .status-dot__dot,
+.status-dot[data-state="success"] .status-dot__dot,
+.status-dot[data-state="healthy"] .status-dot__dot,
+.status-dot[data-state="failed"] .status-dot__dot,
+.status-dot[data-state="error"] .status-dot__dot {
+  background: var(--ink);
+}
+
+.status-dot[data-state="queued"] .status-dot__dot,
+.status-dot[data-state="pending"] .status-dot__dot,
+.status-dot[data-state="canceled"] .status-dot__dot,
+.status-dot[data-state="cancelled"] .status-dot__dot {
+  background: transparent;
+  border: 1px solid var(--ink-45);
+}
