@@ -2,8 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { HostStats } from "@/components/shell/HostStats";
 import { PageHeader } from "@/components/shell/PageHeader";
+import { StatusDot } from "@/components/shell/StatusDot";
 import { getAuth } from "@/lib/auth";
+import { listDeployments } from "@/lib/deployments";
 import { requireSession } from "@/lib/require-session";
+
+function timestamp(date: Date): string {
+  return `${date.toISOString().slice(0, 16).replace("T", " ")} UTC`;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +23,8 @@ export default async function OverviewPage() {
   const active =
     organizations.find((org) => org.id === session.session.activeOrganizationId) ??
     organizations[0];
+
+  const deployments = active ? (await listDeployments(active.id)).slice(0, 5) : [];
 
   return (
     <>
@@ -42,6 +50,42 @@ export default async function OverviewPage() {
             Add a server
           </Link>
         </div>
+      </section>
+
+      <section className="page__section">
+        <div className="section-head">
+          <h2 className="section-head__title">Recent activity</h2>
+          <Link className="recent__more" href="/deployments">
+            all deployments →
+          </Link>
+        </div>
+        {deployments.length === 0 ? (
+          <div className="empty">
+            <strong className="label">Nothing deployed yet</strong>
+            <p>
+              Press Deploy on an application and its attempt appears here with the state it actually
+              reported.
+            </p>
+            <Link className="btn" href="/applications">
+              Open applications
+            </Link>
+          </div>
+        ) : (
+          <ul className="recent">
+            {deployments.map((deployment) => (
+              <li className="recent__row" key={deployment.id}>
+                <span className="recent__main">
+                  <span className="recent__name">{deployment.applicationName}</span>
+                  <span className="deployment__meta">
+                    {deployment.projectName} · {deployment.environmentSlug} ·{" "}
+                    {timestamp(deployment.startedAt ?? deployment.createdAt)}
+                  </span>
+                </span>
+                <StatusDot status={deployment.status} />
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="page__section">

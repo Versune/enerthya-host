@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { decryptSecret } from "@enerthya/core/crypto";
@@ -11,13 +11,31 @@ import {
   stopAndRemove,
 } from "@enerthya/core/runtime";
 import { putObject, s3ConfigFromEnv } from "@enerthya/core/s3";
-import { getDb, selectBackupJob, updateBackup } from "@enerthya/db";
+import { type Database, getDb, selectBackupJob, updateBackup } from "@enerthya/db";
 import tar from "tar-fs";
+import { logger } from "./log";
 
 const BACKUP_DIR = process.env.ENERTHYA_BACKUP_DIR ?? "/data/enerthya/backups";
 const READY_TIMEOUT_MS = 90_000;
 
 type Credentials = { username: string; password: string; database: string };
+
+/**
+ * Takes ownership of a backup by moving it from `scheduled` to `running`.
+ *
+ * The check is the `WHERE` clause, so two deliveries of the same job cannot
+ * both win: the second update matches nothing. `updateBackup` is
+ * unconditional, so it cannot express this claim.
+ */
+async function claimBackup(db: Database, backupId: string): Promise<boolean> {
+  const claimed = await db.$client`
+    update "backup"
+    set status = 'running', started_at = now()
+    where id = ${backupId} and status = 'scheduled'
+    returning id
+  `;
+  return claimed.length > 0;
+}
 
 async function waitReady(runtime: RuntimeConnection, containerId: string): Promise<void> {
   const deadline = Date.now() + READY_TIMEOUT_MS;
@@ -55,22 +73,31 @@ async function tableCount(
  * Dumps a managed database and then **restores it into a throwaway server**,
  * comparing the table count. A dump that was written is not a backup; one that
  * was restored is.
+ *
+ * The row is claimed before any work starts: a duplicate or re-delivered job
+ * finds it out of `scheduled`, returns, and cannot overwrite the owner's
+ * status or delete the dump it is still writing.
  */
 export async function runBackup(backupId: string): Promise<void> {
   const db = getDb();
   const backup = await selectBackupJob(db, backupId);
   if (!backup) return;
 
-  await updateBackup(db, backupId, { status: "running", startedAt: new Date() });
+  if (!(await claimBackup(db, backupId))) {
+    logger.info({ backupId }, "backup is already running or finished; leaving it alone");
+    return;
+  }
 
-  const runtime = await connectRuntime().catch(() => null);
-  if (!runtime) throw new Error("No container runtime answered.");
-
-  const credentials = JSON.parse(decryptSecret(backup.credentialsEncrypted)) as Credentials;
+  let runtime: RuntimeConnection | null = null;
   let verificationId: string | null = null;
   let dumpPath: string | null = null;
 
   try {
+    runtime = await connectRuntime().catch(() => null);
+    if (!runtime) throw new Error("No container runtime answered.");
+
+    const credentials = JSON.parse(decryptSecret(backup.credentialsEncrypted)) as Credentials;
+
     const [source] = await runtime.client.listContainers({
       filters: { label: [`enerthya.database=${backup.databaseId}`] },
     });
@@ -101,8 +128,12 @@ export async function runBackup(backupId: string): Promise<void> {
       name: `enerthya-verify-${backupId.slice(0, 8)}`,
       image: `postgres:${backup.version}-alpine`,
       containerPort: 5432,
+      // No host port, no restart policy, a per-run password: if the worker
+      // dies mid-backup this container must not survive with a customer dump.
+      publishPort: false,
+      restartPolicy: "no",
       labels: { "enerthya.managed": "true", "enerthya.verification": backupId },
-      env: ["POSTGRES_PASSWORD=verify-only", "POSTGRES_DB=postgres"],
+      env: [`POSTGRES_PASSWORD=${randomBytes(24).toString("hex")}`, "POSTGRES_DB=postgres"],
     });
     verificationId = verification.id;
     await waitReady(runtime, verification.id);
@@ -176,6 +207,63 @@ export async function runBackup(backupId: string): Promise<void> {
     });
     throw error;
   } finally {
-    if (verificationId) await stopAndRemove(runtime.client, verificationId).catch(() => undefined);
+    if (runtime && verificationId) {
+      await stopAndRemove(runtime.client, verificationId).catch(() => undefined);
+    }
   }
+}
+
+/**
+ * Removes verification servers left behind by a backup process that died
+ * before its `finally` ran. Each one can hold a customer dump and nothing else
+ * will ever collect it, so the worker sweeps them once at startup before new
+ * backups begin. Returns how many containers were removed.
+ */
+export async function sweepVerificationContainers(): Promise<number> {
+  let runtime: RuntimeConnection | null = null;
+  try {
+    runtime = await connectRuntime();
+  } catch (error) {
+    logger.warn(
+      { err: error instanceof Error ? error.message : String(error) },
+      "could not check for leftover verification containers",
+    );
+    return 0;
+  }
+  if (!runtime) return 0;
+
+  const containers = await runtime.client
+    .listContainers({ all: true, filters: { label: ["enerthya.verification"] } })
+    .catch((error: unknown) => {
+      logger.warn(
+        { err: error instanceof Error ? error.message : String(error) },
+        "could not list leftover verification containers",
+      );
+      return [];
+    });
+
+  const removed: string[] = [];
+  for (const container of containers) {
+    try {
+      // No graceful stop: an orphan has no data worth flushing, only a dump
+      // that must not stay on disk.
+      await runtime.client.getContainer(container.Id).remove({ force: true });
+      removed.push(container.Id);
+    } catch (error) {
+      logger.warn(
+        {
+          containerId: container.Id,
+          err: error instanceof Error ? error.message : String(error),
+        },
+        "could not remove an orphaned verification container",
+      );
+    }
+  }
+  if (removed.length > 0) {
+    logger.warn(
+      { count: removed.length, containerIds: removed },
+      "removed orphaned backup verifiers",
+    );
+  }
+  return removed.length;
 }

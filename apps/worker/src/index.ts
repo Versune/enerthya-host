@@ -16,6 +16,7 @@ import {
 } from "@enerthya/core/queue";
 import { getDb, selectInFlightDeployments } from "@enerthya/db";
 import { Worker } from "bullmq";
+import { sweepVerificationContainers } from "./backup";
 import { startBackupScheduler } from "./backup-scheduler";
 import { startDatabaseWorker } from "./database-worker";
 import { runDeployment } from "./deploy";
@@ -87,6 +88,9 @@ if (redisUrl) {
   if (databaseUrl) {
     startLogServer(databaseUrl);
     startStatsServer(databaseUrl);
+    // A backup killed mid-run leaves its verification server behind, holding
+    // a customer dump. Clear those before this process starts new backups.
+    void sweepVerificationContainers();
     startBackupScheduler(redisUrl);
     logger.info({ intervalMs: 300_000 }, "backup scheduler running");
     startEmailServer(databaseUrl);

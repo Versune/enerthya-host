@@ -104,6 +104,9 @@ jobs:
           cp -a apps/worker/dist dist/stage/apps/worker/dist
           cp docker/Dockerfile dist/stage/Dockerfile
           cp docker/compose.yml dist/stage/compose.yml
+          # A worktree that ran `pnpm dev` carries real secrets in the standalone
+          # copy. The installer writes its own env; nothing here may ship one.
+          find dist/stage -type f \( -name '.env' -o -name '.env.*' \) -delete
 
       # An installer downloads this and runs it as root; it must contain what
       # the Dockerfile and install.sh expect, or fail here instead of on a host.
@@ -117,6 +120,10 @@ jobs:
               exit 1
             fi
           done
+          if find dist/stage -type f \( -name '.env' -o -name '.env.*' \) | grep -q .; then
+            echo "::error::an env file slipped into the staged artifact"
+            exit 1
+          fi
           echo "staged tree has every path the installer needs"
 
       # The installer runs this on a customer's host. Boot it here first, with

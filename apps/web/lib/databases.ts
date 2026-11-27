@@ -3,7 +3,6 @@ import { decryptSecret, encryptSecret } from "@enerthya/core/crypto";
 import { enqueueBackupJob, enqueueDatabaseJob } from "@enerthya/core/queue";
 import {
   type BackupSummary,
-  deleteManagedDatabase,
   environmentInOrganization,
   getDb,
   insertBackup,
@@ -103,8 +102,19 @@ export async function removeManagedDatabase(organizationId: string, id: string):
   if (!rows.some((row) => row.id === id)) return false;
 
   const redisUrl = process.env.REDIS_URL;
-  if (redisUrl) await enqueueDatabaseJob(redisUrl, id, "remove").catch(() => undefined);
-  return deleteManagedDatabase(db, organizationId, id);
+  try {
+    if (!redisUrl) throw new Error("REDIS_URL is not set in the panel's environment.");
+    await enqueueDatabaseJob(redisUrl, id, "remove", organizationId);
+  } catch (error) {
+    throw new QueueUnavailableError(
+      error instanceof Error ? error.message : "The queue is unreachable.",
+    );
+  }
+
+  // The row stays until the worker has stopped the container and removed the
+  // volume: it is the worker's only handle, and deleting it here would leave
+  // an orphaned data store with nothing left to clean up.
+  return true;
 }
 
 export type BackupRow = BackupSummary;
