@@ -35,6 +35,13 @@ function createAuth() {
         .map((origin) => origin.trim())
         .filter(Boolean) ?? []),
     ],
+    // better-auth marks cookies Secure only when baseURL is https. A self-hosted
+    // install usually terminates TLS at a reverse proxy and may keep an http
+    // baseURL, so force it in production. Leaving the option undefined elsewhere
+    // preserves the http dev default.
+    advanced: {
+      useSecureCookies: process.env.NODE_ENV === "production" ? true : undefined,
+    },
     database: drizzleAdapter(getDb(), {
       provider: "pg",
       schema: {
