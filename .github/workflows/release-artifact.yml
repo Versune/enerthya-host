@@ -90,6 +90,9 @@ jobs:
           mkdir -p dist/stage
           cp -a apps/web/.next/standalone/. dist/stage/
           mkdir -p dist/stage/apps/web/.next
+          # The standalone helper links static assets to the build workspace.
+          # Package real files so the archive works after leaving the runner.
+          rm -rf dist/stage/apps/web/.next/static
           cp -a apps/web/.next/static dist/stage/apps/web/.next/static
           # The standalone bundle already carries public/; replace it instead of
           # nesting a second copy inside it.
@@ -120,6 +123,10 @@ jobs:
               exit 1
             fi
           done
+          if [ -L dist/stage/apps/web/.next/static ]; then
+            echo "::error::the staged static directory must contain real assets"
+            exit 1
+          fi
           if find dist/stage -type f \( -name '.env' -o -name '.env.*' \) | grep -q .; then
             echo "::error::an env file slipped into the staged artifact"
             exit 1
