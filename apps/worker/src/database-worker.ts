@@ -1,5 +1,5 @@
 import { decryptSecret } from "@enerthya/core/crypto";
-import { DATABASE_QUEUE, redisConnection } from "@enerthya/core/queue";
+import { DATABASE_QUEUE, type DatabaseJob, redisConnection } from "@enerthya/core/queue";
 import {
   connectRuntime,
   createAndStart,
@@ -9,7 +9,12 @@ import {
   removeVolume,
   stopAndRemove,
 } from "@enerthya/core/runtime";
-import { getDb, selectManagedDatabaseForWorker, updateManagedDatabase } from "@enerthya/db";
+import {
+  deleteManagedDatabase,
+  getDb,
+  selectManagedDatabaseForWorker,
+  updateManagedDatabase,
+} from "@enerthya/db";
 import { Worker } from "bullmq";
 import { runBackup } from "./backup";
 
@@ -78,32 +83,39 @@ export async function provisionDatabase(databaseId: string): Promise<void> {
   }
 }
 
-export async function deprovisionDatabase(databaseId: string): Promise<void> {
+export async function deprovisionDatabase(
+  databaseId: string,
+  organizationId: string,
+): Promise<void> {
   const db = getDb();
   const row = await selectManagedDatabaseForWorker(db, databaseId);
   if (!row) return;
 
-  const runtime = await connectRuntime().catch(() => null);
-  if (runtime) {
-    const containers = await runtime.client.listContainers({
-      all: true,
-      filters: { label: [`enerthya.database=${databaseId}`] },
-    });
-    for (const container of containers) await stopAndRemove(runtime.client, container.Id);
-    await removeVolume(runtime.client, row.volumeName);
-  }
+  // Without a runtime the container may still be running, so keep the row:
+  // it is what a retried removal reads to find the container and its volume.
+  const runtime = await connectRuntime();
+  if (!runtime) throw new Error("No container runtime answered.");
+
+  const containers = await runtime.client.listContainers({
+    all: true,
+    filters: { label: [`enerthya.database=${databaseId}`] },
+  });
+  for (const container of containers) await stopAndRemove(runtime.client, container.Id);
+  await removeVolume(runtime.client, row.volumeName);
+
+  // Only now is the data store actually gone. Removing an already-missing row
+  // keeps a retried job idempotent.
+  await deleteManagedDatabase(db, organizationId, databaseId);
 }
 
 export function startDatabaseWorker(redisUrl: string): Worker {
   return new Worker(
     DATABASE_QUEUE,
     async (job) => {
-      const data = job.data as
-        | { databaseId: string; action: "provision" | "remove" }
-        | { backupId: string; action: "backup" };
+      const data = job.data as DatabaseJob;
       if (data.action === "backup") await runBackup(data.backupId);
       else if (data.action === "provision") await provisionDatabase(data.databaseId);
-      else await deprovisionDatabase(data.databaseId);
+      else await deprovisionDatabase(data.databaseId, data.organizationId);
     },
     {
       connection: { ...redisConnection(redisUrl), maxRetriesPerRequest: null },

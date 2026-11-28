@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { DeploymentLog } from "@/components/deployments/DeploymentLog";
 import { PageHeader } from "@/components/shell/PageHeader";
+import { StatusDot } from "@/components/shell/StatusDot";
 import { currentOrganization } from "@/lib/current-org";
 import { listDeployments } from "@/lib/deployments";
 
@@ -73,11 +74,7 @@ export default async function DeploymentsPage() {
                   status={deployment.status}
                 />
               </div>
-              <span
-                className={`env-chip${deployment.status === "failed" ? " env-chip--failed" : ""}`}
-              >
-                {deployment.status}
-              </span>
+              <StatusDot status={deployment.status} />
             </li>
           ))}
         </ul>

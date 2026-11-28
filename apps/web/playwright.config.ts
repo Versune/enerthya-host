@@ -16,7 +16,16 @@ export default defineConfig({
     baseURL,
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chrome",
+        launchOptions: { args: ["--no-sandbox"] },
+      },
+    },
+  ],
   webServer: {
     command: `pnpm exec next dev -p ${PORT}`,
     url: `${baseURL}/api/health`,
@@ -29,7 +38,8 @@ export default defineConfig({
       // 32 bytes, base64; only the test database ever sees what it encrypts.
       ENCRYPTION_KEY: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
       BETTER_AUTH_URL: baseURL,
-      DATABASE_URL: "postgres://enerthya:enerthya@127.0.0.1:5432/enerthya",
+      DATABASE_URL:
+        process.env.E2E_DATABASE_URL ?? "postgres://enerthya:enerthya@127.0.0.1:5432/enerthya_e2e",
     },
   },
 });

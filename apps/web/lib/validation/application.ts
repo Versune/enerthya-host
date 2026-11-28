@@ -1,6 +1,34 @@
 import { isAcceptableRepositoryUrl } from "@enerthya/core/git-url";
 import { z } from "zod";
 
+/**
+ * Host paths that must never be bind-mounted into a tenant container. The
+ * worker runs as root, so a mount is exactly as powerful as root on the host:
+ * `/` alone is the whole machine, and `/var/run` carries the container socket.
+ * Refused at validation, not merely discouraged in the UI.
+ */
+const FORBIDDEN_MOUNT_ROOTS = [
+  "/proc",
+  "/sys",
+  "/dev",
+  "/etc",
+  "/root",
+  "/boot",
+  "/run",
+  "/var/run",
+  "/var/lib/docker",
+  "/var/lib/containers",
+  "/home",
+] as const;
+
+function isForbiddenMount(source: string): boolean {
+  const normalized = source.replace(/\/+$/, "") || "/";
+  if (normalized === "/") return true;
+  return FORBIDDEN_MOUNT_ROOTS.some(
+    (root) => normalized === root || normalized.startsWith(`${root}/`),
+  );
+}
+
 export const applicationSchema = z
   .object({
     name: z
@@ -24,7 +52,11 @@ export const applicationSchema = z
             .string()
             .trim()
             .startsWith("/", "Use an absolute host path.")
-            .refine((value) => !value.includes(".."), "A mount path cannot contain .."),
+            .refine((value) => !value.includes(".."), "A mount path cannot contain ..")
+            .refine(
+              (value) => !isForbiddenMount(value),
+              "That host path cannot be mounted into an application.",
+            ),
           target: z
             .string()
             .trim()
@@ -60,7 +92,7 @@ export const applicationSchema = z
       ),
     dockerImage: z.string().trim().max(255).optional().or(z.literal("")),
     gitBranch: z.string().trim().min(1).max(120).default("main"),
-    buildType: z.enum(["dockerfile", "nixpacks", "docker-compose"]).default("nixpacks"),
+    buildType: z.enum(["dockerfile", "nixpacks", "docker-compose"]).default("dockerfile"),
     port: z.coerce
       .number()
       .int("The port must be a whole number.")

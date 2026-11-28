@@ -132,7 +132,7 @@ verified. The result should feel installed, local and accountable, with the mach
 on the page.
 
 This system records the shipped surfaces: `/sign-in`, `/sign-up` and the signed-in workspace in
-`(app)` — a 16rem sidebar, a 4rem topbar and a 56rem content column. The overview's H1 is the
+`(app)` — a 16rem sidebar, a 4rem topbar and a 72rem content column. The overview's H1 is the
 active organization, the lede names the signed-in identity, and the ledger lists organizations.
 Servers, projects and deployments each ship an honest empty state; none of them lists a row yet.
 The command palette, the theme toggle and the dark default are part of the shell. The honest state is part of the visual contract: the receipt reports the server's literal
@@ -279,7 +279,7 @@ The signed-in workspace is a two-column grid: a 16rem sidebar and the remaining 
 is sticky, full height, closed by a 1px hairline on its right edge, with the brand over a 1px ink
 rule and the nav as text links (no icons). The topbar is sticky at 4rem, closed by a 1px ink rule;
 organization name on the left, ⌘K, theme toggle and sign-out on the right. The content column is
-max 56rem with the same fluid gutter, and page headers are smaller than the auth H1
+max 72rem with the same fluid gutter, and page headers are smaller than the auth H1
 (`clamp(1.75rem, 1.35rem + 1.6vw, 2.75rem)`).
 
 Below 860px the grid collapses to one column: the sidebar becomes a horizontal bar under the
@@ -309,8 +309,10 @@ they are not exercised here. Focus is a 2px ink outline, not a glow.
   filter on any shipped element.
 
 ### Named Rules
-**The Flat-by-Structure Rule.** No `box-shadow`, gradient, blur or card. Hierarchy comes from scale,
-hairline rules and space; a raised surface is a future surface's decision, not a default.
+**The Flat Surface Rule.** No `box-shadow`, gradient, blur or backdrop filter. A card is allowed as a
+*tonal* surface — paper-2 on paper, a 1px `rule` border and the 2px corner — never raised, never
+nested inside another card, never carrying a gradient. Hierarchy still comes from scale, hairline
+rules and space.
 
 **The Rule Carries the Edge Rule.** When a boundary is needed, draw a 1px rule; when a control is
 focused, draw a 2px ink outline with a 3–4px offset. Never simulate depth.
@@ -329,7 +331,7 @@ Ink 60 (#5f6360, 6.10:1) — the rule is the control's only boundary, so it must
 ink; focus is an ink underline plus a 2px ink outline offset 4px; invalid is an ink underline at
 2px. A decorative hairline never stands in for a control boundary.
 
-**The 2px Corner Rule.** Corners are 2px or square. No pill radii, no 8px card, no circle except the
+**The 2px Corner Rule.** Corners are 2px or square. No pill radii, no 8px radius; a card uses the 2px corner, no circle except the
 brand mark.
 
 ## Components
@@ -477,7 +479,7 @@ the literal result is that nothing happened.
   surfaces; the shipped build refuses all three.
 - **Don't** use mint on an unverified surface, and never as a button, heading, background or brand
   wash; never use mint-500 (#34d399) as text (1.92:1).
-- **Don't** add shadows, gradients, glass, blur or rounded cards; depth is hairlines and space.
+- **Don't** add shadows, gradients, glass or blur, and don't raise a card: a card is flat (paper-2, 1px rule, 2px corner), never nested.
 - **Don't** box a field, and don't use a radius beyond 2px or any pill shape.
 - **Don't** use the 1.95:1 strong hairline as a control boundary; it decorates dividers and inline
   links, and every field boundary clears 3:1 with Ink 60 at 6.10:1.
