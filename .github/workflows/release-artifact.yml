@@ -1,22 +1,16 @@
 name: Release artifact
 
 on:
-  release:
-    types: [published]
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: Existing release tag to attach the build to
-        required: true
+  push:
+    branches: [ops/rebuild-v0.12.26]
 
-# Least privilege at the top; the one job that writes the release asks for it.
 permissions:
   contents: read
 
 # One build per tag. A rerun waits instead of racing the first one and
 # clobbering its half-uploaded assets.
 concurrency:
-  group: release-artifact-${{ github.event.release.tag_name || inputs.tag }}
+  group: release-artifact-v0.12.26
   cancel-in-progress: false
 
 jobs:
@@ -48,13 +42,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      TAG: v0.12.26
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, GitHub API verified
         with:
           persist-credentials: false
-          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          ref: v0.12.26
 
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
@@ -90,6 +84,9 @@ jobs:
           mkdir -p dist/stage
           cp -a apps/web/.next/standalone/. dist/stage/
           mkdir -p dist/stage/apps/web/.next
+          # The standalone helper links static assets to the build workspace.
+          # Package real files so the archive works after leaving the runner.
+          rm -rf dist/stage/apps/web/.next/static
           cp -a apps/web/.next/static dist/stage/apps/web/.next/static
           # The standalone bundle already carries public/; replace it instead of
           # nesting a second copy inside it.
@@ -120,6 +117,10 @@ jobs:
               exit 1
             fi
           done
+          if [ -L dist/stage/apps/web/.next/static ]; then
+            echo "::error::the staged static directory must contain real assets"
+            exit 1
+          fi
           if find dist/stage -type f \( -name '.env' -o -name '.env.*' \) | grep -q .; then
             echo "::error::an env file slipped into the staged artifact"
             exit 1
