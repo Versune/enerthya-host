@@ -1,0 +1,12 @@
+# Secrets and build output never enter an image built from this context.
+.git
+.gitignore
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+**/dist
+**/.env
+**/.env.*
+!**/.env.example

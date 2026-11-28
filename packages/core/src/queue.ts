@@ -10,8 +10,9 @@ export const DATABASE_QUEUE = "databases";
 
 export type DeployJob = { deploymentId: string; resume?: boolean };
 export type DatabaseJob =
-  | { databaseId: string; action: "provision" | "remove"; backupId?: never }
-  | { backupId: string; action: "backup"; databaseId?: never };
+  | { databaseId: string; action: "provision"; organizationId?: never; backupId?: never }
+  | { databaseId: string; action: "remove"; organizationId: string; backupId?: never }
+  | { backupId: string; action: "backup"; databaseId?: never; organizationId?: never };
 
 export type RedisConnection = {
   host: string;
@@ -85,12 +86,37 @@ export async function enqueueDeployment(
 }
 
 /** Queues a managed database operation. The job id pairs the action with the
- * database, so re-requesting the same action cannot double-provision. */
+ * database, so re-requesting the same action cannot double-provision. A removal
+ * carries the organization because the worker deletes the row once the
+ * container and volume are gone, and that delete is organization-scoped. */
+export function enqueueDatabaseJob(
+  redisUrl: string,
+  databaseId: string,
+  action: "provision",
+): Promise<void>;
+export function enqueueDatabaseJob(
+  redisUrl: string,
+  databaseId: string,
+  action: "remove",
+  organizationId: string,
+): Promise<void>;
 export async function enqueueDatabaseJob(
   redisUrl: string,
   databaseId: string,
   action: "provision" | "remove",
+  organizationId?: string,
 ): Promise<void> {
+  if (action === "remove") {
+    if (organizationId === undefined) {
+      throw new Error("A database removal job needs its organization id.");
+    }
+    await addDatabaseJob(redisUrl, `${action}-${databaseId}`, {
+      databaseId,
+      action,
+      organizationId,
+    });
+    return;
+  }
   await addDatabaseJob(redisUrl, `${action}-${databaseId}`, { databaseId, action });
 }
 
