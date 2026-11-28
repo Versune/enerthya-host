@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.27](https://github.com/Versune/enerthya-host/compare/v0.12.26...v0.12.27) (2026-11-28)
+
+
+### Bug Fixes
+
+* **release:** stage standalone static assets as real files ([#139](https://github.com/Versune/enerthya-host/issues/139)) ([482cfeb](https://github.com/Versune/enerthya-host/commit/482cfeb389195654d940df3f6136e53fd0d2fe3e))
+
 ## [0.12.26](https://github.com/Versune/enerthya-host/compare/v0.12.25...v0.12.26) (2026-11-28)
 
 
