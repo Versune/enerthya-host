@@ -75,3 +75,5 @@ jobs:
         run: pnpm --filter @enerthya/web exec playwright install --with-deps chromium
       - name: End-to-end tests
         run: pnpm --filter @enerthya/web test:e2e
+        env:
+          E2E_DATABASE_URL: ${{ env.DATABASE_URL }}

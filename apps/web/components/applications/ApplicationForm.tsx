@@ -29,7 +29,7 @@ export function ApplicationForm({ environments }: { environments: EnvironmentOpt
   const [dockerImage, setDockerImage] = useState("");
   const [gitBranch, setGitBranch] = useState("main");
   const [buildType, setBuildType] = useState<"dockerfile" | "nixpacks" | "docker-compose">(
-    "nixpacks",
+    "dockerfile",
   );
   const [port, setPort] = useState("3000");
   const [mounts, setMounts] = useState("");
@@ -220,10 +220,18 @@ export function ApplicationForm({ environments }: { environments: EnvironmentOpt
               setBuildType(event.target.value as "dockerfile" | "nixpacks" | "docker-compose")
             }
           >
-            <option value="nixpacks">Nixpacks</option>
             <option value="dockerfile">Dockerfile</option>
-            <option value="docker-compose">docker-compose</option>
+            <option value="nixpacks" disabled>
+              Nixpacks — not supported yet
+            </option>
+            <option value="docker-compose" disabled>
+              docker-compose — not supported yet
+            </option>
           </select>
+          <p className="field__hint">
+            The pipeline builds the repository&apos;s Dockerfile today. Nixpacks and compose are
+            refused with a reason instead of failing silently.
+          </p>
         </div>
 
         {kind === "web" ? (

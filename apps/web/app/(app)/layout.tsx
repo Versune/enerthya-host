@@ -21,7 +21,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       <div className="shell">
         <Sidebar />
         <div className="shell__main">
-          <Topbar organization={active?.name ?? "No organization"} />
+          <Topbar
+            organization={active?.name ?? "No organization"}
+            user={{ name: session.user.name ?? session.user.email, email: session.user.email }}
+          />
           <main className="page" id="main">
             {children}
           </main>
