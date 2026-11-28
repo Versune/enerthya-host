@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.12.26](https://github.com/Versune/enerthya-host/compare/v0.12.25...v0.12.26) (2026-11-28)
+
+
+### Features
+
+* **web:** dashboard design refresh and accessibility pass ([#130](https://github.com/Versune/enerthya-host/issues/130)) ([5e8b783](https://github.com/Versune/enerthya-host/commit/5e8b7839eb8e6875551a38aa604625ea8c09e17d))
+
+
+### Bug Fixes
+
+* **core:** use default ssh2 import so utils resolves under Node 24 ESM ([#129](https://github.com/Versune/enerthya-host/issues/129)) ([906e198](https://github.com/Versune/enerthya-host/commit/906e19818d9d15cfabd429bbe78603632ac56c8c))
+* **security:** audit remediation across mounts, CSRF, backups and API caps ([#136](https://github.com/Versune/enerthya-host/issues/136)) ([f24219c](https://github.com/Versune/enerthya-host/commit/f24219c7d18d8a64b8abdb0e1da50d63c30606db))
+
 ## [0.12.25](https://github.com/Versune/enerthya-host/compare/v0.12.24...v0.12.25) (2026-11-24)
 
 

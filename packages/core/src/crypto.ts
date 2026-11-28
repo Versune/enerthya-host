@@ -9,15 +9,35 @@ import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
 const VERSION = "v1";
 const ALGORITHM = "aes-256-gcm";
+const HEX_KEY = /^[0-9a-f]{64}$/i;
+// Standard and URL-safe base64 alphabets, with padding only at the end. Buffer
+// silently skips anything else, so characters must be rejected before decoding.
+const BASE64_KEY = /^[A-Za-z0-9+/_-]+={0,2}$/;
 
-function key(): Buffer {
-  const raw = process.env.ENCRYPTION_KEY;
+function decodeKey(raw: string | undefined): Buffer {
   if (!raw) throw new Error("ENCRYPTION_KEY is not set");
-  const bytes = /^[0-9a-f]{64}$/i.test(raw) ? Buffer.from(raw, "hex") : Buffer.from(raw, "base64");
+  if (HEX_KEY.test(raw)) return Buffer.from(raw, "hex");
+  if (!BASE64_KEY.test(raw)) {
+    throw new Error("ENCRYPTION_KEY must be base64 (32 bytes) or 64 hex characters");
+  }
+  const bytes = Buffer.from(raw, "base64");
   if (bytes.length !== 32) {
     throw new Error("ENCRYPTION_KEY must decode to 32 bytes (base64 or 64 hex characters)");
   }
   return bytes;
+}
+
+function key(): Buffer {
+  return decodeKey(process.env.ENCRYPTION_KEY);
+}
+
+/**
+ * Fails fast at boot when ENCRYPTION_KEY is missing, contains characters that
+ * are not base64/hex, or does not decode to exactly 32 bytes. Encryption and
+ * decryption stay lazy; panels call this during startup.
+ */
+export function validateEncryptionKey(): void {
+  decodeKey(process.env.ENCRYPTION_KEY);
 }
 
 export function encryptSecret(plaintext: string): string {

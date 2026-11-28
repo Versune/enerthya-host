@@ -32,7 +32,11 @@ export function signPutObject(
   body: Buffer,
   now = new Date(),
 ): SignedRequest {
-  return signRequest(config, "PUT", key, sha256Hex(body), now);
+  return signRequest(config, "PUT", key, sha256Hex(body), now, {
+    // Ask the bucket to encrypt the object at rest. It is part of the signed
+    // canonical request, so an intermediary cannot strip or alter it.
+    "x-amz-server-side-encryption": "AES256",
+  });
 }
 
 /** AWS Signature V4 for a DELETE; the payload hash is the empty-body digest. */
@@ -46,6 +50,7 @@ function signRequest(
   key: string,
   payloadHash: string,
   now: Date,
+  extraHeaders: Record<string, string> = {},
 ): SignedRequest {
   const endpoint = config.endpoint.replace(/\/$/, "");
   const url = new URL(`${endpoint}/${config.bucket}/${key}`);
@@ -56,6 +61,7 @@ function signRequest(
     host: url.host,
     "x-amz-content-sha256": payloadHash,
     "x-amz-date": amzDate,
+    ...extraHeaders,
   };
   const signedHeaders = Object.keys(headers).sort().join(";");
   const canonicalRequest = [
