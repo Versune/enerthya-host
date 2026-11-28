@@ -30,6 +30,16 @@ export async function organizationView(organizationId: string) {
   };
 }
 
+/** Escapes a value for interpolation into the email's HTML part. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function invitationEmail(organization: string, link: string) {
   const text = [
     `You were invited to ${organization} on Enerthya Host.`,
@@ -39,12 +49,15 @@ function invitationEmail(organization: string, link: string) {
     "If you were not expecting this, ignore this message.",
   ].join("\n");
 
+  const htmlOrganization = escapeHtml(organization);
+  const htmlLink = escapeHtml(link);
+
   const html = `<div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#111;max-width:36rem;padding:24px;border:1px solid #d9d9d9">
 <p style="font-size:11px;letter-spacing:.12em;margin:0">INVITATION</p>
-<h1 style="font-size:22px;margin:8px 0 16px;font-weight:600">${organization}</h1>
+<h1 style="font-size:22px;margin:8px 0 16px;font-weight:600">${htmlOrganization}</h1>
 <p style="font-size:13px;line-height:1.6">You were invited to this organization on Enerthya Host.</p>
-<p style="margin:20px 0"><a href="${link}" style="background:#111;color:#fff;padding:10px 16px;text-decoration:none;font-size:13px">Accept the invitation</a></p>
-<p style="font-size:12px;color:#555;margin:0">${link}</p>
+<p style="margin:20px 0"><a href="${htmlLink}" style="background:#111;color:#fff;padding:10px 16px;text-decoration:none;font-size:13px">Accept the invitation</a></p>
+<p style="font-size:12px;color:#555;margin:0">${htmlLink}</p>
 </div>`;
 
   return { text, html };
